@@ -99,10 +99,17 @@
 @endsection
 
 @push('scripts')
-
 <script>
-    // pakai function dari ajax.js
-    updateData('#editForm', "{{ route('admin.update', $admin->id) }}");
-</script>
+document.addEventListener('DOMContentLoaded', function () {
 
+    if (typeof window.updateData === 'function') {
+
+        window.updateData('#editForm', "{{ route('admin.update', $admin->id) }}");
+
+    } else {
+        console.error('updateData belum tersedia (ajax.js belum ke-load)');
+    }
+
+});
+</script>
 @endpush

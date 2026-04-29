@@ -143,7 +143,9 @@
 /* =========================
    CREATE AJAX (ajax.js)
 ========================= */
-createData('#formSchedule', "{{ route('schedule.store') }}");
+window.addEventListener('load', function () {
+    createData('#formSchedule', "{{ route('schedule.store') }}");
+});
 
 
 /* =========================

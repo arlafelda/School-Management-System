@@ -165,20 +165,21 @@
 @push('scripts')
 
 <script>
-$(document).ready(function () {
+window.addEventListener('load', function () {
 
     // =====================
     // CLICK ROW → DETAIL
     // =====================
-    $('.schedule-row').on('click', function () {
+    $(document).on('click', '.schedule-row', function () {
         let url = $(this).data('url');
         window.location.href = url;
     });
 
+
     // =====================
     // DELETE AJAX
     // =====================
-    $('.formDelete').on('submit', function (e) {
+    $(document).on('submit', '.formDelete', function (e) {
         e.preventDefault();
 
         let url = this.action;

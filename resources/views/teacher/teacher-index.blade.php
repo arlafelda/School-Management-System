@@ -112,37 +112,55 @@
 @push('scripts')
 
 <script>
-/* =========================
-   CLICK ROW DETAIL
-========================= */
-$(document).on('click', 'tr[data-url]', function () {
-    window.location = $(this).data('url');
-});
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================
+       CLICK ROW DETAIL
+    ========================= */
+    document.addEventListener('click', function (e) {
+        let row = e.target.closest('tr[data-url]');
+        if (row) {
+            window.location = row.getAttribute('data-url');
+        }
+    });
 
 
-/* =========================
-   DELETE AJAX (PAKAI ajax.js)
-========================= */
-$(document).on('click', '.btn-delete', function (e) {
-    e.preventDefault();
+    /* =========================
+       DELETE AJAX
+    ========================= */
+    document.addEventListener('click', function (e) {
 
-    let url = $(this).data('url');
-    let id = $(this).data('id');
-    let row = $('#row-' + id);
+        let btn = e.target.closest('.btn-delete');
+        if (!btn) return;
 
-    if (!confirm('Yakin ingin menghapus data ini?')) return;
+        e.preventDefault();
 
-    deleteData(url, function () {
+        let url = btn.getAttribute('data-url');
+        let id = btn.getAttribute('data-id');
+        let row = document.getElementById('row-' + id);
 
-        row.remove();
+        if (!confirm('Yakin ingin menghapus data ini?')) return;
 
-        $('#alertBox').html(`
-            <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                Data berhasil dihapus
-            </div>
-        `);
+        if (typeof deleteData !== 'undefined') {
+
+            deleteData(url, function () {
+
+                if (row) row.remove();
+
+                document.getElementById('alertBox').innerHTML = `
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        Data berhasil dihapus
+                    </div>
+                `;
+
+            });
+
+        } else {
+            console.error('deleteData belum tersedia');
+        }
 
     });
+
 });
 </script>
 

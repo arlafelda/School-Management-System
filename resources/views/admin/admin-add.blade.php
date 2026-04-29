@@ -85,6 +85,17 @@
 
 @push('scripts')
 <script>
-    createData('#addForm', "{{ route('admin.store') }}");
+document.addEventListener('DOMContentLoaded', function () {
+
+    // cek function ada atau tidak
+    if (typeof window.createData === 'function') {
+
+        window.createData('#addForm', "{{ route('admin.store') }}");
+
+    } else {
+        console.error('createData belum tersedia (ajax.js belum ke-load)');
+    }
+
+});
 </script>
 @endpush

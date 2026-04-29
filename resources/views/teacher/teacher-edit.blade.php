@@ -89,6 +89,16 @@
 
 @push('scripts')
 <script>
-    updateData('#formEditGuru', "{{ route('teacher.update', $teacher->id) }}");
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof updateData !== 'undefined') {
+
+        updateData('#formEditGuru', "{{ route('teacher.update', $teacher->id) }}");
+
+    } else {
+        console.error('updateData belum tersedia');
+    }
+
+});
 </script>
 @endpush

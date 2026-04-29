@@ -1,3 +1,6 @@
+import $ from 'jquery';
+window.$ = window.jQuery = $;
+
 import './bootstrap';
 import './sidebar';
 import './ajax';
@@ -5,5 +8,4 @@ import './ajax';
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
-
 Alpine.start();

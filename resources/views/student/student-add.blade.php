@@ -151,7 +151,16 @@
 
 @push('scripts')
 <script>
-    // pakai AJAX PRO kamu (ajax.js)
-    createData('#formSiswa', "{{ route('students.store') }}");
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof createData !== 'undefined') {
+
+        createData('#formSiswa', "{{ route('students.store') }}");
+
+    } else {
+        console.error('createData belum tersedia');
+    }
+
+});
 </script>
 @endpush

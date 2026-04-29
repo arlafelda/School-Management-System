@@ -97,7 +97,16 @@
 
 @push('scripts')
 <script>
-    // AJAX PAKAI ajax.js (GLOBAL FUNCTION)
-    createData('#formGuru', "{{ route('teacher.store') }}");
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof createData !== 'undefined') {
+
+        createData('#formGuru', "{{ route('teacher.store') }}");
+
+    } else {
+        console.error('createData belum tersedia');
+    }
+
+});
 </script>
 @endpush

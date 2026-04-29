@@ -6,7 +6,14 @@
 
     <h1 class="text-xl font-bold mb-6">Edit Kelas</h1>
 
-    <form action="{{ route('class.update', $class->id) }}" method="POST">
+    <!-- ALERT -->
+    <div id="alertBox" class="mb-4"></div>
+
+    <!-- ⛔ TAMBAH ID -->
+    <form id="formEditClass"
+        action="{{ route('class.update', $class->id) }}"
+        method="POST">
+
         @csrf
         @method('PUT')
 
@@ -62,10 +69,12 @@
                     <option value="">-- Pilih Guru --</option>
 
                     @foreach($teachers as $teacher)
-                        <option value="{{ $teacher->id }}"
-                            {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
-                            {{ $teacher->name }}
-                        </option>
+                    <option value="{{ $teacher->id }}"
+                        {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
+
+                        {{ $teacher->name }} - {{ $teacher->subject }}
+
+                    </option>
                     @endforeach
 
                 </select>
@@ -81,7 +90,8 @@
                 Kembali
             </a>
 
-            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+            <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg">
                 Update
             </button>
 
@@ -92,3 +102,38 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ❗ cek jQuery
+        if (typeof window.$ === 'undefined') {
+            console.error('jQuery belum load');
+            return;
+        }
+
+        // ❗ cek function AJAX
+        if (typeof window.updateData === 'function') {
+
+            window.updateData('#formEditClass',
+                "{{ route('class.update', $class->id) }}",
+                function(res) {
+
+                    $('#alertBox').html(`
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Kelas berhasil diupdate'}
+                    </div>
+                `);
+
+                }
+            );
+
+        } else {
+            console.error('updateData belum tersedia (ajax.js belum ke-load)');
+        }
+
+    });
+</script>
+@endpush

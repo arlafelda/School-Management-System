@@ -179,7 +179,16 @@
 
 @push('scripts')
 <script>
-    // pakai AJAX PRO (ajax.js)
-    updateData('#formEditSiswa', "{{ route('students.update', $student->id) }}");
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof updateData !== 'undefined') {
+
+        updateData('#formEditSiswa', "{{ route('students.update', $student->id) }}");
+
+    } else {
+        console.error('updateData belum tersedia');
+    }
+
+});
 </script>
 @endpush

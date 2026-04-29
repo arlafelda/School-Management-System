@@ -16,7 +16,6 @@
             </p>
         </div>
 
-        <!-- 🔥 TAMBAH KELAS -->
         <a href="{{ route('class.create') }}"
            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow">
             + Tambah Kelas
@@ -27,12 +26,8 @@
     <!-- CONTENT -->
     <main class="p-6">
 
-        <!-- SUCCESS MESSAGE -->
-        @if(session('success'))
-        <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">
-            {{ session('success') }}
-        </div>
-        @endif
+        <!-- ALERT AJAX -->
+        <div id="alertBox"></div>
 
         <!-- TABLE -->
         <div class="bg-white rounded-lg shadow overflow-x-auto">
@@ -86,15 +81,16 @@
                                 Edit
                             </a>
 
+                            <!-- 🔥 DELETE AJAX -->
                             <form action="{{ route('class.delete', $class->id) }}"
                                   method="POST"
-                                  class="inline"
-                                  onsubmit="return confirm('Hapus data ini?')">
+                                  class="inline formDelete">
 
                                 @csrf
                                 @method('DELETE')
 
-                                <button class="text-red-500 hover:underline text-sm">
+                                <button type="submit"
+                                    class="text-red-500 hover:underline text-sm">
                                     Hapus
                                 </button>
 
@@ -123,3 +119,50 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ❗ Pastikan jQuery sudah load
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    // 🔥 DELETE AJAX GLOBAL
+    $(document).on('submit', '.formDelete', function (e) {
+        e.preventDefault();
+
+        if (!confirm("Yakin ingin menghapus data ini?")) return;
+
+        let url = this.action;
+        let row = $(this).closest('tr');
+
+        // ❗ Pastikan function ajax ada
+        if (typeof window.deleteData === 'function') {
+
+            window.deleteData(url, function () {
+
+                // hapus row tabel
+                row.remove();
+
+                // tampilkan alert
+                $('#alertBox').html(`
+                    <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                        Data kelas berhasil dihapus
+                    </div>
+                `);
+
+            });
+
+        } else {
+            console.error('deleteData belum tersedia (ajax.js belum ke-load)');
+        }
+
+    });
+
+});
+</script>
+@endpush

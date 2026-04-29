@@ -122,26 +122,41 @@
 @push('scripts')
 
 <script>
-/* =========================
-   AJAX DELETE (PAKAI ajax.js)
-========================= */
-$('.formDelete').on('submit', function (e) {
-    e.preventDefault();
+document.addEventListener("DOMContentLoaded", function () {
 
-    let url = this.action;
-    let row = $(this).closest('tr');
+    document.addEventListener('submit', function (e) {
 
-    deleteData(url, function () {
+        if (e.target.classList.contains('formDelete')) {
+            e.preventDefault();
 
-        row.remove();
+            let form = e.target;
+            let url = form.action;
+            let row = form.closest('tr');
 
-        $('#alertBox').html(`
-            <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
-                Data berhasil dihapus
-            </div>
-        `);
+            // cek fungsi dari ajax.js
+            if (typeof deleteData !== 'undefined') {
+
+                deleteData(url, function () {
+
+                    // hapus row tabel
+                    if (row) row.remove();
+
+                    // tampilkan alert
+                    document.getElementById('alertBox').innerHTML = `
+                        <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
+                            Data berhasil dihapus
+                        </div>
+                    `;
+
+                });
+
+            } else {
+                console.error('deleteData belum tersedia');
+            }
+        }
 
     });
+
 });
 </script>
 

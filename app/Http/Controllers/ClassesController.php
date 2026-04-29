@@ -11,74 +11,82 @@ class ClassesController extends Controller
     public function index()
     {
         $classes = ClassModel::with(['students', 'teacher'])->latest()->get();
-
         return view('class.class-index', compact('classes'));
     }
 
     public function create()
     {
-        $teachers = Teacher::all();
+        $teachers = Teacher::where('position', 'wali_kelas')->get();
         return view('class.class-add', compact('teachers'));
     }
 
+    /* =========================
+       STORE (AJAX READY)
+    ========================= */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required',
             'level' => 'required',
             'major' => 'nullable',
             'academic_year' => 'required',
             'semester' => 'required',
-            'teacher_id' => 'nullable'
+            'teacher_id' => 'nullable|exists:tbl_teachers,id'
         ]);
 
-        ClassModel::create([
-            'name' => $request->name,
-            'level' => $request->level,
-            'major' => $request->major,
-            'academic_year' => $request->academic_year,
-            'semester' => $request->semester,
-            'teacher_id' => $request->teacher_id
-        ]);
+        $class = ClassModel::create($validated);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Kelas berhasil ditambahkan',
+                'data' => $class
+            ]);
+        }
 
         return redirect()->route('class.index')
             ->with('success', 'Kelas berhasil ditambahkan');
     }
-    public function edit($id)
+
+    public function edit(int $id)
     {
         $class = ClassModel::findOrFail($id);
-        $teachers = Teacher::all();
+        $teachers = Teacher::where('position', 'wali_kelas')->get();
 
         return view('class.class-edit', compact('class', 'teachers'));
     }
 
-    public function update(Request $request, $id)
+    /* =========================
+       UPDATE (AJAX READY)
+    ========================= */
+    public function update(Request $request, int $id)
     {
         $class = ClassModel::findOrFail($id);
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required',
             'level' => 'required',
             'major' => 'nullable',
             'academic_year' => 'required',
             'semester' => 'required',
-            'teacher_id' => 'nullable'
+            'teacher_id' => 'nullable|exists:tbl_teachers,id'
         ]);
 
-        $class->update([
-            'name' => $request->name,
-            'level' => $request->level,
-            'major' => $request->major,
-            'academic_year' => $request->academic_year,
-            'semester' => $request->semester,
-            'teacher_id' => $request->teacher_id
-        ]);
+        $class->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Kelas berhasil diupdate',
+                'data' => $class
+            ]);
+        }
 
         return redirect()->route('class.index')
             ->with('success', 'Kelas berhasil diupdate');
     }
 
-    public function show($id, Request $request)
+    public function show(int $id, Request $request)
     {
         $class = ClassModel::with(['teacher', 'students'])->findOrFail($id);
 
@@ -88,9 +96,19 @@ class ClassesController extends Controller
         return view('class.class-show', compact('class', 'year', 'semester'));
     }
 
-    public function destroy($id)
+    /* =========================
+       DELETE (AJAX READY)
+    ========================= */
+    public function destroy(Request $request, int $id)
     {
         ClassModel::destroy($id);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Kelas berhasil dihapus'
+            ]);
+        }
 
         return redirect()->route('class.index')
             ->with('success', 'Kelas berhasil dihapus');

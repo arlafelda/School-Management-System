@@ -124,24 +124,27 @@
 @endsection
 
 @push('scripts')
-
 <script>
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-    updateData('#formEditSchedule',
-        "{{ route('schedule.update', $schedule->id) }}",
-        function (res) {
+    if (typeof updateData === "function") {
 
-            $('#alertBox').html(`
-                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                    ${res.message ?? 'Data berhasil diupdate'}
-                </div>
-            `);
+        updateData('#formEditSchedule',
+            "{{ route('schedule.update', $schedule->id) }}",
+            function (res) {
 
-        }
-    );
+                document.getElementById('alertBox').innerHTML = `
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Data berhasil diupdate'}
+                    </div>
+                `;
+            }
+        );
+
+    } else {
+        console.error("updateData belum tersedia");
+    }
 
 });
 </script>
-
 @endpush
