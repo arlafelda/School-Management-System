@@ -10,7 +10,10 @@
         <p class="text-sm text-gray-500">Perbarui nilai akademik siswa dengan benar</p>
     </div>
 
-    <!-- CENTER WRAPPER (tidak pakai flex center lagi) -->
+    <!-- ALERT -->
+    <div id="alertBox" class="mb-4"></div>
+
+    <!-- CARD -->
     <div class="bg-white rounded-xl shadow border max-w-3xl">
 
         <!-- FORM HEADER -->
@@ -21,7 +24,11 @@
         </div>
 
         <!-- FORM -->
-        <form method="POST" action="{{ route('grades.update', $grade->id) }}" class="p-6 space-y-5">
+        <form id="formEditGrade"
+            method="POST"
+            action="{{ route('grades.update', $grade->id) }}"
+            class="p-6 space-y-5">
+
             @csrf
             @method('PUT')
 
@@ -32,11 +39,16 @@
                 <select name="subject"
                     class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
 
-                    <option value="Matematika" {{ $grade->subject == 'Matematika' ? 'selected' : '' }}>Matematika</option>
-                    <option value="Bahasa Indonesia" {{ $grade->subject == 'Bahasa Indonesia' ? 'selected' : '' }}>Bahasa Indonesia</option>
-                    <option value="Bahasa Inggris" {{ $grade->subject == 'Bahasa Inggris' ? 'selected' : '' }}>Bahasa Inggris</option>
-                    <option value="IPA" {{ $grade->subject == 'IPA' ? 'selected' : '' }}>IPA</option>
-                    <option value="IPS" {{ $grade->subject == 'IPS' ? 'selected' : '' }}>IPS</option>
+                    <option value="">-- Pilih Mata Pelajaran --</option>
+
+                    @foreach($subjects as $s)
+                    <option value="{{ $s->subject }}"
+                        {{ $grade->subject == $s->subject ? 'selected' : '' }}>
+
+                        {{ $s->subject }}
+
+                    </option>
+                    @endforeach
 
                 </select>
             </div>
@@ -89,3 +101,39 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // 🔥 CEK jQuery
+        if (typeof window.$ === 'undefined') {
+            console.error('jQuery belum load');
+            return;
+        }
+
+        // 🔥 CEK ajax.js
+        if (typeof window.updateData === 'function') {
+
+            updateData(
+                '#formEditGrade',
+                "{{ route('grades.update', $grade->id) }}",
+                function(res) {
+
+                    $('#alertBox').html(`
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Nilai berhasil diupdate'}
+                    </div>
+                `);
+
+                }
+            );
+
+        } else {
+            console.error('updateData tidak ditemukan (ajax.js belum di-load)');
+        }
+
+    });
+</script>
+@endpush

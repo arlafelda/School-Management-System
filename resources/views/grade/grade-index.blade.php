@@ -17,6 +17,9 @@
         </a>
     </div>
 
+    <!-- ALERT -->
+    <div id="alertBox"></div>
+
     <!-- CARD -->
     <div class="grid md:grid-cols-3 gap-4">
 
@@ -121,8 +124,8 @@
                     $final = ($g->assignment_score + $g->mid_exam_score + $g->final_exam_score) / 3;
                 @endphp
 
-                <!-- ROW BISA DIKLIK -->
-                <tr data-url="{{ route('grades.show', $g->id) }}"
+                <tr id="row-{{ $g->id }}"
+                    data-url="{{ route('grades.show', $g->id) }}"
                     class="grade-row border-t hover:bg-gray-50 cursor-pointer">
 
                     <td class="p-3">{{ $g->student->name ?? '-' }}</td>
@@ -150,17 +153,17 @@
                             Edit
                         </a>
 
-                        <!-- DELETE -->
+                        <!-- DELETE AJAX -->
                         <form action="{{ route('grades.destroy', $g->id) }}"
                             method="POST"
-                            class="inline"
+                            class="inline formDelete"
+                            data-id="{{ $g->id }}"
                             onclick="event.stopPropagation()">
 
                             @csrf
                             @method('DELETE')
 
-                            <button class="text-red-600 text-xs hover:underline"
-                                onclick="return confirm('Hapus data?')">
+                            <button class="text-red-600 text-xs hover:underline">
                                 Hapus
                             </button>
 
@@ -190,12 +193,53 @@
 
 @push('scripts')
 <script>
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
 
+    // ❗ pastikan jQuery ada
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    // =========================
     // CLICK ROW → DETAIL
-    $('.grade-row').on('click', function () {
+    // =========================
+    $(document).on('click', '.grade-row', function () {
         let url = $(this).data('url');
         window.location.href = url;
+    });
+
+    // =========================
+    // DELETE AJAX
+    // =========================
+    $(document).on('submit', '.formDelete', function (e) {
+        e.preventDefault();
+
+        if (!confirm('Hapus data ini?')) return;
+
+        let url = this.action;
+        let id = $(this).data('id');
+        let row = $('#row-' + id);
+
+        // cek function dari ajax.js
+        if (typeof deleteData === 'function') {
+
+            deleteData(url, function () {
+
+                row.remove();
+
+                $('#alertBox').html(`
+                    <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
+                        Data berhasil dihapus
+                    </div>
+                `);
+
+            });
+
+        } else {
+            console.error('deleteData tidak ditemukan (ajax.js belum load)');
+        }
+
     });
 
 });

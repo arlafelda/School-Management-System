@@ -24,6 +24,9 @@
 
     </div>
 
+    <!-- ALERT -->
+    <div id="alertBox"></div>
+
     <!-- FILTER -->
     <form method="GET" id="filterForm"
           class="grid md:grid-cols-5 gap-3 bg-white p-4 border rounded-lg">
@@ -81,8 +84,8 @@
 
     </form>
 
-    <!-- FORM NILAI -->
-    <form method="POST" action="{{ route('grades.store') }}">
+    <!-- FORM NILAI (AJAX) -->
+    <form id="formGrade" method="POST" action="{{ route('grades.store') }}">
         @csrf
 
         <input type="hidden" name="subject"
@@ -173,3 +176,35 @@ function filter(){
 </script>
 
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // 🔥 CEK jQuery
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    // 🔥 CEK ajax.js
+    if (typeof window.createData === 'function') {
+
+        createData('#formGrade', "{{ route('grades.store') }}", function(res){
+
+            $('#alertBox').html(`
+                <div class="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
+                    ${res.message ?? 'Nilai berhasil disimpan'}
+                </div>
+            `);
+
+        });
+
+    } else {
+        console.error('createData tidak ditemukan (ajax.js belum di-load)');
+    }
+
+});
+</script>
+@endpush

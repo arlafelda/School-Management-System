@@ -57,58 +57,38 @@ class GradeController extends Controller
         $teachers = Teacher::all();
 
         $students = Student::with('class')
-
-            // FILTER KELAS
-            ->when($request->class_id, function ($q) use ($request) {
-                $q->where('class_id', $request->class_id);
-            })
-
-            // FILTER JURUSAN
+            ->when($request->class_id, fn($q) => $q->where('class_id', $request->class_id))
             ->when($request->major, function ($q) use ($request) {
-                $q->whereHas('class', function ($q2) use ($request) {
-                    $q2->where('major', $request->major);
-                });
+                $q->whereHas('class', fn($q2) => $q2->where('major', $request->major));
             })
-
-            // FILTER TAHUN AJARAN
             ->when($request->academic_year, function ($q) use ($request) {
-                $q->whereHas('class', function ($q2) use ($request) {
-                    $q2->where('academic_year', $request->academic_year);
-                });
+                $q->whereHas('class', fn($q2) => $q2->where('academic_year', $request->academic_year));
             })
-
-            // FILTER SEMESTER
             ->when($request->semester, function ($q) use ($request) {
-                $q->whereHas('class', function ($q2) use ($request) {
-                    $q2->where('semester', $request->semester);
-                });
+                $q->whereHas('class', fn($q2) => $q2->where('semester', $request->semester));
             })
-
-            // 🔥 FILTER MAPEL (TEACHER)
             ->when($request->teacher_id, function ($q) use ($request) {
-                $q->whereHas('class', function ($q2) use ($request) {
-                    $q2->where('teacher_id', $request->teacher_id);
-                });
+                $q->whereHas('class', fn($q2) => $q2->where('teacher_id', $request->teacher_id));
             })
-
             ->get();
 
         return view('grade.grade-add', compact('students', 'classes', 'teachers'));
     }
 
     // =========================
-    // STORE (FIX TOTAL)
+    // STORE (AJAX READY)
     // =========================
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'subject' => 'required|string',
             'student_id' => 'required|array',
         ]);
 
-        foreach ($request->student_id as $index => $student_id) {
+        $created = [];
 
-            Grade::create([
+        foreach ($request->student_id as $index => $student_id) {
+            $created[] = Grade::create([
                 'student_id' => $student_id,
                 'subject' => $request->subject,
                 'assignment_score' => $request->assignment_score[$index] ?? 0,
@@ -117,26 +97,47 @@ class GradeController extends Controller
             ]);
         }
 
+        // ✅ AJAX RESPONSE
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Nilai berhasil disimpan',
+                'data' => $created
+            ]);
+        }
+
         return redirect()->route('grades.index')
             ->with('success', 'Nilai berhasil disimpan');
     }
 
-    public function show($id)
+    // =========================
+    // SHOW
+    // =========================
+    public function show(int $id)
     {
-        $grade = Grade::with('student.class')->findOrFail($id);
-         $teachers = Teacher::all();
+        $grade = Grade::with(['student.class'])->findOrFail($id);
+        $teachers = Teacher::all();
 
         return view('grade.grade-show', compact('grade', 'teachers'));
     }
 
-    public function edit($id)
+    // =========================
+    // EDIT
+    // =========================
+    public function edit(int $id)
     {
         $grade = Grade::findOrFail($id);
 
-        return view('grade.grade-edit', compact('grade'));
+        // ambil subject unik saja
+        $subjects = Teacher::select('subject')->distinct()->get();
+
+        return view('grade.grade-edit', compact('grade', 'subjects'));
     }
 
-    public function update(Request $request, $id)
+    // =========================
+    // UPDATE (AJAX READY)
+    // =========================
+    public function update(Request $request, int $id)
     {
         $request->validate([
             'subject' => 'required',
@@ -151,14 +152,32 @@ class GradeController extends Controller
             'final_exam_score' => $request->final_exam_score,
         ]);
 
-        return redirect()->route('grades.index')->with('success', 'Nilai berhasil diupdate');
+        // ✅ AJAX RESPONSE
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Nilai berhasil diupdate'
+            ]);
+        }
+
+        return redirect()->route('grades.index')
+            ->with('success', 'Nilai berhasil diupdate');
     }
 
-    public function destroy($id)
+    // =========================
+    // DELETE (AJAX READY)
+    // =========================
+    public function destroy(Request $request, int $id)
     {
         $grade = Grade::findOrFail($id);
-
         $grade->delete();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Data berhasil dihapus'
+            ]);
+        }
 
         return redirect()->route('grades.index')
             ->with('success', 'Data berhasil dihapus');
