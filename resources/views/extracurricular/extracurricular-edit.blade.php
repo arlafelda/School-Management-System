@@ -24,21 +24,16 @@
     <!-- CONTENT -->
     <main class="p-6 flex justify-center">
 
+        <!-- ✅ ALERT -->
+        <div id="alertBox" class="absolute top-20 w-full max-w-3xl mx-auto"></div>
+
         <div class="w-full max-w-3xl bg-white rounded-lg shadow p-6">
 
-            <!-- ERROR VALIDATION -->
-            @if ($errors->any())
-                <div class="mb-4 bg-red-100 text-red-600 p-3 rounded-lg">
-                    <ul class="text-sm">
-                        @foreach ($errors->all() as $error)
-                            <li>- {{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
             <!-- FORM -->
-            <form action="{{ route('extracurricular.update', $data->id) }}" method="POST">
+            <form id="formEditEkskul"
+                  action="{{ route('extracurricular.update', $data->id) }}"
+                  method="POST">
+
                 @csrf
                 @method('PUT')
 
@@ -47,15 +42,15 @@
                     <label class="block text-sm mb-1 font-medium">Nama Ekstrakurikuler</label>
                     <input type="text" name="name"
                         value="{{ old('name', $data->name) }}"
-                        class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200 outline-none"
-                        placeholder="Contoh: Futsal, Pramuka">
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
                 </div>
 
                 <!-- GURU PEMBINA -->
                 <div class="mb-4">
                     <label class="block text-sm mb-1 font-medium">Pembina (Guru)</label>
                     <select name="teacher_id"
-                        class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200 outline-none">
+                        class="w-full border rounded-lg px-3 py-2">
 
                         <option value="">-- Pilih Guru --</option>
 
@@ -80,8 +75,7 @@
                                 <input type="checkbox"
                                     name="student_ids[]"
                                     value="{{ $student->id }}"
-                                    {{ in_array($student->id, $data->students->pluck('id')->toArray()) ? 'checked' : '' }}
-                                    class="rounded text-blue-600">
+                                    {{ in_array($student->id, $data->students->pluck('id')->toArray()) ? 'checked' : '' }}>
 
                                 {{ $student->name }}
                             </label>
@@ -94,12 +88,12 @@
                 <div class="flex justify-between">
 
                     <a href="{{ route('extracurricular.index') }}"
-                       class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm">
+                       class="px-4 py-2 rounded-lg bg-gray-200 text-sm">
                         Kembali
                     </a>
 
                     <button type="submit"
-                        class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm">
+                        class="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm">
                         Update
                     </button>
 
@@ -114,3 +108,40 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ✅ pastikan jQuery ada
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    // ✅ pastikan function ajax ada
+    if (typeof window.updateData === 'function') {
+
+        window.updateData('#formEditEkskul',
+            "{{ route('extracurricular.update', $data->id) }}",
+            function (res) {
+
+                $('#alertBox').html(`
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Data berhasil diupdate'}
+                    </div>
+                `);
+
+                // optional redirect
+                // window.location.href = "{{ route('extracurricular.index') }}";
+            }
+        );
+
+    } else {
+        console.error('updateData belum tersedia (ajax.js belum ke-load)');
+    }
+
+});
+</script>
+@endpush

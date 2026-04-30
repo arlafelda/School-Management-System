@@ -26,6 +26,9 @@
     <!-- CONTENT -->
     <main class="p-6">
 
+        <!-- ✅ ALERT -->
+        <div id="alertBox" class="mb-4"></div>
+
         <div class="bg-white rounded-lg shadow overflow-x-auto">
 
             <table class="w-full text-sm">
@@ -44,9 +47,9 @@
                     @forelse($data as $d)
 
                         <tr
+                            id="row-{{ $d->id }}"
                             class="border-t hover:bg-gray-50 cursor-pointer"
                             data-url="{{ route('extracurricular.show', $d->id) }}"
-                            onclick="goToDetail(event, this)"
                         >
 
                             <!-- NAMA -->
@@ -73,16 +76,17 @@
                                     Edit
                                 </a>
 
+                                <!-- ✅ DELETE AJAX -->
                                 <form action="{{ route('extracurricular.destroy', $d->id) }}"
                                       method="POST"
-                                      class="inline"
+                                      class="inline formDelete"
+                                      data-id="{{ $d->id }}"
                                       onclick="event.stopPropagation()">
 
                                     @csrf
                                     @method('DELETE')
 
                                     <button type="submit"
-                                            onclick="return confirm('Yakin hapus?')"
                                             class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs">
                                         Hapus
                                     </button>
@@ -111,20 +115,64 @@
 
 </div>
 
-<!-- SCRIPT -->
-<script>
-function goToDetail(event, el) {
+@endsection
 
-    if (
-        event.target.closest('a') ||
-        event.target.closest('button') ||
-        event.target.closest('form')
-    ) {
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ✅ cek jQuery
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
         return;
     }
 
-    window.location.href = el.dataset.url;
-}
-</script>
+    // =========================
+    // CLICK ROW → DETAIL
+    // =========================
+    $(document).on('click', 'tr[data-url]', function (e) {
 
-@endsection
+        if (
+            e.target.closest('a') ||
+            e.target.closest('button') ||
+            e.target.closest('form')
+        ) return;
+
+        window.location.href = $(this).data('url');
+    });
+
+    // =========================
+    // DELETE AJAX
+    // =========================
+    $(document).on('submit', '.formDelete', function (e) {
+        e.preventDefault();
+
+        let url = this.action;
+        let id = $(this).data('id');
+        let row = $('#row-' + id);
+
+        // cek function ajax
+        if (typeof window.deleteData === 'function') {
+
+            window.deleteData(url, function () {
+
+                row.remove();
+
+                $('#alertBox').html(`
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        Data berhasil dihapus
+                    </div>
+                `);
+
+            });
+
+        } else {
+            console.error('deleteData belum tersedia (ajax.js belum ke-load)');
+        }
+
+    });
+
+});
+</script>
+@endpush

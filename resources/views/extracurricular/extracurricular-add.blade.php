@@ -19,9 +19,13 @@
     <!-- CONTENT -->
     <main class="p-6">
 
+        <!-- ✅ ALERT -->
+        <div id="alertBox" class="max-w-3xl mx-auto mb-4"></div>
+
         <div class="bg-white p-6 rounded-lg shadow max-w-3xl mx-auto">
 
-            <form method="POST" action="{{ route('extracurricular.store') }}">
+            <!-- ✅ TAMBAH ID -->
+            <form id="formEkskul" method="POST" action="{{ route('extracurricular.store') }}">
                 @csrf
 
                 <!-- NAMA -->
@@ -87,3 +91,39 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ✅ CEK JQUERY
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    // ✅ CEK FUNCTION AJAX
+    if (typeof window.createData === 'function') {
+
+        window.createData('#formEkskul', "{{ route('extracurricular.store') }}", function(res) {
+
+            // tampilkan alert
+            $('#alertBox').html(`
+                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                    ${res.message ?? 'Data berhasil ditambahkan'}
+                </div>
+            `);
+
+            // optional redirect
+            // window.location.href = "{{ route('extracurricular.index') }}";
+
+        });
+
+    } else {
+        console.error('createData belum tersedia (ajax.js belum ke-load)');
+    }
+
+});
+</script>
+@endpush
