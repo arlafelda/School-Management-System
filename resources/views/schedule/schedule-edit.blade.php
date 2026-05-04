@@ -56,10 +56,20 @@
             <!-- TANGGAL -->
             <div>
                 <label class="block text-sm font-medium mb-1">Tanggal</label>
+
                 <input type="date" name="date"
                     value="{{ old('date', optional($schedule)->date ? \Carbon\Carbon::parse($schedule->date)->format('Y-m-d') : '') }}"
                     class="w-full border rounded px-3 py-2 text-sm"
                     required>
+
+                <!-- FORMAT INDONESIA (DISPLAY ONLY) -->
+                @if($schedule->date)
+                    <p class="text-xs text-gray-500 mt-1">
+                        Format Indonesia:
+                        {{ \Carbon\Carbon::parse($schedule->date)->format('d-m-Y') }}
+                    </p>
+                @endif
+
             </div>
 
             <!-- JAM -->
@@ -122,6 +132,7 @@
 </div>
 
 @endsection
+
 
 @push('scripts')
 <script>

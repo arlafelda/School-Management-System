@@ -10,10 +10,10 @@
         <p class="text-sm text-gray-500">Perbarui data absensi siswa</p>
     </div>
 
-    <!-- 🔥 ALERT -->
+    <!-- ALERT -->
     <div id="alertBox" class="mb-4"></div>
 
-    <!-- 🔥 TAMBAH ID -->
+    <!-- FORM -->
     <form id="formEditAttendance"
           method="POST"
           action="{{ route('attendance.update', $attendance->id) }}">
@@ -45,9 +45,17 @@
             </select>
 
             <!-- TANGGAL -->
-            <input type="date" name="date"
-                value="{{ $attendance->date }}"
-                class="border rounded-lg p-2">
+            <div>
+                <input type="date" name="date"
+                    value="{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m-d') }}"
+                    class="border rounded-lg p-2 w-full">
+
+                <!-- FORMAT INDONESIA -->
+                <p class="text-xs text-gray-500 mt-1">
+                    Format Indonesia:
+                    {{ \Carbon\Carbon::parse($attendance->date)->format('d-m-Y') }}
+                </p>
+            </div>
 
         </div>
 
@@ -141,13 +149,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ✅ CEK jQuery
     if (typeof window.$ === 'undefined') {
         console.error('jQuery belum load');
         return;
     }
 
-    // ✅ CEK ajax.js
     if (typeof window.updateData === 'function') {
 
         updateData('#formEditAttendance',

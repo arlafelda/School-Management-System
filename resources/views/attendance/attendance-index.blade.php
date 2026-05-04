@@ -31,17 +31,23 @@
 
         <div class="bg-white p-5 rounded-xl shadow-sm">
             <p class="text-sm text-gray-500">Kehadiran</p>
-            <h3 class="text-2xl font-bold text-blue-600">{{ $persen }}%</h3>
+            <h3 class="text-2xl font-bold text-blue-600 text-right">
+                {{ number_format($persen, 1) }}%
+            </h3>
         </div>
 
         <div class="bg-white p-5 rounded-xl shadow-sm">
             <p class="text-sm text-gray-500">Total Data</p>
-            <h3 class="text-2xl font-bold">{{ $attendances->count() }}</h3>
+            <h3 class="text-2xl font-bold text-right">
+                {{ number_format($attendances->count()) }}
+            </h3>
         </div>
 
         <div class="bg-white p-5 rounded-xl shadow-sm">
             <p class="text-sm text-gray-500">Status</p>
-            <h3 class="text-2xl font-bold text-purple-600">Aktif</h3>
+            <h3 class="text-2xl font-bold text-purple-600 text-right">
+                {{ number_format($attendances->count()) }}
+            </h3>
         </div>
 
     </div>
@@ -69,7 +75,10 @@
 
                 <tr class="hover:bg-gray-50" id="row-{{ $a->id }}">
 
-                    <td class="p-3">{{ $i + 1 }}</td>
+                    <!-- NUMBER -->
+                    <td class="p-3 text-right">
+                        {{ number_format($i + 1) }}
+                    </td>
 
                     <td class="p-3 font-medium">
                         {{ $a->student->name ?? '-' }}
@@ -83,8 +92,12 @@
                         {{ $a->schedule->teacher->subject ?? '-' }}
                     </td>
 
-                    <td class="p-3">
-                        {{ $a->date ?? '-' }}
+                    <!-- 🔥 FIX FORMAT INDONESIA -->
+                    <td class="p-3 text-right">
+                        {{ $a->date 
+                            ? \Carbon\Carbon::parse($a->date)->format('d-m-Y') 
+                            : '-' 
+                        }}
                     </td>
 
                     <td class="p-3">
@@ -106,13 +119,11 @@
 
                     <td class="p-3 text-right space-x-2">
 
-                        <!-- EDIT -->
                         <a href="{{ route('attendance.edit', $a->id) }}"
                             class="text-blue-500 hover:underline text-sm">
                             Edit
                         </a>
 
-                        <!-- DELETE AJAX -->
                         <button
                             data-id="{{ $a->id }}"
                             data-url="{{ route('attendance.destroy', $a->id) }}"
@@ -147,7 +158,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // 🔥 gunakan ajax.js
+    if (typeof deleteData === 'undefined') {
+        console.error('ajax.js belum ke-load');
+        return;
+    }
+
     document.querySelectorAll('.btn-delete').forEach(btn => {
 
         btn.addEventListener('click', function () {
@@ -155,12 +170,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let id = this.dataset.id;
             let url = this.dataset.url;
 
-            // pakai helper ajax.js
             deleteData(url, function(res){
-
-                // hapus row tanpa reload
                 document.getElementById('row-' + id).remove();
-
             });
 
         });

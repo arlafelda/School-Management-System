@@ -63,11 +63,11 @@
             <thead class="bg-gray-100">
                 <tr>
                     <th class="p-3 text-left">Nama</th>
-                    <th class="p-3 text-center">Hadir</th>
-                    <th class="p-3 text-center">Izin</th>
-                    <th class="p-3 text-center">Alpa</th>
-                    <th class="p-3 text-center">Total</th>
-                    <th class="p-3 text-center">%</th>
+                    <th class="p-3 text-right">Hadir</th>
+                    <th class="p-3 text-right">Izin</th>
+                    <th class="p-3 text-right">Alpa</th>
+                    <th class="p-3 text-right">Total</th>
+                    <th class="p-3 text-right">%</th>
                 </tr>
             </thead>
 
@@ -76,8 +76,12 @@
                 @foreach($rekap as $r)
 
                     @php
-                        $total = $r->hadir + $r->izin + $r->alpa;
-                        $persen = $total > 0 ? round(($r->hadir / $total) * 100, 1) : 0;
+                        $hadir = $r->hadir ?? 0;
+                        $izin  = $r->izin ?? 0;
+                        $alpa  = $r->alpa ?? 0;
+
+                        $total = $hadir + $izin + $alpa;
+                        $persen = $total > 0 ? ($hadir / $total) * 100 : 0;
                     @endphp
 
                     <tr class="border-b hover:bg-gray-50">
@@ -86,24 +90,24 @@
                             {{ $r->student->name ?? '-' }}
                         </td>
 
-                        <td class="p-3 text-center text-green-600">
-                            {{ $r->hadir }}
+                        <td class="p-3 text-right text-green-600">
+                            {{ number_format($hadir) }}
                         </td>
 
-                        <td class="p-3 text-center text-yellow-500">
-                            {{ $r->izin }}
+                        <td class="p-3 text-right text-yellow-500">
+                            {{ number_format($izin) }}
                         </td>
 
-                        <td class="p-3 text-center text-red-500">
-                            {{ $r->alpa }}
+                        <td class="p-3 text-right text-red-500">
+                            {{ number_format($alpa) }}
                         </td>
 
-                        <td class="p-3 text-center">
-                            {{ $total }}
+                        <td class="p-3 text-right">
+                            {{ number_format($total) }}
                         </td>
 
-                        <td class="p-3 text-center font-semibold text-blue-600">
-                            {{ $persen }}%
+                        <td class="p-3 text-right font-semibold text-blue-600">
+                            {{ number_format($persen, 1) }}%
                         </td>
 
                     </tr>

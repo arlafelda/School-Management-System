@@ -115,9 +115,15 @@
 
             <div>
                 <label class="text-sm font-medium">Tanggal Lahir</label>
+
                 <input type="date" name="birth_date"
-                    value="{{ $student->birth_date }}"
+                    value="{{ \Carbon\Carbon::parse($student->birth_date)->format('Y-m-d') }}"
                     class="w-full border rounded-lg px-3 py-2 text-sm">
+
+                <!-- TAMBAHAN FORMAT INDONESIA (tidak mengubah desain utama) -->
+                <p class="text-xs text-gray-500 mt-1">
+                    Format Indonesia: {{ \Carbon\Carbon::parse($student->birth_date)->format('d-m-Y') }}
+                </p>
             </div>
 
             <div>

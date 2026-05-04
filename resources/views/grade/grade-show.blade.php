@@ -77,34 +77,41 @@
             <!-- NILAI TABLE -->
             <div class="overflow-hidden border rounded-xl">
 
-                <table class="w-full text-sm text-center">
+                <table class="w-full text-sm">
 
                     <thead class="bg-gray-100 text-gray-600">
                         <tr>
-                            <th class="p-3">Tugas</th>
-                            <th class="p-3">UTS</th>
-                            <th class="p-3">UAS</th>
-                            <th class="p-3">Nilai Akhir</th>
+                            <th class="p-3 text-right">Tugas</th>
+                            <th class="p-3 text-right">UTS</th>
+                            <th class="p-3 text-right">UAS</th>
+                            <th class="p-3 text-right">Nilai Akhir</th>
                         </tr>
                     </thead>
 
                     <tbody>
+                        @php
+                            $tugas = $grade->assignment_score ?? 0;
+                            $uts   = $grade->mid_exam_score ?? 0;
+                            $uas   = $grade->final_exam_score ?? 0;
+                            $final = $grade->final_score ?? (($tugas + $uts + $uas) / 3);
+                        @endphp
+
                         <tr class="border-t text-lg font-semibold">
 
-                            <td class="p-3 text-blue-600">
-                                {{ $grade->assignment_score }}
+                            <td class="p-3 text-blue-600 text-right">
+                                {{ number_format($tugas) }}
                             </td>
 
-                            <td class="p-3 text-yellow-600">
-                                {{ $grade->mid_exam_score }}
+                            <td class="p-3 text-yellow-600 text-right">
+                                {{ number_format($uts) }}
                             </td>
 
-                            <td class="p-3 text-green-600">
-                                {{ $grade->final_exam_score }}
+                            <td class="p-3 text-green-600 text-right">
+                                {{ number_format($uas) }}
                             </td>
 
-                            <td class="p-3 text-indigo-600">
-                                {{ $grade->final_score }}
+                            <td class="p-3 text-indigo-600 text-right">
+                                {{ number_format($final, 1) }}
                             </td>
 
                         </tr>

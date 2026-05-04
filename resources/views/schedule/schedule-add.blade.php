@@ -61,10 +61,19 @@
             <!-- TANGGAL -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Tanggal</label>
+
                 <input type="date" name="date"
                        value="{{ old('date') }}"
                        class="w-full border rounded px-3 py-2 text-sm"
                        required>
+
+                <!-- FORMAT INDONESIA (DISPLAY ONLY) -->
+                @if(old('date'))
+                    <p class="text-xs text-gray-500 mt-1">
+                        Format Indonesia: {{ \Carbon\Carbon::parse(old('date'))->format('d-m-Y') }}
+                    </p>
+                @endif
+
             </div>
 
             <!-- JAM -->
@@ -141,7 +150,7 @@
 
 <script>
 /* =========================
-   CREATE AJAX (ajax.js)
+   CREATE AJAX
 ========================= */
 window.addEventListener('load', function () {
     createData('#formSchedule', "{{ route('schedule.store') }}");
@@ -167,7 +176,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     teacherSelect.addEventListener('change', updateSubject);
 
-    updateSubject(); // init value
+    updateSubject();
+
 });
 </script>
 

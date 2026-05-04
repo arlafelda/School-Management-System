@@ -13,34 +13,46 @@
 <!-- STAT -->
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
 
-    <div class="bg-white p-4 rounded-xl shadow text-center">
-        <p class="text-xs">Siswa</p>
-        <h3 class="font-bold">{{ $totalStudents }}</h3>
+    <div class="bg-white p-4 rounded-xl shadow text-right">
+        <p class="text-xs text-left">Siswa</p>
+        <h3 class="font-bold">
+            {{ number_format($totalStudents) }}
+        </h3>
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow text-center">
-        <p class="text-xs">Guru</p>
-        <h3 class="font-bold">{{ $totalTeachers }}</h3>
+    <div class="bg-white p-4 rounded-xl shadow text-right">
+        <p class="text-xs text-left">Guru</p>
+        <h3 class="font-bold">
+            {{ number_format($totalTeachers) }}
+        </h3>
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow text-center">
-        <p class="text-xs">Admin</p>
-        <h3 class="font-bold">{{ $totalAdmins }}</h3>
+    <div class="bg-white p-4 rounded-xl shadow text-right">
+        <p class="text-xs text-left">Admin</p>
+        <h3 class="font-bold">
+            {{ number_format($totalAdmins) }}
+        </h3>
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow text-center">
-        <p class="text-xs">Kelas</p>
-        <h3 class="font-bold">{{ $totalClasses }}</h3>
+    <div class="bg-white p-4 rounded-xl shadow text-right">
+        <p class="text-xs text-left">Kelas</p>
+        <h3 class="font-bold">
+            {{ number_format($totalClasses) }}
+        </h3>
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow text-center">
-        <p class="text-xs">Jurusan</p>
-        <h3 class="font-bold">{{ $totalMajors }}</h3>
+    <div class="bg-white p-4 rounded-xl shadow text-right">
+        <p class="text-xs text-left">Jurusan</p>
+        <h3 class="font-bold">
+            {{ number_format($totalMajors) }}
+        </h3>
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow text-center">
-        <p class="text-xs">Mapel</p>
-        <h3 class="font-bold">{{ $totalSubjects }}</h3>
+    <div class="bg-white p-4 rounded-xl shadow text-right">
+        <p class="text-xs text-left">Mapel</p>
+        <h3 class="font-bold">
+            {{ number_format($totalSubjects) }}
+        </h3>
     </div>
 
 </div>
@@ -75,7 +87,9 @@
                 <div>
                     <div class="flex justify-between text-xs mb-1">
                         <span>{{ $labels[$index] }}</span>
-                        <span>{{ $value }}</span>
+                        <span class="text-right">
+                            {{ number_format($value) }}
+                        </span>
                     </div>
 
                     <div class="w-full bg-gray-200 rounded h-3">

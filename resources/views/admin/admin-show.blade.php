@@ -56,14 +56,14 @@
             <div>
                 <p class="text-gray-500">Tanggal Dibuat</p>
                 <p class="font-semibold">
-                    {{ \Carbon\Carbon::parse($admin->created_at)->translatedFormat('d F Y') }}
+                    {{ \Carbon\Carbon::parse($admin->created_at)->locale('id')->translatedFormat('d F Y') }}
                 </p>
             </div>
 
             <div>
                 <p class="text-gray-500">Terakhir Update</p>
                 <p class="font-semibold">
-                    {{ \Carbon\Carbon::parse($admin->updated_at)->translatedFormat('d F Y') }}
+                    {{ \Carbon\Carbon::parse($admin->updated_at)->locale('id')->translatedFormat('d F Y') }}
                 </p>
             </div>
 

@@ -26,7 +26,7 @@
     <!-- CONTENT -->
     <main class="p-6">
 
-        <!-- ✅ ALERT -->
+        <!-- ALERT -->
         <div id="alertBox" class="mb-4"></div>
 
         <div class="bg-white rounded-lg shadow overflow-x-auto">
@@ -37,7 +37,7 @@
                     <tr>
                         <th class="p-3 text-left">Nama Ekskul</th>
                         <th class="p-3 text-center">Pembina</th>
-                        <th class="p-3 text-center">Jumlah Siswa</th>
+                        <th class="p-3 text-right">Jumlah Siswa</th>
                         <th class="p-3 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -63,8 +63,8 @@
                             </td>
 
                             <!-- JUMLAH SISWA -->
-                            <td class="p-3 text-center">
-                                {{ $d->students->count() }}
+                            <td class="p-3 text-right">
+                                {{ number_format($d->students->count()) }}
                             </td>
 
                             <!-- AKSI -->
@@ -76,7 +76,7 @@
                                     Edit
                                 </a>
 
-                                <!-- ✅ DELETE AJAX -->
+                                <!-- DELETE AJAX -->
                                 <form action="{{ route('extracurricular.destroy', $d->id) }}"
                                       method="POST"
                                       class="inline formDelete"
@@ -122,15 +122,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ✅ cek jQuery
     if (typeof window.$ === 'undefined') {
         console.error('jQuery belum load');
         return;
     }
 
-    // =========================
     // CLICK ROW → DETAIL
-    // =========================
     $(document).on('click', 'tr[data-url]', function (e) {
 
         if (
@@ -142,9 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = $(this).data('url');
     });
 
-    // =========================
     // DELETE AJAX
-    // =========================
     $(document).on('submit', '.formDelete', function (e) {
         e.preventDefault();
 
@@ -152,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
         let id = $(this).data('id');
         let row = $('#row-' + id);
 
-        // cek function ajax
         if (typeof window.deleteData === 'function') {
 
             window.deleteData(url, function () {

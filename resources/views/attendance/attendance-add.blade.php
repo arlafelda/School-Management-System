@@ -9,7 +9,8 @@
         <h2 class="text-lg font-semibold">Input Absensi</h2>
 
         <span class="text-sm text-gray-500">
-            Tanggal: {{ $date ?? date('Y-m-d') }}
+            Tanggal:
+            {{ \Carbon\Carbon::parse($date ?? date('Y-m-d'))->format('d-m-Y') }}
         </span>
     </div>
 
@@ -39,6 +40,7 @@
                 @endforeach
             </select>
 
+            <!-- TANGGAL (VALUE TETAP Y-M-D) -->
             <input type="date" name="date"
                 value="{{ $date ?? date('Y-m-d') }}"
                 class="border rounded-lg px-3 py-2">
@@ -102,16 +104,14 @@
 
             </div>
 
-            <!-- 🔥 BUTTON AREA (DITAMBAHKAN KEMBALI TANPA UBAH DESAIN) -->
+            <!-- BUTTON -->
             <div class="mt-4 flex gap-3">
 
-                <!-- TOMBOL KEMBALI -->
                 <a href="{{ route('attendance.index') }}"
                    class="px-6 py-2 border rounded-lg">
                     Kembali
                 </a>
 
-                <!-- TOMBOL SIMPAN -->
                 <button class="px-6 py-2 bg-blue-500 text-white rounded-lg">
                     Simpan
                 </button>
@@ -131,7 +131,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ❗ Pastikan jQuery & ajax.js sudah ke-load
     if (typeof $ === 'undefined') {
         console.error('jQuery belum load (Vite belum jalan)');
         return;
@@ -142,13 +141,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // ✅ AJAX SUBMIT
     createData('#formAttendance', "{{ route('attendance.store') }}", function(res){
 
         let schedule = $('input[name="schedule_id"]').val();
         let students = $('input[name="student_id[]"]').length;
 
-        // VALIDASI FRONTEND
         if (!schedule) {
             showToast('Pilih mata pelajaran dulu', 'error');
             return;
@@ -165,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `);
 
-        // reset radio saja
         $('input[type=radio]').prop('checked', false);
 
     });

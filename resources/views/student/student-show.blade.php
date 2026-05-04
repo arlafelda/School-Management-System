@@ -96,7 +96,11 @@
                 <p class="text-gray-500">Tempat, Tanggal Lahir</p>
                 <p class="font-medium">
                     {{ $student->birth_place ?? '-' }},
-                    {{ $student->birth_date ? \Carbon\Carbon::parse($student->birth_date)->format('d M Y') : '-' }}
+                    {{
+                        $student->birth_date
+                        ? \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y')
+                        : '-'
+                    }}
                 </p>
             </div>
 

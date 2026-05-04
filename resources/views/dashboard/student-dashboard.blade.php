@@ -75,7 +75,9 @@
         <!-- KEHADIRAN -->
         <div class="bg-white p-5 rounded-lg shadow">
             <p class="text-sm text-gray-500">Persentase Kehadiran</p>
-            <h2 class="text-3xl font-bold">{{ $attendancePercent }}%</h2>
+            <h2 class="text-3xl font-bold text-right">
+                {{ number_format($attendancePercent, 1) }}%
+            </h2>
 
             <div class="w-full bg-gray-200 h-2 rounded mt-3">
                 <div id="progressBar"
@@ -88,16 +90,16 @@
         <!-- TOTAL ABSEN -->
         <div class="bg-white p-5 rounded-lg shadow">
             <p class="text-sm text-gray-500">Total Kehadiran</p>
-            <h2 class="text-3xl font-bold">
-                {{ $totalAttendance }}
+            <h2 class="text-3xl font-bold text-right">
+                {{ number_format($totalAttendance) }}
             </h2>
         </div>
 
         <!-- JUMLAH JADWAL -->
         <div class="bg-blue-100 p-5 rounded-lg">
             <p class="text-blue-600 text-sm">Jadwal Hari Ini</p>
-            <h2 class="text-2xl font-bold text-blue-700">
-                {{ $todaySchedules->count() }} Pelajaran
+            <h2 class="text-2xl font-bold text-blue-700 text-right">
+                {{ number_format($todaySchedules->count()) }} Pelajaran
             </h2>
         </div>
 

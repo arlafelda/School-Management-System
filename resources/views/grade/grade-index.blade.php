@@ -25,32 +25,36 @@
 
         <div class="bg-white p-4 rounded-lg border">
             <p class="text-sm text-gray-500">Total Data</p>
-            <h3 class="text-2xl font-bold">{{ $data->count() }}</h3>
+            <h3 class="text-2xl font-bold text-right">
+                {{ number_format($data->count()) }}
+            </h3>
         </div>
 
         <div class="bg-white p-4 rounded-lg border">
             <p class="text-sm text-gray-500">Rata-rata Nilai</p>
-            <h3 class="text-2xl font-bold">
+            <h3 class="text-2xl font-bold text-right">
                 {{
                     $data->count()
                     ? number_format(
                         $data->avg(function($item){
                             return ($item->assignment_score + $item->mid_exam_score + $item->final_exam_score) / 3;
                         }), 1)
-                    : 0
+                    : number_format(0,1)
                 }}
             </h3>
         </div>
 
         <div class="bg-white p-4 rounded-lg border">
             <p class="text-sm text-gray-500">Nilai Kosong</p>
-            <h3 class="text-2xl text-red-500 font-bold">
+            <h3 class="text-2xl text-red-500 font-bold text-right">
                 {{
-                    $data->filter(function($item){
-                        return $item->assignment_score == 0
-                            && $item->mid_exam_score == 0
-                            && $item->final_exam_score == 0;
-                    })->count()
+                    number_format(
+                        $data->filter(function($item){
+                            return $item->assignment_score == 0
+                                && $item->mid_exam_score == 0
+                                && $item->final_exam_score == 0;
+                        })->count()
+                    )
                 }}
             </h3>
         </div>
@@ -109,10 +113,10 @@
                     <th class="p-3 text-left">Nama</th>
                     <th class="p-3 text-center">Kelas</th>
                     <th class="p-3 text-center">Mapel</th>
-                    <th class="p-3 text-center">Tugas</th>
-                    <th class="p-3 text-center">UTS</th>
-                    <th class="p-3 text-center">UAS</th>
-                    <th class="p-3 text-center">Nilai</th>
+                    <th class="p-3 text-right">Tugas</th>
+                    <th class="p-3 text-right">UTS</th>
+                    <th class="p-3 text-right">UAS</th>
+                    <th class="p-3 text-right">Nilai</th>
                     <th class="p-3 text-center">Aksi</th>
                 </tr>
             </thead>
@@ -121,7 +125,11 @@
                 @forelse($data as $g)
 
                 @php
-                    $final = ($g->assignment_score + $g->mid_exam_score + $g->final_exam_score) / 3;
+                    $tugas = $g->assignment_score ?? 0;
+                    $uts   = $g->mid_exam_score ?? 0;
+                    $uas   = $g->final_exam_score ?? 0;
+
+                    $final = ($tugas + $uts + $uas) / 3;
                 @endphp
 
                 <tr id="row-{{ $g->id }}"
@@ -136,12 +144,20 @@
 
                     <td class="p-3 text-center">{{ $g->subject }}</td>
 
-                    <td class="p-3 text-center">{{ $g->assignment_score }}</td>
-                    <td class="p-3 text-center">{{ $g->mid_exam_score }}</td>
-                    <td class="p-3 text-center">{{ $g->final_exam_score }}</td>
+                    <td class="p-3 text-right">
+                        {{ number_format($tugas) }}
+                    </td>
 
-                    <td class="p-3 text-center text-blue-600 font-bold">
-                        {{ number_format($final,1) }}
+                    <td class="p-3 text-right">
+                        {{ number_format($uts) }}
+                    </td>
+
+                    <td class="p-3 text-right">
+                        {{ number_format($uas) }}
+                    </td>
+
+                    <td class="p-3 text-right text-blue-600 font-bold">
+                        {{ number_format($final, 1) }}
                     </td>
 
                     <td class="p-3 text-center space-x-1">
@@ -195,23 +211,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ❗ pastikan jQuery ada
     if (typeof window.$ === 'undefined') {
         console.error('jQuery belum load');
         return;
     }
 
-    // =========================
     // CLICK ROW → DETAIL
-    // =========================
     $(document).on('click', '.grade-row', function () {
         let url = $(this).data('url');
         window.location.href = url;
     });
 
-    // =========================
     // DELETE AJAX
-    // =========================
     $(document).on('submit', '.formDelete', function (e) {
         e.preventDefault();
 
@@ -221,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
         let id = $(this).data('id');
         let row = $('#row-' + id);
 
-        // cek function dari ajax.js
         if (typeof deleteData === 'function') {
 
             deleteData(url, function () {
