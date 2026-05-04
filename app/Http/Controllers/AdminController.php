@@ -48,13 +48,13 @@ class AdminController extends Controller
             'message' => 'Admin berhasil dibuat'
         ]);
     }
-    public function edit($id)
+    public function edit(int $id)
     {
         $admin = User::findOrFail($id);
         return view('admin.admin-edit', compact('admin'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request,int $id)
     {
         $admin = User::findOrFail($id);
 
@@ -75,14 +75,14 @@ class AdminController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $admin = User::findOrFail($id);
 
         return view('admin.admin-show', compact('admin'));
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $admin = User::findOrFail($id);
 

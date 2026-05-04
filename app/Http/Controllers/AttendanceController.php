@@ -8,6 +8,7 @@ use App\Models\Schedule;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class AttendanceController extends Controller
 {
@@ -39,6 +40,7 @@ class AttendanceController extends Controller
     }
 
     // ===================== CREATE =====================
+    // ===================== CREATE =====================
     public function create(Request $request)
     {
         $classes = ClassModel::all();
@@ -46,31 +48,28 @@ class AttendanceController extends Controller
 
         $day = Carbon::parse($date)->locale('id')->dayName;
 
+        // 🔥 Ambil jadwal
         $schedules = Schedule::with('teacher')
-            ->when($request->class_id, function ($q) use ($request) {
-                $q->where('class_id', $request->class_id);
-            })
+            ->when($request->class_id, fn($q) =>
+                $q->where('class_id', $request->class_id)
+            )
             ->where('day', ucfirst($day))
             ->get();
 
+        // 🔥 DEBUG (boleh dihapus nanti)
+        // dd($request->all());
+
         $students = collect();
 
+        // 🔥 PERBAIKAN: jangan terlalu ketat
         if ($request->class_id && $request->schedule_id) {
 
-            $scheduleValid = Schedule::where('id', $request->schedule_id)
-                ->where('class_id', $request->class_id)
-                ->where('day', ucfirst($day))
-                ->exists();
-
-            if ($scheduleValid) {
-
-                $students = Student::where('class_id', $request->class_id)
-                    ->whereDoesntHave('attendances', function ($q) use ($request, $date) {
-                        $q->where('schedule_id', $request->schedule_id)
-                          ->whereDate('date', $date);
-                    })
-                    ->get();
-            }
+            $students = Student::where('class_id', $request->class_id)
+                ->whereDoesntHave('attendances', function ($q) use ($request, $date) {
+                    $q->where('schedule_id', $request->schedule_id)
+                      ->whereDate('date', $date);
+                })
+                ->get();
         }
 
         return view('attendance.attendance-add', compact(
@@ -81,14 +80,25 @@ class AttendanceController extends Controller
         ));
     }
 
-    // ===================== STORE =====================
+    // ===================== STORE (AJAX FIX) =====================
     public function store(Request $request)
     {
-        $request->validate([
+        // 🔥 DEBUG (kalau masih error aktifkan ini)
+        // dd($request->all());
+
+        $validator = Validator::make($request->all(), [
             'schedule_id' => 'required',
             'date' => 'required|date',
             'student_id' => 'required|array'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         foreach ($request->student_id as $studentId) {
 
@@ -107,33 +117,28 @@ class AttendanceController extends Controller
             );
         }
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Absensi berhasil disimpan');
+        return response()->json([
+            'status' => true,
+            'message' => 'Absensi berhasil disimpan'
+        ]);
     }
 
-    // ===================== EDIT (BARU) =====================
-    public function edit($id)
+    // ===================== UPDATE (AJAX FIX) =====================
+    public function update(Request $request, int $id)
     {
-        $attendance = Attendance::with(['student.class', 'schedule'])->findOrFail($id);
-
-        $classes = ClassModel::all();
-        $schedules = Schedule::with('teacher')->get();
-
-        return view('attendance.attendance-edit', compact(
-            'attendance',
-            'classes',
-            'schedules'
-        ));
-    }
-
-    // ===================== UPDATE =====================
-    public function update(Request $request, $id)
-    {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'schedule_id' => 'required',
             'date' => 'required|date',
             'status' => 'required'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $attendance = Attendance::findOrFail($id);
 
@@ -143,18 +148,22 @@ class AttendanceController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Absensi berhasil diperbarui');
+        return response()->json([
+            'status' => true,
+            'message' => 'Absensi berhasil diperbarui'
+        ]);
     }
 
-    // ===================== DELETE (BARU) =====================
-    public function destroy($id)
+    // ===================== DELETE (AJAX FIX) =====================
+    public function destroy(Request $request, int $id)
     {
         $attendance = Attendance::findOrFail($id);
         $attendance->delete();
 
-        return redirect()->route('attendance.index')
-            ->with('success', 'Absensi berhasil dihapus');
+        return response()->json([
+            'status' => true,
+            'message' => 'Absensi berhasil dihapus'
+        ]);
     }
 
     // ===================== RECAP =====================

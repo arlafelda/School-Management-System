@@ -67,7 +67,7 @@
 
                 @forelse($attendances as $i => $a)
 
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50" id="row-{{ $a->id }}">
 
                     <td class="p-3">{{ $i + 1 }}</td>
 
@@ -104,11 +104,22 @@
 
                     </td>
 
-                    <td class="p-3 text-right">
+                    <td class="p-3 text-right space-x-2">
+
+                        <!-- EDIT -->
                         <a href="{{ route('attendance.edit', $a->id) }}"
-                            class="text-blue-500 hover:underline">
+                            class="text-blue-500 hover:underline text-sm">
                             Edit
                         </a>
+
+                        <!-- DELETE AJAX -->
+                        <button
+                            data-id="{{ $a->id }}"
+                            data-url="{{ route('attendance.destroy', $a->id) }}"
+                            class="btn-delete text-red-500 hover:underline text-sm">
+                            Hapus
+                        </button>
+
                     </td>
 
                 </tr>
@@ -130,3 +141,32 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // 🔥 gunakan ajax.js
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+
+        btn.addEventListener('click', function () {
+
+            let id = this.dataset.id;
+            let url = this.dataset.url;
+
+            // pakai helper ajax.js
+            deleteData(url, function(res){
+
+                // hapus row tanpa reload
+                document.getElementById('row-' + id).remove();
+
+            });
+
+        });
+
+    });
+
+});
+</script>
+@endpush

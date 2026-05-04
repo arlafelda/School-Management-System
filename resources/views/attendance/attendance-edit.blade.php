@@ -10,7 +10,14 @@
         <p class="text-sm text-gray-500">Perbarui data absensi siswa</p>
     </div>
 
-    <form method="POST" action="{{ route('attendance.update', $attendance->id) }}">
+    <!-- 🔥 ALERT -->
+    <div id="alertBox" class="mb-4"></div>
+
+    <!-- 🔥 TAMBAH ID -->
+    <form id="formEditAttendance"
+          method="POST"
+          action="{{ route('attendance.update', $attendance->id) }}">
+
         @csrf
         @method('PUT')
 
@@ -128,3 +135,38 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ✅ CEK jQuery
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    // ✅ CEK ajax.js
+    if (typeof window.updateData === 'function') {
+
+        updateData('#formEditAttendance',
+            "{{ route('attendance.update', $attendance->id) }}",
+            function (res) {
+
+                $('#alertBox').html(`
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Absensi berhasil diupdate'}
+                    </div>
+                `);
+
+            }
+        );
+
+    } else {
+        console.error('updateData tidak ditemukan (ajax.js belum ke-load)');
+    }
+
+});
+</script>
+@endpush

@@ -19,32 +19,6 @@
         <form method="GET" action="{{ route('attendance.create') }}"
               class="bg-white p-4 rounded-xl shadow-sm mb-6 grid md:grid-cols-6 gap-4">
 
-            <select name="academic_year" class="border rounded-lg px-3 py-2">
-                <option value="">Tahun Ajaran</option>
-                @foreach($classes->unique('academic_year') as $c)
-                    <option value="{{ $c->academic_year }}"
-                        {{ request('academic_year') == $c->academic_year ? 'selected' : '' }}>
-                        {{ $c->academic_year }}
-                    </option>
-                @endforeach
-            </select>
-
-            <select name="semester" class="border rounded-lg px-3 py-2">
-                <option value="">Semester</option>
-                <option value="Ganjil" {{ request('semester')=='Ganjil'?'selected':'' }}>Ganjil</option>
-                <option value="Genap" {{ request('semester')=='Genap'?'selected':'' }}>Genap</option>
-            </select>
-
-            <select name="major" class="border rounded-lg px-3 py-2">
-                <option value="">Jurusan</option>
-                @foreach($classes->unique('major') as $c)
-                    <option value="{{ $c->major }}"
-                        {{ request('major') == $c->major ? 'selected' : '' }}>
-                        {{ $c->major }}
-                    </option>
-                @endforeach
-            </select>
-
             <select name="class_id" class="border rounded-lg px-3 py-2">
                 <option value="">Kelas</option>
                 @foreach($classes as $c)
@@ -57,15 +31,12 @@
 
             <select name="schedule_id" class="border rounded-lg px-3 py-2">
                 <option value="">Mata Pelajaran</option>
-
-                @forelse($schedules as $s)
+                @foreach($schedules as $s)
                     <option value="{{ $s->id }}"
-                        {{ (request('schedule_id') ?? ($scheduleId ?? null)) == $s->id ? 'selected' : '' }}>
-                        {{ $s->teacher->subject ?? 'Tidak ada mapel' }}
+                        {{ request('schedule_id') == $s->id ? 'selected' : '' }}>
+                        {{ $s->teacher->subject ?? '-' }}
                     </option>
-                @empty
-                    <option value="">Tidak ada jadwal hari ini</option>
-                @endforelse
+                @endforeach
             </select>
 
             <input type="date" name="date"
@@ -78,78 +49,50 @@
 
         </form>
 
-        <!-- ================= FORM ABSENSI ================= -->
-        <form method="POST" action="{{ route('attendance.store') }}">
+        <!-- ALERT -->
+        <div id="alertBox" class="mb-4"></div>
+
+        <!-- ================= FORM ================= -->
+        <form id="formAttendance">
+
             @csrf
 
+            <input type="hidden" name="schedule_id" value="{{ request('schedule_id') }}">
             <input type="hidden" name="date" value="{{ $date ?? date('Y-m-d') }}">
 
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
 
-                <div class="p-4 flex justify-between items-center border-b">
-                    <h3 class="font-semibold">Daftar Siswa</h3>
-
-                    <button type="button"
-                        onclick="setAllHadir()"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
-                        Set Semua Hadir
-                    </button>
-                </div>
-
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-gray-600">
-                    <tr>
-                        <th class="p-3 text-left">No</th>
-                        <th class="p-3 text-left">NISN</th>
-                        <th class="p-3 text-left">Nama</th>
-                        <th class="p-3 text-center">Absensi</th>
-                    </tr>
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-3">Nama</th>
+                            <th class="p-3 text-center">Absensi</th>
+                        </tr>
                     </thead>
 
-                    <tbody class="divide-y">
+                    <tbody>
 
-                    @forelse($students as $i => $student)
-                    <tr class="hover:bg-gray-50">
+                    @forelse($students as $student)
+                    <tr class="border-t">
 
-                        <td class="p-3">{{ $i+1 }}</td>
-                        <td class="p-3">{{ $student->nisn }}</td>
-                        <td class="p-3 font-medium">{{ $student->name }}</td>
+                        <td class="p-3">{{ $student->name }}</td>
 
                         <td class="p-3 text-center">
 
                             <input type="hidden" name="student_id[]" value="{{ $student->id }}">
 
-                            <div class="flex justify-center gap-4">
-
-                                <label>
-                                    <input type="radio" name="attendance[{{ $student->id }}]" value="hadir" required>
-                                    Hadir
-                                </label>
-
-                                <label>
-                                    <input type="radio" name="attendance[{{ $student->id }}]" value="izin">
-                                    Izin
-                                </label>
-
-                                <label>
-                                    <input type="radio" name="attendance[{{ $student->id }}]" value="sakit">
-                                    Sakit
-                                </label>
-
-                                <label>
-                                    <input type="radio" name="attendance[{{ $student->id }}]" value="alpa">
-                                    Alpa
-                                </label>
-
-                            </div>
+                            <label><input type="radio" name="attendance[{{ $student->id }}]" value="hadir"> Hadir</label>
+                            <label><input type="radio" name="attendance[{{ $student->id }}]" value="izin"> Izin</label>
+                            <label><input type="radio" name="attendance[{{ $student->id }}]" value="sakit"> Sakit</label>
+                            <label><input type="radio" name="attendance[{{ $student->id }}]" value="alpa"> Alpa</label>
 
                         </td>
 
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="text-center p-6 text-gray-400">
-                            Tidak ada siswa untuk hari ini (cek kelas & jadwal)
+                        <td colspan="2" class="text-center p-6 text-gray-400">
+                            Tidak ada siswa
                         </td>
                     </tr>
                     @endforelse
@@ -159,16 +102,17 @@
 
             </div>
 
-            <!-- ACTION -->
-            <div class="mt-6 flex justify-end gap-4">
+            <!-- 🔥 BUTTON AREA (DITAMBAHKAN KEMBALI TANPA UBAH DESAIN) -->
+            <div class="mt-4 flex gap-3">
 
+                <!-- TOMBOL KEMBALI -->
                 <a href="{{ route('attendance.index') }}"
-                    class="px-6 py-2 border rounded-lg">
-                    Batal
+                   class="px-6 py-2 border rounded-lg">
+                    Kembali
                 </a>
 
-                <button type="submit"
-                    class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                <!-- TOMBOL SIMPAN -->
+                <button class="px-6 py-2 bg-blue-500 text-white rounded-lg">
                     Simpan
                 </button>
 
@@ -180,10 +124,52 @@
 
 </div>
 
-<script>
-function setAllHadir() {
-    document.querySelectorAll('input[value="hadir"]').forEach(el => el.checked = true);
-}
-</script>
-
 @endsection
+
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ❗ Pastikan jQuery & ajax.js sudah ke-load
+    if (typeof $ === 'undefined') {
+        console.error('jQuery belum load (Vite belum jalan)');
+        return;
+    }
+
+    if (typeof createData === 'undefined') {
+        console.error('ajax.js belum ke-load');
+        return;
+    }
+
+    // ✅ AJAX SUBMIT
+    createData('#formAttendance', "{{ route('attendance.store') }}", function(res){
+
+        let schedule = $('input[name="schedule_id"]').val();
+        let students = $('input[name="student_id[]"]').length;
+
+        // VALIDASI FRONTEND
+        if (!schedule) {
+            showToast('Pilih mata pelajaran dulu', 'error');
+            return;
+        }
+
+        if (students === 0) {
+            showToast('Tidak ada siswa', 'error');
+            return;
+        }
+
+        $('#alertBox').html(`
+            <div class="p-3 bg-green-100 text-green-700 rounded">
+                ${res.message}
+            </div>
+        `);
+
+        // reset radio saja
+        $('input[type=radio]').prop('checked', false);
+
+    });
+
+});
+</script>
+@endpush
