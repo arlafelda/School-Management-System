@@ -1,8 +1,5 @@
 import $ from 'jquery';
 
-/* =====================
-   GLOBAL FUNCTION (WAJIB DI LUAR)
-===================== */
 
 /* ---------- TOAST ---------- */
 function showToast(message, type = "success") {
@@ -23,7 +20,6 @@ function showToast(message, type = "success") {
     }, 2500);
 }
 
-/* ---------- ERROR HANDLER ---------- */
 function handleError(xhr) {
     if (xhr.status === 422) {
         let errors = xhr.responseJSON.errors;

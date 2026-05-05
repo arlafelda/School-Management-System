@@ -20,9 +20,6 @@ class ClassesController extends Controller
         return view('class.class-add', compact('teachers'));
     }
 
-    /* =========================
-       STORE (AJAX READY)
-    ========================= */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -56,9 +53,6 @@ class ClassesController extends Controller
         return view('class.class-edit', compact('class', 'teachers'));
     }
 
-    /* =========================
-       UPDATE (AJAX READY)
-    ========================= */
     public function update(Request $request, int $id)
     {
         $class = ClassModel::findOrFail($id);
@@ -96,9 +90,6 @@ class ClassesController extends Controller
         return view('class.class-show', compact('class', 'year', 'semester'));
     }
 
-    /* =========================
-       DELETE (AJAX READY)
-    ========================= */
     public function destroy(Request $request, int $id)
     {
         ClassModel::destroy($id);

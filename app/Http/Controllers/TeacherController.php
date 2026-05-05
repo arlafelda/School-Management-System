@@ -64,19 +64,19 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil ditambahkan');
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $teacher = Teacher::with('user')->findOrFail($id);
         return view('teacher.teacher-show', compact('teacher'));
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         $teacher = Teacher::with('user')->findOrFail($id);
         return view('teacher.teacher-edit', compact('teacher'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $teacher = Teacher::with('user')->findOrFail($id);
 
@@ -116,7 +116,7 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil diupdate');
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, int $id)
     {
         $teacher = Teacher::findOrFail($id);
 

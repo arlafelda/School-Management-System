@@ -9,7 +9,7 @@ class Schedule extends Model
     protected $table = 'tbl_schedules';
 
     protected $fillable = [
-        'class_id',      // 🔥 TAMBAHKAN INI (INI PENYEBAB ERROR)
+        'class_id',      
         'day',
         'start_time',
         'end_time',

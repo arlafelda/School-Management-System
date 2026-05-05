@@ -8,13 +8,10 @@
 
     <title>{{ config('app.name', 'School') }}</title>
 
-    <!-- Tailwind (boleh tetap kalau belum build Tailwind Vite) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- VITE (WAJIB) -->
+    <!-- Vite (CSS & JS) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -28,11 +25,13 @@
 
     <div class="md:ml-64 min-h-screen flex flex-col">
 
+        <!-- Button Mobile -->
         <button onclick="toggleSidebar()"
             class="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow">
             ☰
         </button>
 
+        <!-- Content -->
         <main class="p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6">
             @yield('content')
         </main>

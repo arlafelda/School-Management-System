@@ -10,9 +10,6 @@ use Illuminate\Http\Request;
 
 class GradeController extends Controller
 {
-    // =========================
-    // INDEX
-    // =========================
     public function index(Request $request)
     {
         $classes = ClassModel::all();
@@ -48,9 +45,6 @@ class GradeController extends Controller
         return view('grade.grade-index', compact('data', 'classes'));
     }
 
-    // =========================
-    // CREATE
-    // =========================
     public function create(Request $request)
     {
         $classes = ClassModel::all();
@@ -75,9 +69,6 @@ class GradeController extends Controller
         return view('grade.grade-add', compact('students', 'classes', 'teachers'));
     }
 
-    // =========================
-    // STORE (AJAX READY)
-    // =========================
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -110,9 +101,6 @@ class GradeController extends Controller
             ->with('success', 'Nilai berhasil disimpan');
     }
 
-    // =========================
-    // SHOW
-    // =========================
     public function show(int $id)
     {
         $grade = Grade::with(['student.class'])->findOrFail($id);
@@ -121,9 +109,6 @@ class GradeController extends Controller
         return view('grade.grade-show', compact('grade', 'teachers'));
     }
 
-    // =========================
-    // EDIT
-    // =========================
     public function edit(int $id)
     {
         $grade = Grade::findOrFail($id);
@@ -134,9 +119,6 @@ class GradeController extends Controller
         return view('grade.grade-edit', compact('grade', 'subjects'));
     }
 
-    // =========================
-    // UPDATE (AJAX READY)
-    // =========================
     public function update(Request $request, int $id)
     {
         $request->validate([
@@ -164,9 +146,6 @@ class GradeController extends Controller
             ->with('success', 'Nilai berhasil diupdate');
     }
 
-    // =========================
-    // DELETE (AJAX READY)
-    // =========================
     public function destroy(Request $request, int $id)
     {
         $grade = Grade::findOrFail($id);

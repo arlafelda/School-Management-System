@@ -11,7 +11,7 @@
 
         <!-- DASHBOARD -->
         <a href="{{ route('dashboard.superadmin') }}"
-            class="block p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+            class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
             Dashboard
         </a>
 
@@ -85,10 +85,7 @@
 <!-- HEADER -->
 <header class="bg-white border-b px-4 md:px-8 py-4 flex justify-between items-center md:ml-64">
 
-    <input type="text" placeholder="Search..."
-        class="w-40 md:w-72 px-4 py-2 border rounded-lg text-sm">
-
-    <div class="relative">
+    <div class="relative ml-auto">
         <button onclick="toggleProfile()" class="flex items-center gap-3">
             <img src="https://i.pravatar.cc/40" class="w-8 h-8 rounded-full">
             <div class="hidden md:block text-sm">

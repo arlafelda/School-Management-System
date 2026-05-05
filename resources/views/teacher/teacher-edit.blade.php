@@ -11,11 +11,6 @@
         <!-- HEADER -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold text-blue-700">Edit Guru</h2>
-
-            <a href="{{ route('teacher.index') }}"
-               class="text-sm bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300">
-                ← Kembali
-            </a>
         </div>
 
         <!-- FORM -->

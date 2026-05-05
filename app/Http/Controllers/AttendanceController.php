@@ -56,9 +56,6 @@ class AttendanceController extends Controller
             ->where('day', ucfirst($day))
             ->get();
 
-        // 🔥 DEBUG (boleh dihapus nanti)
-        // dd($request->all());
-
         $students = collect();
 
         // 🔥 PERBAIKAN: jangan terlalu ketat
@@ -83,8 +80,6 @@ class AttendanceController extends Controller
     // ===================== STORE (AJAX FIX) =====================
     public function store(Request $request)
     {
-        // 🔥 DEBUG (kalau masih error aktifkan ini)
-        // dd($request->all());
 
         $validator = Validator::make($request->all(), [
             'schedule_id' => 'required',

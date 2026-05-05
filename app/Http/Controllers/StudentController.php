@@ -63,7 +63,6 @@ class StudentController extends Controller
             'parent_address' => $request->parent_address,
         ]);
 
-        // 🔥 CEK AJAX
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -75,13 +74,13 @@ class StudentController extends Controller
             ->with('success', 'Akun student berhasil dibuat');
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $student = Student::with('user', 'class')->findOrFail($id);
         return view('student.student-show', compact('student'));
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         $student = Student::findOrFail($id);
         $classes = ClassModel::all(); // 🔥 WAJIB
@@ -89,7 +88,7 @@ class StudentController extends Controller
         return view('student.student-edit', compact('student', 'classes'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $student = Student::with('user')->findOrFail($id);
 
@@ -137,7 +136,7 @@ class StudentController extends Controller
             ->with('success', 'Data siswa berhasil diupdate');
     }
 
-    public function destroy($id, Request $request)
+    public function destroy(int $id, Request $request)
     {
         $student = Student::findOrFail($id);
 

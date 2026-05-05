@@ -93,9 +93,6 @@ document.addEventListener('click', function (e) {
 });
 
 
-/* =========================
-   DELETE AJAX (pakai ajax.js)
-========================= */
 document.addEventListener('click', function (e) {
 
     let btn = e.target.closest('.btn-delete');

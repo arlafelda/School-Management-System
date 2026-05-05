@@ -77,19 +77,6 @@
                 ✏️ Edit Profile
             </a>
 
-            <form action="{{ route('admin.delete', $admin->id) }}"
-                  method="POST"
-                  onsubmit="return confirm('Yakin ingin menghapus admin ini?')">
-
-                @csrf
-                @method('DELETE')
-
-                <button class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600">
-                    🗑️ Hapus
-                </button>
-
-            </form>
-
         </div>
 
     </div>

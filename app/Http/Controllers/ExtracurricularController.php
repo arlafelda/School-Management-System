@@ -24,9 +24,6 @@ class ExtracurricularController extends Controller
         return view('extracurricular.extracurricular-add', compact('teachers', 'students'));
     }
 
-    /* =========================
-       STORE (AJAX READY)
-    ========================= */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -69,9 +66,6 @@ class ExtracurricularController extends Controller
         return view('extracurricular.extracurricular-edit', compact('data', 'teachers', 'students'));
     }
 
-    /* =========================
-       UPDATE (AJAX READY)
-    ========================= */
     public function update(Request $request, int $id)
     {
         $data = Extracurricular::findOrFail($id);
@@ -100,9 +94,6 @@ class ExtracurricularController extends Controller
             ->with('success', 'Data berhasil diupdate');
     }
 
-    /* =========================
-       DELETE (AJAX READY)
-    ========================= */
     public function destroy(Request $request, int $id)
     {
         Extracurricular::destroy($id);
@@ -126,9 +117,6 @@ class ExtracurricularController extends Controller
         return view('extracurricular.extracurricular-student', compact('extracurriculars'));
     }
 
-    /* =========================
-       JOIN (AJAX READY)
-    ========================= */
     public function join(Request $request, int $id)
     {
         $student = Auth::user()->student;

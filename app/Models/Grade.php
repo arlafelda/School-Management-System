@@ -22,7 +22,6 @@ class Grade extends Model
         return $this->belongsTo(Student::class);
     }
 
-    // RELASI KE CLASS (via student)
     public function class()
     {
         return $this->hasOneThrough(
