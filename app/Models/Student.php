@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use App\Models\User;
 
 class Student extends Model
@@ -11,9 +12,11 @@ class Student extends Model
 
     protected $fillable = [
         'user_id',
+        'slug', // ✔ WAJIB DITAMBAHKAN
         'nisn',
         'nis',
         'name',
+        'archived',
         'gender',
         'birth_place',
         'birth_date',
@@ -27,6 +30,22 @@ class Student extends Model
         'parent_phone',
         'parent_address',
     ];
+
+    // 🔥 ROUTE MODEL BINDING SLUG
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    // 🔥 AUTO SLUG SAAT CREATE
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($student) {
+            $student->slug = Str::slug($student->name) . '-' . rand(1000,9999);
+        });
+    }
 
     // RELASI USER LOGIN
     public function user()

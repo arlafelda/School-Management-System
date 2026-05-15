@@ -6,13 +6,28 @@ use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class TeacherController extends Controller
 {
     public function index()
     {
-        $teachers = Teacher::with('user')->latest()->get();
+        $teachers = Teacher::with('user')
+            ->where('archived', 0)
+            ->latest()
+            ->get();
+
         return view('teacher.teacher-index', compact('teachers'));
+    }
+
+    public function archived()
+    {
+        $teachers = Teacher::with('user')
+            ->where('archived', 1)
+            ->latest()
+            ->get();
+
+        return view('teacher.teacher-archived', compact('teachers'));
     }
 
     public function create()
@@ -33,16 +48,15 @@ class TeacherController extends Controller
             'position' => 'nullable',
         ]);
 
-        // USER
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'teacher',
+            'archived' => 0,
         ]);
 
-        // TEACHER
-        Teacher::create([
+        $teacher = Teacher::create([
             'user_id' => $user->id,
             'name' => $request->name,
             'nip' => $request->nip,
@@ -50,9 +64,12 @@ class TeacherController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
             'position' => $request->position,
+            'archived' => 0,
         ]);
 
-        // 🔥 AJAX RESPONSE
+        $teacher->slug = Str::slug($request->name) . '-' . $teacher->id;
+        $teacher->save();
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -64,32 +81,42 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil ditambahkan');
     }
 
-    public function show(int $id)
+    public function show(string $slug)
     {
-        $teacher = Teacher::with('user')->findOrFail($id);
+        $teacher = Teacher::with('user')
+            ->where('slug', $slug)
+            ->where('archived', 0)
+            ->firstOrFail();
+
         return view('teacher.teacher-show', compact('teacher'));
     }
 
-    public function edit(int $id)
+    public function edit(string $slug)
     {
-        $teacher = Teacher::with('user')->findOrFail($id);
+        $teacher = Teacher::with('user')
+            ->where('slug', $slug)
+            ->where('archived', 0)
+            ->firstOrFail();
+
         return view('teacher.teacher-edit', compact('teacher'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $slug)
     {
-        $teacher = Teacher::with('user')->findOrFail($id);
+        $teacher = Teacher::with('user')
+            ->where('slug', $slug)
+            ->where('archived', 0)
+            ->firstOrFail();
 
         $validated = $request->validate([
             'name' => 'required',
-            'nip' => 'required|unique:tbl_teachers,nip,' . $id,
+            'nip' => 'required|unique:tbl_teachers,nip,' . $teacher->id,
             'subject' => 'nullable',
             'phone' => 'nullable',
             'address' => 'nullable',
             'position' => 'nullable',
         ]);
 
-        // UPDATE TEACHER
         $teacher->update([
             'name' => $request->name,
             'nip' => $request->nip,
@@ -99,12 +126,13 @@ class TeacherController extends Controller
             'position' => $request->position,
         ]);
 
-        // UPDATE USER
         $teacher->user->update([
             'name' => $request->name,
         ]);
 
-        // 🔥 AJAX RESPONSE
+        $teacher->slug = Str::slug($request->name) . '-' . $teacher->id;
+        $teacher->save();
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -116,25 +144,30 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil diupdate');
     }
 
-    public function destroy(Request $request, int $id)
+    public function destroy(Request $request, string $slug)
     {
-        $teacher = Teacher::findOrFail($id);
+        $teacher = Teacher::where('slug', $slug)
+            ->where('archived', 0)
+            ->firstOrFail();
+
+        $teacher->update([
+            'archived' => 1
+        ]);
 
         if ($teacher->user) {
-            $teacher->user->delete();
+            $teacher->user->update([
+                'archived' => 1
+            ]);
         }
 
-        $teacher->delete();
-
-        // 🔥 AJAX RESPONSE
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Guru berhasil dihapus'
+                'message' => 'Guru berhasil dipindahkan ke arsip'
             ]);
         }
 
         return redirect()->route('teacher.index')
-            ->with('success', 'Guru berhasil dihapus');
+            ->with('success', 'Guru berhasil dipindahkan ke arsip');
     }
 }

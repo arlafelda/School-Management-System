@@ -6,6 +6,21 @@
 
 <div class="space-y-6">
 
+    <!-- 🔥 BREADCRUMB -->
+    <nav class="text-sm text-gray-500">
+        <ol class="flex items-center space-x-2">
+            <li>
+                <a href="{{ route('students.index') }}" class="hover:text-blue-600">
+                    Siswa
+                </a>
+            </li>
+            <li>/</li>
+            <li class="text-gray-700 font-medium">
+                {{ $student->name }}
+            </li>
+        </ol>
+    </nav>
+
     <!-- HEADER -->
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 rounded-2xl shadow-lg">
 

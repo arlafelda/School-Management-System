@@ -4,6 +4,21 @@
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
+    <!-- 🧭 BREADCRUMB -->
+    <div class="px-6 pt-4 text-sm text-gray-500">
+
+        <a href="{{ route('extracurricular.index') }}" class="hover:text-blue-600">
+            Ekstrakurikuler
+        </a>
+
+        <span class="mx-2">/</span>
+
+        <span class="text-gray-700 font-medium">
+            {{ $data->name }}
+        </span>
+
+    </div>
+
     <!-- HEADER -->
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
 
@@ -32,6 +47,11 @@
             <h1 class="text-2xl font-bold mb-2">
                 {{ $data->name }}
             </h1>
+
+            <!-- SLUG INFO (optional debug / info UI) -->
+            <p class="text-xs text-gray-400 mb-4">
+                slug: {{ $data->slug }}
+            </p>
 
             <!-- PEMBINA -->
             <p class="text-gray-600 mb-4">

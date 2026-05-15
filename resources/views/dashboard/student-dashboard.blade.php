@@ -1,151 +1,115 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Siswa</title>
+@extends('layouts.app')
 
-<script src="https://cdn.tailwindcss.com"></script>
+@section('title', 'Dashboard Siswa')
 
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-</head>
-
-<body class="bg-gray-100 font-[Inter] text-gray-800">
-
-<!-- NAVBAR -->
-<header class="fixed top-0 left-0 right-0 h-16 bg-white border-b flex items-center justify-between px-6 z-50">
-    <h1 class="text-xl font-bold text-blue-700 font-[Manrope]">LENTERA</h1>
-
-    <div class="flex items-center gap-4">
-        <button class="p-2 hover:bg-gray-100 rounded-full">🔔</button>
-        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
-    </div>
-</header>
-
-<!-- SIDEBAR -->
-<aside class="fixed top-16 left-0 w-64 h-full bg-white border-r p-4 hidden md:block">
-
-    <p class="text-xs text-gray-500 mb-3">MENU</p>
-
-    <nav class="space-y-2 text-sm">
-
-        <a class="flex items-center gap-2 p-3 bg-blue-100 text-blue-700 rounded-lg font-semibold">
-            📊 Beranda
-        </a>
-
-        <a class="flex items-center gap-2 p-3 hover:bg-gray-100 rounded-lg">
-            📚 Jadwal
-        </a>
-
-        <a class="flex items-center gap-2 p-3 hover:bg-gray-100 rounded-lg">
-            📝 Nilai
-        </a>
-
-        <a class="flex items-center gap-2 p-3 hover:bg-gray-100 rounded-lg">
-            👤 Profil
-        </a>
-
+@section('breadcrumb')
+    <nav class="text-sm text-gray-500">
+        Home / Dashboard / Student
     </nav>
+@endsection
 
-    <!-- LOGOUT -->
-    <form method="POST" action="{{ route('logout') }}" class="mt-6">
-        @csrf
-        <button type="submit"
-            class="w-full flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
-            🚪 Logout
-        </button>
-    </form>
+@section('content')
 
-</aside>
+<div class="space-y-8">
 
-<!-- MAIN -->
-<main class="md:ml-64 pt-20 p-6">
-
-    <!-- GREETING -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold font-[Manrope]">
+    <!-- HERO -->
+    <section class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-3xl p-8 shadow-lg">
+        <h1 class="text-2xl md:text-3xl font-bold">
             Halo, {{ auth()->user()->name }} 👋
         </h1>
-        <p class="text-gray-500 text-sm">Selamat datang kembali</p>
-    </div>
+        <p class="text-sm mt-2 text-white/80">
+            Selamat datang kembali di dashboard siswa
+        </p>
+    </section>
 
-    <!-- GRID -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- STATS -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
         <!-- KEHADIRAN -->
-        <div class="bg-white p-5 rounded-lg shadow">
-            <p class="text-sm text-gray-500">Persentase Kehadiran</p>
-            <h2 class="text-3xl font-bold text-right">
-                {{ number_format($attendancePercent, 1) }}%
+        <div class="bg-white rounded-2xl shadow p-6 hover:shadow-lg transition">
+            <p class="text-sm text-slate-500">Persentase Kehadiran</p>
+
+            <h2 class="text-3xl font-bold mt-2 text-right">
+                {{ number_format($attendancePercent ?? 0, 1) }}%
             </h2>
 
-            <div class="w-full bg-gray-200 h-2 rounded mt-3">
+            <div class="w-full bg-gray-200 h-2 rounded mt-4">
                 <div id="progressBar"
-                     data-percent="{{ (int) $attendancePercent }}"
-                     class="bg-blue-600 h-2 rounded transition-all duration-500">
+                     data-percent="{{ (int) ($attendancePercent ?? 0) }}"
+                     class="bg-blue-600 h-2 rounded transition-all duration-500"
+                     style="width: 0%">
                 </div>
             </div>
         </div>
 
-        <!-- TOTAL ABSEN -->
-        <div class="bg-white p-5 rounded-lg shadow">
-            <p class="text-sm text-gray-500">Total Kehadiran</p>
-            <h2 class="text-3xl font-bold text-right">
-                {{ number_format($totalAttendance) }}
+        <!-- TOTAL KEHADIRAN -->
+        <div class="bg-white rounded-2xl shadow p-6 hover:shadow-lg transition">
+            <p class="text-sm text-slate-500">Total Kehadiran</p>
+            <h2 class="text-2xl font-bold mt-2 text-right">
+                {{ number_format($totalAttendance ?? 0) }}
             </h2>
         </div>
 
-        <!-- JUMLAH JADWAL -->
-        <div class="bg-blue-100 p-5 rounded-lg">
-            <p class="text-blue-600 text-sm">Jadwal Hari Ini</p>
-            <h2 class="text-2xl font-bold text-blue-700 text-right">
-                {{ number_format($todaySchedules->count()) }} Pelajaran
+        <!-- JADWAL HARI INI -->
+        <div class="bg-blue-50 rounded-2xl shadow p-6 hover:shadow-lg transition">
+            <p class="text-sm text-blue-600">Jadwal Hari Ini</p>
+            <h2 class="text-2xl font-bold mt-2 text-right text-blue-700">
+                {{ $todaySchedules->count() ?? 0 }} Pelajaran
             </h2>
         </div>
 
-    </div>
+    </section>
 
-    <!-- JADWAL -->
-    <div class="bg-white rounded-lg shadow mt-6">
+    <!-- JADWAL LIST -->
+    <section class="bg-white rounded-2xl shadow overflow-hidden">
 
-        <div class="p-4 border-b font-semibold">
+        <div class="p-5 border-b font-semibold">
             Jadwal Hari Ini
         </div>
 
         <div class="divide-y">
 
             @forelse($todaySchedules as $schedule)
-                <div class="p-4 flex justify-between">
+                <div class="p-5 flex justify-between items-center">
+
                     <div>
                         <p class="font-semibold">
                             {{ $schedule->subject ?? '-' }}
                         </p>
+
                         <p class="text-sm text-gray-500">
                             {{ $schedule->start_time }} - {{ $schedule->end_time }}
                         </p>
+
                         <p class="text-xs text-gray-400">
                             {{ $schedule->teacher->name ?? '-' }}
                         </p>
                     </div>
+
                 </div>
             @empty
-                <div class="p-4 text-center text-gray-500">
+                <div class="p-6 text-center text-gray-500">
                     Tidak ada jadwal hari ini
                 </div>
             @endforelse
 
         </div>
 
-    </div>
+    </section>
 
-</main>
+</div>
 
+@endsection
+
+@push('scripts')
 <script>
+document.addEventListener('DOMContentLoaded', function () {
     const bar = document.getElementById('progressBar');
-    const percent = bar.dataset.percent;
 
-    bar.style.width = percent + '%';
+    if (bar) {
+        const percent = bar.dataset.percent || 0;
+        bar.style.width = percent + '%';
+    }
+});
 </script>
-
-</body>
-</html>
+@endpush

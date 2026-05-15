@@ -1,11 +1,33 @@
 @extends('layouts.app')
 
+@section('title', 'Tambah Admin')
+
 @section('content')
 
 <div class="min-h-screen bg-gray-100">
 
-    <!-- CONTENT -->
     <main class="p-4 md:p-8">
+
+        <!-- BREADCRUMB -->
+        <div class="mb-4 text-sm text-gray-500">
+            <a href="{{ route('dashboard.super_admin') }}"
+               class="hover:text-blue-600">
+                Dashboard
+            </a>
+
+            <span class="mx-2">/</span>
+
+            <a href="{{ route('admin.index') }}"
+               class="hover:text-blue-600">
+                Kelola Admin
+            </a>
+
+            <span class="mx-2">/</span>
+
+            <span class="text-gray-700 font-medium">
+                Tambah Admin
+            </span>
+        </div>
 
         <div class="max-w-2xl mx-auto">
 
@@ -15,6 +37,9 @@
                 <p class="text-gray-500 text-sm">Isi data admin baru</p>
             </div>
 
+            <!-- ALERT -->
+            <div id="alertBox" class="hidden mb-4 p-3 rounded text-sm"></div>
+
             <!-- CARD FORM -->
             <div class="bg-white p-6 md:p-8 rounded-xl shadow border">
 
@@ -23,31 +48,37 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+                        <!-- INPUT PERTAMA (AUTO-FOCUS TARGET) -->
                         <div class="md:col-span-2">
                             <label class="text-sm font-medium">Nama Lengkap *</label>
-                            <input type="text" name="name"
-                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            <input
+                                type="text"
+                                name="name"
+                                id="firstInput"
+                                class="mt-1 w-full px-4 py-2 border rounded-lg"
                                 required>
                         </div>
 
                         <div>
                             <label class="text-sm font-medium">Email *</label>
-                            <input type="email" name="email"
-                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>
+                            <input type="email"
+                                   name="email"
+                                   class="mt-1 w-full px-4 py-2 border rounded-lg"
+                                   required>
                         </div>
 
                         <div>
                             <label class="text-sm font-medium">Password *</label>
-                            <input type="password" name="password"
-                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                required>
+                            <input type="password"
+                                   name="password"
+                                   class="mt-1 w-full px-4 py-2 border rounded-lg"
+                                   required>
                         </div>
 
                         <div class="md:col-span-2">
                             <label class="text-sm font-medium">Status</label>
                             <select name="archived"
-                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    class="mt-1 w-full px-4 py-2 border rounded-lg">
                                 <option value="0">Aktif</option>
                                 <option value="1">Nonaktif</option>
                             </select>
@@ -55,16 +86,15 @@
 
                     </div>
 
-                    <!-- BUTTON -->
                     <div class="flex justify-end gap-3 pt-4">
 
                         <a href="{{ route('admin.index') }}"
-                            class="px-5 py-2 border rounded-lg hover:bg-gray-100">
+                           class="px-5 py-2 border rounded-lg">
                             Batal
                         </a>
 
                         <button type="submit"
-                            class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                class="px-5 py-2 bg-blue-600 text-white rounded-lg">
                             Simpan
                         </button>
 
@@ -87,13 +117,38 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // cek function ada atau tidak
+    // AUTO-FOCUS SAAT HALAMAN DIBUKA
+    document.getElementById('firstInput')?.focus();
+
     if (typeof window.createData === 'function') {
 
-        window.createData('#addForm', "{{ route('admin.store') }}");
+        window.createData('#addForm', "{{ route('admin.store') }}", {
+            onSuccess: function (data) {
+
+                let alertBox = document.getElementById('alertBox');
+
+                alertBox.classList.remove('hidden');
+                alertBox.className = "mb-4 p-3 rounded text-sm bg-green-100 text-green-700";
+                alertBox.innerText = data.message;
+
+                document.getElementById('addForm').reset();
+
+                // AUTO-FOCUS LAGI SETELAH RESET
+                document.getElementById('firstInput')?.focus();
+            },
+
+            onError: function (err) {
+
+                let alertBox = document.getElementById('alertBox');
+
+                alertBox.classList.remove('hidden');
+                alertBox.className = "mb-4 p-3 rounded text-sm bg-red-100 text-red-700";
+                alertBox.innerText = err.error || 'Terjadi kesalahan';
+            }
+        });
 
     } else {
-        console.error('createData belum tersedia (ajax.js belum ke-load)');
+        console.error('ajax.js belum ke-load!');
     }
 
 });

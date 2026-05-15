@@ -6,6 +6,15 @@
 
 <div class="p-6">
 
+    <!-- ✅ BREADCRUMB -->
+    <nav class="text-sm text-gray-500 mb-4">
+        <a href="/" class="hover:underline">Home</a>
+        <span> > </span>
+        <a href="{{ route('admin.index') }}" class="hover:underline">Admin</a>
+        <span> > </span>
+        <span class="text-gray-700 font-medium">{{ $admin->name }}</span>
+    </nav>
+
     <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow border p-6">
 
         <!-- HEADER -->
@@ -72,7 +81,8 @@
         <!-- ACTION -->
         <div class="mt-8 flex flex-wrap gap-3">
 
-            <a href="{{ route('admin.edit', $admin->id) }}"
+            <!-- ✅ SUDAH PAKAI SLUG -->
+            <a href="{{ route('admin.edit', $admin->slug) }}"
                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
                 ✏️ Edit Profile
             </a>

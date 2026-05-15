@@ -1,25 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekskul Siswa</title>
+@section('title', 'Ekskul Siswa')
 
-    <!-- CSRF -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <!-- TAILWIND -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- JQUERY (WAJIB) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- AJAX.JS -->
-    <script src="{{ asset('js/ajax.js') }}"></script>
-</head>
-
-<body class="bg-gray-100 p-6">
+@section('content')
 
 @php
     $student = auth()->user()->student ?? null;
@@ -74,7 +57,7 @@
 
         @elseif($student)
 
-            <!-- 🔥 FORM AJAX -->
+            <!-- FORM AJAX JOIN -->
             <form class="formJoin"
                   action="{{ route('extracurricular.join', $e->id) }}"
                   method="POST">
@@ -116,12 +99,6 @@
 <script>
 $(function () {
 
-    // ⛔ pastikan ajax.js ada
-    if (typeof $ === 'undefined') {
-        console.error('jQuery belum load');
-        return;
-    }
-
     $(document).on('submit', '.formJoin', function (e) {
         e.preventDefault();
 
@@ -137,9 +114,8 @@ $(function () {
                 button.prop('disabled', true).text('Loading...');
             },
 
-            success: function (res) {
+            success: function () {
 
-                // 🔥 ubah tombol jadi sukses
                 $(form).html(`
                     <button class="w-full bg-green-500 text-white py-2 rounded text-sm cursor-not-allowed">
                         ✔ Sudah Terdaftar
@@ -151,7 +127,6 @@ $(function () {
                         Berhasil daftar ekstrakurikuler
                     </div>
                 `);
-
             },
 
             error: function () {
@@ -165,5 +140,4 @@ $(function () {
 });
 </script>
 
-</body>
-</html>
+@endsection

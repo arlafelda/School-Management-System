@@ -10,12 +10,20 @@ class ClassModel extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'level',
         'major',
         'academic_year',
         'semester',
-        'teacher_id'
+        'teacher_id',
+        'archived',
     ];
+
+    // 🔥 route model binding pakai slug
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
 
     public function students()
     {
@@ -26,6 +34,7 @@ class ClassModel extends Model
     {
         return $this->belongsTo(Teacher::class, 'teacher_id');
     }
+
     public function schedules()
     {
         return $this->hasMany(Schedule::class, 'class_id')->with('teacher');

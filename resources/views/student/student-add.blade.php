@@ -6,10 +6,21 @@
 
 <div class="space-y-6">
 
+    <!-- 🔥 BREADCRUMB -->
+    <nav class="text-sm text-gray-500">
+        <ol class="flex items-center space-x-2">
+            <li class="text-gray-700 font-medium">Dashboard</li>
+            <li>/</li>
+            <li class="text-gray-700 font-medium">Siswa</li>
+            <li>/</li>
+            <li class="text-gray-500">Tambah</li>
+        </ol>
+    </nav>
+
     <!-- ALERT AJAX -->
     <div id="alertBox"></div>
 
-    <!-- ERROR VALIDATION (fallback Laravel non-AJAX) -->
+    <!-- ERROR VALIDATION -->
     @if ($errors->any())
         <div class="mb-4 bg-red-100 text-red-700 p-3 rounded">
             @foreach ($errors->all() as $error)
@@ -37,7 +48,8 @@
 
                 <div class="grid grid-cols-2 gap-4">
 
-                    <input type="email" name="email" placeholder="Email Login"
+                    <!-- ✅ AUTO-FOCUS -->
+                    <input type="email" name="email" id="firstInput" placeholder="Email Login"
                         class="border rounded-lg px-3 py-2 text-sm" required>
 
                     <input type="password" name="password" placeholder="Password"
@@ -153,9 +165,21 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    // 🔥 AUTO-FOCUS SAAT HALAMAN DIBUKA
+    const input = document.getElementById('firstInput');
+    if (input) input.focus();
+
     if (typeof createData !== 'undefined') {
 
-        createData('#formSiswa', "{{ route('students.store') }}");
+        createData('#formSiswa', "{{ route('students.store') }}", {
+            onSuccess: function () {
+
+                document.getElementById('formSiswa').reset();
+
+                // 🔥 AUTO-FOCUS ULANG SETELAH SUBMIT
+                if (input) input.focus();
+            }
+        });
 
     } else {
         console.error('createData belum tersedia');

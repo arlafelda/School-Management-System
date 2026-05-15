@@ -4,7 +4,16 @@
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
-    <!-- HEADER -->
+    <div class="px-6 pt-4 text-sm text-gray-500">
+        <span class="text-gray-700 font-medium">
+            Dashboard
+        </span>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 font-medium">
+            Ekstrakurikuler
+        </span>
+    </div>
+
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
 
         <div>
@@ -16,17 +25,24 @@
             </p>
         </div>
 
-        <a href="{{ route('extracurricular.create') }}"
-           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
-            + Tambah
-        </a>
+        <div class="flex gap-2">
+
+            <a href="{{ route('extracurricular.archived') }}"
+               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
+                Archived
+            </a>
+
+            <a href="{{ route('extracurricular.create') }}"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                + Tambah
+            </a>
+
+        </div>
 
     </header>
 
-    <!-- CONTENT -->
     <main class="p-6">
 
-        <!-- ALERT -->
         <div id="alertBox" class="mb-4"></div>
 
         <div class="bg-white rounded-lg shadow overflow-x-auto">
@@ -49,49 +65,54 @@
                         <tr
                             id="row-{{ $d->id }}"
                             class="border-t hover:bg-gray-50 cursor-pointer"
-                            data-url="{{ route('extracurricular.show', $d->id) }}"
+                            data-url="{{ $d->slug ? route('extracurricular.show', $d->slug) : '#' }}"
                         >
 
-                            <!-- NAMA -->
                             <td class="p-3 font-medium">
-                                {{ $d->name }}
+                                @if($d->slug)
+                                    {{ $d->name }}
+                                @else
+                                    <span class="text-red-500">
+                                        {{ $d->name }} (slug kosong)
+                                    </span>
+                                @endif
                             </td>
 
-                            <!-- PEMBINA -->
                             <td class="p-3 text-center">
                                 {{ $d->teacher->name ?? '-' }}
                             </td>
 
-                            <!-- JUMLAH SISWA -->
                             <td class="p-3 text-right">
-                                {{ number_format($d->students->count()) }}
+                                {{ $d->students->count() }}
                             </td>
 
-                            <!-- AKSI -->
                             <td class="p-3 text-center space-x-2">
 
-                                <a href="{{ route('extracurricular.edit', $d->id) }}"
-                                   onclick="event.stopPropagation()"
-                                   class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs">
-                                    Edit
-                                </a>
+                                @if($d->slug)
 
-                                <!-- DELETE AJAX -->
-                                <form action="{{ route('extracurricular.destroy', $d->id) }}"
-                                      method="POST"
-                                      class="inline formDelete"
-                                      data-id="{{ $d->id }}"
-                                      onclick="event.stopPropagation()">
+                                    <a href="{{ route('extracurricular.edit', $d->slug) }}"
+                                       onclick="event.stopPropagation()"
+                                       class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs">
+                                        Edit
+                                    </a>
 
-                                    @csrf
-                                    @method('DELETE')
+                                    <form action="{{ route('extracurricular.destroy', $d->slug) }}"
+                                          method="POST"
+                                          class="inline formDelete"
+                                          data-id="{{ $d->id }}"
+                                          onclick="event.stopPropagation()">
 
-                                    <button type="submit"
-                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs">
-                                        Hapus
-                                    </button>
+                                        @csrf
+                                        @method('DELETE')
 
-                                </form>
+                                        <button type="submit"
+                                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs">
+                                            Archive
+                                        </button>
+
+                                    </form>
+
+                                @endif
 
                             </td>
 
@@ -127,7 +148,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // CLICK ROW → DETAIL
     $(document).on('click', 'tr[data-url]', function (e) {
 
         if (
@@ -136,12 +156,18 @@ document.addEventListener('DOMContentLoaded', function () {
             e.target.closest('form')
         ) return;
 
-        window.location.href = $(this).data('url');
+        let url = $(this).data('url');
+
+        if (url && url !== '#') {
+            window.location.href = url;
+        }
+
     });
 
-    // DELETE AJAX
     $(document).on('submit', '.formDelete', function (e) {
         e.preventDefault();
+
+        if (!confirm('Yakin ingin memindahkan data ke arsip?')) return;
 
         let url = this.action;
         let id = $(this).data('id');
@@ -155,14 +181,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 $('#alertBox').html(`
                     <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                        Data berhasil dihapus
+                        Data berhasil dipindahkan ke arsip
                     </div>
                 `);
 
             });
 
         } else {
-            console.error('deleteData belum tersedia (ajax.js belum ke-load)');
+            console.error('deleteData belum tersedia');
         }
 
     });

@@ -20,7 +20,6 @@ class DashboardController extends Controller
         // ================= SUPER ADMIN =================
         if ($role === 'super_admin') {
 
-            // 🔥 Chart distribusi role
             $chartData = [
                 User::where('role', 'student')->count(),
                 User::where('role', 'teacher')->count(),
@@ -28,7 +27,7 @@ class DashboardController extends Controller
             ];
 
             return view('dashboard.super-admin-dashboard', [
-                // STAT CARD
+
                 'totalStudents' => User::where('role', 'student')->count(),
                 'totalTeachers' => Teacher::count(),
                 'totalAdmins'   => User::where('role', 'admin')->count(),
@@ -36,13 +35,11 @@ class DashboardController extends Controller
                 'totalMajors'   => ClassModel::distinct('major')->count('major'),
                 'totalSubjects' => Teacher::distinct('subject')->count('subject'),
 
-                // AKTIVITAS
                 'activities' => Schedule::with(['class', 'teacher'])
                     ->latest()
                     ->take(5)
                     ->get(),
 
-                // CHART
                 'chartData' => $chartData,
             ]);
         }
@@ -51,33 +48,59 @@ class DashboardController extends Controller
         if ($role === 'admin') {
 
             return view('dashboard.admin-dashboard', [
+
                 'totalStudents'  => User::where('role', 'student')->count(),
                 'totalTeachers'  => Teacher::count(),
                 'totalClasses'   => ClassModel::count(),
-                'totalSchedules' => Schedule::count(), // 🔥 FIX
+                'totalSchedules' => Schedule::count(),
+
             ]);
         }
 
         // ================= TEACHER =================
-        if ($role === 'teacher') {
-            return view('dashboard.teacher', [
-                'schedules' => Schedule::where('teacher_id', $user->id)->get()
-            ]);
-        }
+if ($role === 'teacher') {
+
+    $today = now()->format('l');
+
+    $todaySchedules = Schedule::with('class')
+        ->where('teacher_id', $user->id)
+        ->where('day', $today)
+        ->get();
+
+    // total jam mengajar
+    $totalTeaching = $todaySchedules->count();
+
+    // total siswa
+    $totalStudents = User::where('role', 'student')->count();
+
+    // sementara statis dulu
+    $attendancePercent = 100;
+
+    return view('dashboard.teacher-dashboard', [
+
+        'todaySchedules'    => $todaySchedules,
+        'totalTeaching'     => $totalTeaching,
+        'totalStudents'     => $totalStudents,
+        'attendancePercent' => $attendancePercent,
+
+    ]);
+}
 
         // ================= STUDENT =================
-        if ($user->role === 'student') {
+        if ($role === 'student') {
 
             $attendances = Attendance::where('student_id', $user->id)->get();
 
             $totalAttendance = $attendances->count();
-            $presentCount = $attendances->where('status', 'present')->count();
+
+            $presentCount = $attendances
+                ->where('status', 'present')
+                ->count();
 
             $attendancePercent = $totalAttendance > 0
                 ? round(($presentCount / $totalAttendance) * 100)
                 : 0;
 
-            // 🔥 ambil hari sekarang (format: Monday, Tuesday, dll)
             $today = now()->format('l');
 
             $todaySchedules = Schedule::with(['teacher', 'class'])
@@ -85,11 +108,14 @@ class DashboardController extends Controller
                 ->get();
 
             return view('dashboard.student-dashboard', [
+
                 'attendancePercent' => $attendancePercent,
-                'totalAttendance' => $totalAttendance,
-                'todaySchedules' => $todaySchedules,
+                'totalAttendance'   => $totalAttendance,
+                'todaySchedules'    => $todaySchedules,
+
             ]);
         }
+
         abort(403);
     }
 }

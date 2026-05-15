@@ -13,7 +13,8 @@ class Schedule extends Model
         'day',
         'start_time',
         'end_time',
-        'teacher_id'
+        'teacher_id',
+        'archived',
     ];
 
     public function teacher()

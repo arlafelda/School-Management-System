@@ -9,19 +9,36 @@ class Grade extends Model
     protected $table = 'tbl_grades';
 
     protected $fillable = [
+
         'student_id',
+        'schedule_id',
         'subject',
+        'archived',
         'assignment_score',
         'mid_exam_score',
         'final_exam_score'
     ];
 
+    // =========================
     // RELASI KE STUDENT
+    // =========================
     public function student()
     {
         return $this->belongsTo(Student::class);
     }
 
+    // =========================
+    // RELASI KE SCHEDULE
+    // =========================
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    // =========================
+    // RELASI KE CLASS
+    // lewat STUDENT
+    // =========================
     public function class()
     {
         return $this->hasOneThrough(
@@ -34,13 +51,17 @@ class Grade extends Model
         );
     }
 
-    // AUTO NILAI AKHIR
+    // =========================
+    // AUTO HITUNG NILAI AKHIR
+    // =========================
     public function getFinalScoreAttribute()
     {
         return round((
+
             $this->assignment_score +
             $this->mid_exam_score +
             $this->final_exam_score
+
         ) / 3, 1);
     }
 }

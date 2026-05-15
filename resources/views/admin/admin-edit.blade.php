@@ -6,10 +6,20 @@
 
 <div class="min-h-screen bg-gray-100">
 
-    <!-- CONTENT -->
     <main class="p-4 md:p-8">
 
         <div class="max-w-2xl mx-auto">
+
+            <!-- ✅ BREADCRUMB -->
+            <nav class="text-sm text-gray-500 mb-4">
+                <a href="{{ route('admin.index') }}" class="hover:text-blue-600">Admin</a>
+                <span class="mx-2">/</span>
+                <a href="{{ route('admin.show', $admin->slug) }}" class="hover:text-blue-600">
+                    {{ $admin->name }}
+                </a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-700 font-medium">Edit</span>
+            </nav>
 
             <!-- TITLE -->
             <div class="mb-6">
@@ -17,30 +27,23 @@
                 <p class="text-gray-500 text-sm">Perbarui data admin</p>
             </div>
 
+            <!-- ALERT -->
+            <div id="alertBox" class="hidden mb-4 p-3 rounded text-sm"></div>
+
             <!-- CARD -->
             <div class="bg-white rounded-xl shadow border p-6 md:p-8">
 
-                <h1 class="text-xl font-bold mb-6">Form Edit Admin</h1>
-
-                <!-- ERROR VALIDATION -->
-                @if ($errors->any())
-                    <div class="mb-4 bg-red-100 text-red-600 p-3 rounded">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>- {{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                <h2 class="text-lg font-semibold mb-6">Form Edit Admin</h2>
 
                 <!-- FORM AJAX -->
                 <form id="editForm" class="space-y-4">
                     @csrf
 
-                    <!-- NAMA -->
+                    <!-- ✅ INPUT PERTAMA (AUTO-FOCUS TARGET) -->
                     <div>
                         <label class="block text-sm font-medium">Nama</label>
                         <input type="text" name="name"
+                            id="firstInput"
                             value="{{ $admin->name }}"
                             class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                             required>
@@ -58,7 +61,7 @@
                     <!-- PASSWORD -->
                     <div>
                         <label class="block text-sm font-medium">
-                            Password (kosongkan jika tidak diubah)
+                            Password (opsional)
                         </label>
                         <input type="password" name="password"
                             class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
@@ -98,13 +101,43 @@
 
 @endsection
 
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
+    // 🔥 AUTO-FOCUS SAAT HALAMAN DIBUKA
+    document.getElementById('firstInput')?.focus();
+
     if (typeof window.updateData === 'function') {
 
-        window.updateData('#editForm', "{{ route('admin.update', $admin->id) }}");
+        window.updateData('#editForm', "{{ route('admin.update', $admin->slug) }}", {
+
+            onSuccess: function(res) {
+
+                let alertBox = document.getElementById('alertBox');
+
+                alertBox.classList.remove('hidden');
+                alertBox.className = "mb-4 p-3 rounded text-sm bg-green-100 text-green-700";
+                alertBox.innerText = res.message;
+
+                let slug = res.slug ?? "{{ $admin->slug }}";
+
+                setTimeout(() => {
+                    window.location.href = `/admin/${slug}`;
+                }, 800);
+            },
+
+            onError: function(err) {
+
+                let alertBox = document.getElementById('alertBox');
+
+                alertBox.classList.remove('hidden');
+                alertBox.className = "mb-4 p-3 rounded text-sm bg-red-100 text-red-700";
+                alertBox.innerText = err.error || 'Terjadi kesalahan';
+            }
+
+        });
 
     } else {
         console.error('updateData belum tersedia (ajax.js belum ke-load)');

@@ -6,6 +6,21 @@
 
 <div class="space-y-6">
 
+    <!-- 🔥 BREADCRUMB -->
+    <nav class="text-sm text-gray-500">
+        <ol class="flex items-center space-x-2">
+            <li>
+                <a href="{{ route('teacher.index') }}" class="text-blue-600 hover:underline">
+                    Guru
+                </a>
+            </li>
+            <li>/</li>
+            <li class="text-gray-700 font-medium">
+                {{ $teacher->name }}
+            </li>
+        </ol>
+    </nav>
+
     <!-- HEADER -->
     <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-blue-700">Profile Guru</h2>
@@ -32,7 +47,7 @@
                 <h2 class="text-2xl font-bold">{{ $teacher->name }}</h2>
 
                 <p class="text-gray-500 text-sm">
-                    {{ $teacher->email ?? '-' }}
+                    {{ $teacher->user->email ?? '-' }}
                 </p>
 
                 <span class="inline-block mt-2 bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs">
@@ -62,7 +77,7 @@
 
             <div>
                 <p class="text-gray-500">Email</p>
-                <p class="font-semibold">{{ $teacher->email ?? '-' }}</p>
+                <p class="font-semibold">{{ $teacher->user->email ?? '-' }}</p>
             </div>
 
             <div>
@@ -98,12 +113,12 @@
         <!-- ACTION -->
         <div class="mt-8 flex flex-wrap gap-3">
 
-            <a href="{{ route('teacher.edit', $teacher->id) }}"
+            <a href="{{ route('teacher.edit', $teacher->slug) }}"
                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
                 ✏️ Edit Profile
             </a>
 
-            <form action="{{ route('teacher.delete', $teacher->id) }}"
+            <form action="{{ route('teacher.delete', $teacher->slug) }}"
                   method="POST"
                   onsubmit="return confirm('Yakin ingin menghapus guru ini?')">
 

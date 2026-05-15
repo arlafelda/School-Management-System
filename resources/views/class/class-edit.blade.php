@@ -4,14 +4,25 @@
 
 <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow mt-6">
 
+    <!-- 🧭 BREADCRUMB -->
+    <div class="text-sm text-gray-500 mb-4">
+        <a href="{{ route('class.index') }}" class="hover:text-blue-600">
+            Kelas
+        </a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 font-medium">
+            Edit
+        </span>
+    </div>
+
     <h1 class="text-xl font-bold mb-6">Edit Kelas</h1>
 
     <!-- ALERT -->
     <div id="alertBox" class="mb-4"></div>
 
-    <!-- ⛔ TAMBAH ID -->
+    <!-- FORM -->
     <form id="formEditClass"
-        action="{{ route('class.update', $class->id) }}"
+        action="{{ route('class.update', $class->slug) }}"
         method="POST">
 
         @csrf
@@ -19,11 +30,16 @@
 
         <div class="grid grid-cols-2 gap-4">
 
-            <!-- Nama -->
+            <!-- ✅ FIELD PERTAMA -->
             <div>
                 <label class="text-sm">Nama Kelas</label>
-                <input type="text" name="name"
+                <input 
+                    id="firstInput"
+                    type="text" 
+                    name="name"
                     value="{{ $class->name }}"
+                    required
+                    autofocus
                     class="w-full border rounded-lg px-3 py-2">
             </div>
 
@@ -71,9 +87,7 @@
                     @foreach($teachers as $teacher)
                     <option value="{{ $teacher->id }}"
                         {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
-
                         {{ $teacher->name }} - {{ $teacher->subject }}
-
                     </option>
                     @endforeach
 
@@ -106,34 +120,47 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
 
-        // ❗ cek jQuery
-        if (typeof window.$ === 'undefined') {
-            console.error('jQuery belum load');
-            return;
+    // ✅ FORCE AUTO FOCUS (ANTI GAGAL)
+    setTimeout(() => {
+        let first = document.getElementById('firstInput');
+        if (first) {
+            first.focus();
+            first.select(); // optional: langsung block text
         }
+    }, 100);
 
-        // ❗ cek function AJAX
-        if (typeof window.updateData === 'function') {
 
-            window.updateData('#formEditClass',
-                "{{ route('class.update', $class->id) }}",
-                function(res) {
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    if (typeof window.updateData === 'function') {
+
+        window.updateData(
+            '#formEditClass',
+            "{{ route('class.update', $class->slug) }}",
+            {
+                onSuccess: function(res) {
 
                     $('#alertBox').html(`
-                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                        ${res.message ?? 'Kelas berhasil diupdate'}
-                    </div>
-                `);
+                        <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                            ${res.message ?? 'Kelas berhasil diupdate'}
+                        </div>
+                    `);
 
+                    // 🔁 Fokus ulang setelah update (opsional)
+                    document.getElementById('firstInput').focus();
                 }
-            );
+            }
+        );
 
-        } else {
-            console.error('updateData belum tersedia (ajax.js belum ke-load)');
-        }
+    } else {
+        console.error('updateData belum tersedia (ajax.js belum ke-load)');
+    }
 
-    });
+});
 </script>
 @endpush

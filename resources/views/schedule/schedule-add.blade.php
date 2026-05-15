@@ -6,6 +6,26 @@
 
 <div class="space-y-6">
 
+    <!-- BREADCRUMB -->
+    <div class="text-sm text-gray-500">
+        <span class="text-gray-700 font-medium">
+            Dashboard
+        </span>
+
+        <span class="mx-2">/</span>
+
+        <a href="{{ route('schedule.index') }}"
+           class="hover:text-blue-600">
+            Jadwal
+        </a>
+
+        <span class="mx-2">/</span>
+
+        <span class="text-gray-700 font-medium">
+            Tambah Jadwal
+        </span>
+    </div>
+
     <!-- TITLE -->
     <div>
         <h1 class="text-2xl font-bold">Tambah Jadwal</h1>
@@ -28,13 +48,13 @@
     <div class="bg-white p-6 rounded-lg shadow max-w-xl">
 
         <form id="formSchedule" action="{{ route('schedule.store') }}" method="POST">
-
             @csrf
 
             <!-- KELAS -->
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Kelas</label>
-                <select name="class_id" required class="w-full border rounded px-3 py-2 text-sm">
+                <select name="class_id" required autofocus
+                    class="w-full border rounded px-3 py-2 text-sm">
                     <option value="">-- Pilih Kelas --</option>
                     @foreach($classes as $class)
                         <option value="{{ $class->id }}"
@@ -67,20 +87,20 @@
                        class="w-full border rounded px-3 py-2 text-sm"
                        required>
 
-                <!-- FORMAT INDONESIA (DISPLAY ONLY) -->
                 @if(old('date'))
                     <p class="text-xs text-gray-500 mt-1">
-                        Format Indonesia: {{ \Carbon\Carbon::parse(old('date'))->format('d-m-Y') }}
+                        Format Indonesia:
+                        {{ \Carbon\Carbon::parse(old('date'))->format('d-m-Y') }}
                     </p>
                 @endif
-
             </div>
 
             <!-- JAM -->
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Jam Mulai</label>
-                    <input type="time" name="start_time"
+                    <input type="time"
+                           name="start_time"
                            value="{{ old('start_time') }}"
                            class="w-full border rounded px-3 py-2 text-sm"
                            required>
@@ -88,7 +108,8 @@
 
                 <div>
                     <label class="block text-sm font-medium mb-1">Jam Selesai</label>
-                    <input type="time" name="end_time"
+                    <input type="time"
+                           name="end_time"
                            value="{{ old('end_time') }}"
                            class="w-full border rounded px-3 py-2 text-sm"
                            required>
@@ -99,7 +120,9 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Guru</label>
 
-                <select name="teacher_id" id="teacherSelect" required
+                <select name="teacher_id"
+                        id="teacherSelect"
+                        required
                         class="w-full border rounded px-3 py-2 text-sm">
 
                     <option value="">-- Pilih Guru --</option>
@@ -118,7 +141,9 @@
             <!-- MAPEL -->
             <div class="mb-6">
                 <label class="block text-sm font-medium mb-1">Mata Pelajaran</label>
-                <input type="text" id="subjectField" readonly
+                <input type="text"
+                       id="subjectField"
+                       readonly
                        class="w-full border rounded px-3 py-2 text-sm bg-gray-100">
             </div>
 
@@ -149,32 +174,51 @@
 @push('scripts')
 
 <script>
-/* =========================
-   CREATE AJAX
-========================= */
+// =========================
+// CREATE AJAX
+// =========================
 window.addEventListener('load', function () {
     createData('#formSchedule', "{{ route('schedule.store') }}");
 });
 
 
-/* =========================
-   AUTO SUBJECT (MAPEL)
-========================= */
+// =========================
+// AUTO FOCUS + AUTO SUBJECT
+// =========================
 document.addEventListener("DOMContentLoaded", function () {
 
-    const teacherSelect = document.getElementById('teacherSelect');
-    const subjectField = document.getElementById('subjectField');
+    // AUTO FOCUS FIELD PERTAMA
+    const firstField =
+        document.querySelector(
+            '#formSchedule select, #formSchedule input, #formSchedule textarea'
+        );
+
+    if (firstField) {
+        firstField.focus();
+    }
+
+    // AUTO SUBJECT
+    const teacherSelect =
+        document.getElementById('teacherSelect');
+
+    const subjectField =
+        document.getElementById('subjectField');
 
     if (!teacherSelect) return;
 
     function updateSubject() {
-        let subject = teacherSelect.options[teacherSelect.selectedIndex]
-            ?.getAttribute('data-subject');
+        let subject =
+            teacherSelect.options[
+                teacherSelect.selectedIndex
+            ]?.getAttribute('data-subject');
 
         subjectField.value = subject ?? '';
     }
 
-    teacherSelect.addEventListener('change', updateSubject);
+    teacherSelect.addEventListener(
+        'change',
+        updateSubject
+    );
 
     updateSubject();
 

@@ -10,16 +10,31 @@ class Extracurricular extends Model
 
     protected $fillable = [
         'name',
-        'teacher_id'
+        'slug',
+        'teacher_id',
+        'archived',
     ];
 
-    public function teacher()
+    // 🔥 Route model binding pakai slug
+    public function getRouteKeyName()
     {
-        return $this->belongsTo(Teacher::class);
+        return 'slug';
     }
 
+    // 🔥 RELASI TEACHER
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    // 🔥 RELASI STUDENTS (FIX PIVOT TABLE)
     public function students()
     {
-        return $this->belongsToMany(Student::class, 'tbl_extracurricular_students');
+        return $this->belongsToMany(
+            Student::class,
+            'tbl_extracurricular_students',
+            'extracurricular_id', // ✅ FIX INI
+            'student_id'
+        );
     }
 }

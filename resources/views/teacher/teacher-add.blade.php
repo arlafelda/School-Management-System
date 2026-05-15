@@ -4,6 +4,21 @@
 
 @section('content')
 
+<!-- BREADCRUMB -->
+<nav class="text-sm text-gray-500 mb-4">
+    <ol class="list-reset flex items-center space-x-2">
+        <li>
+            <a href="{{ route('teacher.index') }}" class="text-blue-600 hover:underline">
+                Guru
+            </a>
+        </li>
+        <li>/</li>
+        <li class="text-gray-700 font-medium">
+            Tambah Guru
+        </li>
+    </ol>
+</nav>
+
 <div class="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow border">
 
     <!-- TITLE -->
@@ -15,7 +30,7 @@
     <!-- ALERT AJAX -->
     <div id="alertBox"></div>
 
-    <!-- ERROR VALIDATION (fallback Laravel) -->
+    <!-- ERROR VALIDATION -->
     @if ($errors->any())
         <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">
             <ul>
@@ -30,9 +45,10 @@
     <form id="formGuru" class="space-y-5">
         @csrf
 
+        <!-- ✅ AUTO-FOCUS TARGET -->
         <div>
             <label class="block text-sm font-medium mb-1">Nama</label>
-            <input type="text" name="name" required
+            <input type="text" name="name" id="firstInput" required
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
         </div>
 
@@ -99,9 +115,21 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    // 🔥 AUTO-FOCUS SAAT HALAMAN DIBUKA
+    document.getElementById('firstInput')?.focus();
+
     if (typeof createData !== 'undefined') {
 
-        createData('#formGuru', "{{ route('teacher.store') }}");
+        createData('#formGuru', "{{ route('teacher.store') }}", {
+            onSuccess: function () {
+
+                // reset form
+                document.getElementById('formGuru').reset();
+
+                // 🔥 AUTO-FOCUS ULANG SETELAH SUBMIT
+                document.getElementById('firstInput')?.focus();
+            }
+        });
 
     } else {
         console.error('createData belum tersedia');

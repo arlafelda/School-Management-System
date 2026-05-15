@@ -1,6 +1,5 @@
 import $ from 'jquery';
 
-
 /* ---------- TOAST ---------- */
 function showToast(message, type = "success") {
     let bg = type === "success" ? "bg-green-500" : "bg-red-500";
@@ -20,6 +19,7 @@ function showToast(message, type = "success") {
     }, 2500);
 }
 
+/* ---------- ERROR HANDLER ---------- */
 function handleError(xhr) {
     if (xhr.status === 422) {
         let errors = xhr.responseJSON.errors;
@@ -36,17 +36,18 @@ function handleError(xhr) {
     showToast("Terjadi kesalahan server", "error");
 }
 
-
 /* =====================
    CREATE
 ===================== */
-window.createData = function (formSelector, url, callback = null) {
+window.createData = function (formSelector, url, options = {}) {
 
-    $(document).on('submit', formSelector, function (e) {
+    $(document).off('submit', formSelector).on('submit', formSelector, function (e) {
         e.preventDefault();
 
         let form = this;
         let formData = new FormData(form);
+
+        window.dispatchEvent(new CustomEvent('modal-loading', { detail: true }));
 
         $.ajax({
             url: url,
@@ -60,34 +61,44 @@ window.createData = function (formSelector, url, callback = null) {
             },
 
             success: function (res) {
+
                 showToast(res.message ?? "Berhasil ditambahkan");
                 form.reset();
 
-                if (callback) callback(res);
+                window.dispatchEvent(new CustomEvent('close-modal', {
+                    detail: form.dataset.modal
+                }));
+
+                if (options.onSuccess) options.onSuccess(res);
             },
 
-            error: handleError,
+            error: function (xhr) {
+                handleError(xhr);
+            },
 
             complete: function () {
                 $(form).find("button[type=submit]").prop("disabled", false);
+
+                window.dispatchEvent(new CustomEvent('modal-loading', { detail: false }));
             }
         });
     });
 };
 
-
 /* =====================
    UPDATE
 ===================== */
-window.updateData = function (formSelector, url, callback = null) {
+window.updateData = function (formSelector, url, options = {}) {
 
-    $(document).on('submit', formSelector, function (e) {
+    $(document).off('submit', formSelector).on('submit', formSelector, function (e) {
         e.preventDefault();
 
         let form = this;
         let formData = new FormData(form);
         formData.append("_method", "PUT");
 
+        window.dispatchEvent(new CustomEvent('modal-loading', { detail: true }));
+
         $.ajax({
             url: url,
             type: "POST",
@@ -95,30 +106,32 @@ window.updateData = function (formSelector, url, callback = null) {
             processData: false,
             contentType: false,
 
-            beforeSend: function () {
-                $(form).find("button[type=submit]").prop("disabled", true);
-            },
-
             success: function (res) {
+
                 showToast(res.message ?? "Berhasil diupdate");
 
-                if (callback) callback(res);
+                window.dispatchEvent(new CustomEvent('close-modal', {
+                    detail: form.dataset.modal
+                }));
+
+                if (options.onSuccess) options.onSuccess(res);
             },
 
-            error: handleError,
+            error: function (xhr) {
+                handleError(xhr);
+            },
 
             complete: function () {
-                $(form).find("button[type=submit]").prop("disabled", false);
+                window.dispatchEvent(new CustomEvent('modal-loading', { detail: false }));
             }
         });
     });
 };
 
-
 /* =====================
    DELETE
 ===================== */
-window.deleteData = function (url, callback = null) {
+window.deleteData = function (url, options = {}) {
 
     if (!confirm("Yakin ingin hapus data?")) return;
 
@@ -128,18 +141,20 @@ window.deleteData = function (url, callback = null) {
         data: { _method: "DELETE" },
 
         success: function (res) {
+
             showToast(res.message ?? "Berhasil dihapus");
 
-            if (callback) callback(res);
+            if (options.onSuccess) options.onSuccess(res);
         },
 
-        error: handleError
+        error: function (xhr) {
+            handleError(xhr);
+        }
     });
 };
 
-
 /* =====================
-   INIT (HANYA SETUP)
+   GLOBAL SETUP
 ===================== */
 $(function () {
 

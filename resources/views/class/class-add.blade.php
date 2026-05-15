@@ -4,6 +4,15 @@
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
+    <!-- 🧭 BREADCRUMB -->
+    <div class="px-6 pt-4 text-sm text-gray-500">
+        <a href="{{ route('class.index') }}" class="hover:text-blue-600">
+            Kelas
+        </a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 font-medium">Tambah</span>
+    </div>
+
     <!-- HEADER -->
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
 
@@ -16,11 +25,6 @@
             </p>
         </div>
 
-        <a href="{{ route('class.index') }}"
-            class="text-sm bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300">
-            ← Kembali
-        </a>
-
     </header>
 
     <!-- CONTENT -->
@@ -31,16 +35,21 @@
 
         <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow">
 
-            <!-- ⛔ TAMBAH ID -->
+            <!-- FORM -->
             <form id="formClass" action="{{ route('class.store') }}" method="POST">
                 @csrf
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    <!-- Nama Kelas -->
+                    <!-- ✅ FIELD PERTAMA (AUTO FOCUS) -->
                     <div>
                         <label class="text-sm font-medium">Nama Kelas</label>
-                        <input type="text" name="name" required
+                        <input 
+                            id="firstInput"
+                            type="text" 
+                            name="name" 
+                            required 
+                            autofocus
                             class="w-full border rounded-lg px-3 py-2 mt-1">
                     </div>
 
@@ -123,33 +132,44 @@
 
 @endsection
 
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
 
-        // tunggu sampai jQuery benar-benar ada
-        if (typeof window.$ === 'undefined') {
-            console.error('jQuery belum load');
-            return;
-        }
+    // ✅ FORCE AUTO FOCUS (ANTI GAGAL)
+    setTimeout(() => {
+        let first = document.getElementById('firstInput');
+        if (first) first.focus();
+    }, 100);
 
-        // tunggu sampai function ajax ada
-        if (typeof window.createData === 'function') {
 
-            window.createData('#formClass', "{{ route('class.store') }}", function(res) {
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
+
+    if (typeof window.createData === 'function') {
+
+        window.createData('#formClass', "{{ route('class.store') }}", {
+            onSuccess: function(res) {
 
                 $('#alertBox').html(`
-                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                    ${res.message ?? 'Data kelas berhasil ditambahkan'}
-                </div>
-            `);
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Data kelas berhasil ditambahkan'}
+                    </div>
+                `);
 
-            });
+                // reset form + fokus lagi ke input pertama
+                document.getElementById('formClass').reset();
+                document.getElementById('firstInput').focus();
+            }
+        });
 
-        } else {
-            console.error('createData belum tersedia (ajax.js belum ke-load)');
-        }
+    } else {
+        console.error('createData belum tersedia (ajax.js belum ke-load)');
+    }
 
-    });
+});
 </script>
 @endpush

@@ -4,14 +4,42 @@
 
 <div class="p-6">
 
+    <!-- BREADCRUMB -->
+    <div class="flex items-center text-sm text-gray-500 mb-4">
+        <span class="text-gray-700 font-medium">
+            Dashboard
+        </span>
+
+        <span class="mx-2">/</span>
+
+        <a href="{{ route('grades.index') }}"
+            class="hover:text-blue-600">
+            Nilai
+        </a>
+
+        <span class="mx-2">/</span>
+
+        <span class="text-blue-600 font-medium">
+            Edit Nilai
+        </span>
+    </div>
+
+
     <!-- HEADER -->
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Edit Nilai Siswa</h1>
-        <p class="text-sm text-gray-500">Perbarui nilai akademik siswa dengan benar</p>
+        <h1 class="text-2xl font-bold text-gray-800">
+            Edit Nilai Siswa
+        </h1>
+
+        <p class="text-sm text-gray-500">
+            Perbarui nilai akademik siswa sesuai mata pelajaran yang diajar
+        </p>
     </div>
+
 
     <!-- ALERT -->
     <div id="alertBox" class="mb-4"></div>
+
 
     <!-- CARD -->
     <div class="bg-white rounded-xl shadow border max-w-3xl">
@@ -23,6 +51,7 @@
             </h2>
         </div>
 
+
         <!-- FORM -->
         <form id="formEditGrade"
             method="POST"
@@ -32,52 +61,145 @@
             @csrf
             @method('PUT')
 
+
+            <!-- DATA SISWA -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="text-sm font-medium text-gray-600">
+                        Nama Siswa
+                    </label>
+
+                    <input type="text"
+                        value="{{ $grade->student->name ?? '-' }}"
+                        disabled
+                        class="w-full mt-1 px-3 py-2 border rounded-lg bg-gray-100 text-gray-600">
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-600">
+                        Kelas
+                    </label>
+
+                    <input type="text"
+                        value="{{ $grade->student->class->name ?? '-' }}"
+                        disabled
+                        class="w-full mt-1 px-3 py-2 border rounded-lg bg-gray-100 text-gray-600">
+                </div>
+
+            </div>
+
+
             <!-- SUBJECT -->
             <div>
-                <label class="text-sm font-medium text-gray-600">Mata Pelajaran</label>
+                <label class="text-sm font-medium text-gray-600">
+                    Mata Pelajaran
+                </label>
 
+                @if(auth()->user()->role === 'teacher')
+
+                <!-- TEACHER TIDAK BOLEH GANTI MAPEL -->
+                <input type="text"
+                    value="{{ $grade->subject }}"
+                    disabled
+                    class="w-full mt-1 px-3 py-2 border rounded-lg bg-gray-100 text-gray-600">
+
+                <input type="hidden"
+                    name="subject"
+                    value="{{ $grade->subject }}">
+
+                @else
+
+                <!-- ADMIN / SUPER ADMIN -->
                 <select name="subject"
                     class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
 
-                    <option value="">-- Pilih Mata Pelajaran --</option>
+                    <option value="">
+                        -- Pilih Mata Pelajaran --
+                    </option>
 
                     @foreach($subjects as $s)
                     <option value="{{ $s->subject }}"
                         {{ $grade->subject == $s->subject ? 'selected' : '' }}>
-
                         {{ $s->subject }}
-
                     </option>
                     @endforeach
 
                 </select>
+
+                @endif
             </div>
+
 
             <!-- NILAI -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
+                <!-- TUGAS -->
                 <div>
-                    <label class="text-sm font-medium text-gray-600">Tugas</label>
-                    <input type="number" name="assignment_score"
+                    <label class="text-sm font-medium text-gray-600">
+                        Tugas
+                    </label>
+
+                    <input type="number"
+                        id="firstInput"
+                        name="assignment_score"
+                        min="0"
+                        max="100"
                         value="{{ $grade->assignment_score }}"
                         class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
 
+                <!-- UTS -->
                 <div>
-                    <label class="text-sm font-medium text-gray-600">UTS</label>
-                    <input type="number" name="mid_exam_score"
+                    <label class="text-sm font-medium text-gray-600">
+                        UTS
+                    </label>
+
+                    <input type="number"
+                        name="mid_exam_score"
+                        min="0"
+                        max="100"
                         value="{{ $grade->mid_exam_score }}"
                         class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-400">
                 </div>
 
+                <!-- UAS -->
                 <div>
-                    <label class="text-sm font-medium text-gray-600">UAS</label>
-                    <input type="number" name="final_exam_score"
+                    <label class="text-sm font-medium text-gray-600">
+                        UAS
+                    </label>
+
+                    <input type="number"
+                        name="final_exam_score"
+                        min="0"
+                        max="100"
                         value="{{ $grade->final_exam_score }}"
                         class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-400">
                 </div>
 
             </div>
+
+
+            <!-- RATA-RATA -->
+            @php
+            $final =
+            (($grade->assignment_score ?? 0) +
+            ($grade->mid_exam_score ?? 0) +
+            ($grade->final_exam_score ?? 0)) / 3;
+            @endphp
+
+            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+
+                <p class="text-sm text-gray-500">
+                    Nilai Rata-rata
+                </p>
+
+                <h3 class="text-2xl font-bold text-blue-700">
+                    {{ number_format($final, 1) }}
+                </h3>
+
+            </div>
+
 
             <!-- BUTTON -->
             <div class="flex justify-between items-center pt-4 border-t">
@@ -107,13 +229,37 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        // 🔥 CEK jQuery
+        // AUTO FOCUS
+        const firstInput = document.getElementById('firstInput');
+
+        if (firstInput) {
+            firstInput.focus();
+        }
+
+        // VALIDASI NILAI
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+
+            input.addEventListener('input', function() {
+
+                if (this.value > 100) {
+                    this.value = 100;
+                }
+
+                if (this.value < 0) {
+                    this.value = 0;
+                }
+
+            });
+
+        });
+
+        // CEK JQUERY
         if (typeof window.$ === 'undefined') {
             console.error('jQuery belum load');
             return;
         }
 
-        // 🔥 CEK ajax.js
+        // CEK AJAX UPDATE
         if (typeof window.updateData === 'function') {
 
             updateData(
@@ -122,8 +268,8 @@
                 function(res) {
 
                     $('#alertBox').html(`
-                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                        ${res.message ?? 'Nilai berhasil diupdate'}
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg mb-4">
+                        ${res.message ?? 'Nilai berhasil diperbarui'}
                     </div>
                 `);
 
@@ -131,7 +277,7 @@
             );
 
         } else {
-            console.error('updateData tidak ditemukan (ajax.js belum di-load)');
+            console.error('updateData tidak ditemukan (cek ajax.js)');
         }
 
     });

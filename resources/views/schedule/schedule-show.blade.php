@@ -4,6 +4,27 @@
 
 @section('content')
 
+<!-- BREADCRUMB -->
+<div class="mb-4 text-sm text-gray-500">
+    <a href="{{ route('dashboard') }}"
+       class="hover:text-blue-600">
+        Dashboard
+    </a>
+
+    <span class="mx-2">/</span>
+
+    <a href="{{ route('schedule.index') }}"
+       class="hover:text-blue-600">
+        Kelola Jadwal
+    </a>
+
+    <span class="mx-2">/</span>
+
+    <span class="text-gray-700 font-medium">
+        Detail Jadwal
+    </span>
+</div>
+
 <div class="space-y-6">
 
     <!-- HEADER -->

@@ -4,6 +4,21 @@
 
 <div class="p-6 space-y-6">
 
+    <!-- 🔥 BREADCRUMB -->
+    <nav class="text-sm text-gray-500">
+        <ol class="flex space-x-2">
+            <li>
+                <a href="{{ route('class.index') }}" class="hover:text-blue-600">
+                    Kelas
+                </a>
+            </li>
+            <li>/</li>
+            <li class="text-gray-700 font-medium">
+                {{ $class->name }}
+            </li>
+        </ol>
+    </nav>
+
     <!-- HEADER -->
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 rounded-2xl shadow-lg">
 
@@ -18,6 +33,7 @@
                 </p>
             </div>
 
+            <!-- 🔥 SLUG BACK -->
             <a href="{{ route('class.index') }}"
                class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm transition">
                 ← Kembali
@@ -25,7 +41,7 @@
 
         </div>
 
-        <!-- INFO CARDS -->
+        <!-- INFO -->
         <div class="grid md:grid-cols-6 gap-4 mt-6">
 
             <div class="bg-white/20 p-4 rounded-xl">
@@ -40,8 +56,8 @@
 
             <div class="bg-white/20 p-4 rounded-xl">
                 <p class="text-xs opacity-80">Tingkat</p>
-                <p class="font-bold text-lg text-right">
-                    {{ number_format($class->level ?? 0) }}
+                <p class="font-bold text-lg">
+                    {{ $class->level }}
                 </p>
             </div>
 
@@ -59,8 +75,8 @@
 
             <div class="bg-white/20 p-4 rounded-xl">
                 <p class="text-xs opacity-80">Total Siswa</p>
-                <p class="font-bold text-lg text-right">
-                    {{ number_format($class->students->count()) }}
+                <p class="font-bold text-lg">
+                    {{ $class->students->count() }}
                 </p>
             </div>
 
@@ -75,7 +91,7 @@
             <h2 class="font-semibold text-lg">Daftar Siswa</h2>
 
             <span class="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-                {{ number_format($class->students->count()) }} Siswa
+                {{ $class->students->count() }} Siswa
             </span>
         </div>
 
@@ -112,7 +128,7 @@
                         </td>
 
                         <td class="p-4 text-right text-gray-600">
-                            {{ is_numeric($student->nisn) ? number_format($student->nisn) : ($student->nisn ?? '-') }}
+                            {{ $student->nisn ?? '-' }}
                         </td>
 
                         <td class="p-4 text-center text-gray-600">

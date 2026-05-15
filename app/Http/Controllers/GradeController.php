@@ -6,34 +6,86 @@ use App\Models\Grade;
 use App\Models\ClassModel;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GradeController extends Controller
 {
+    // =========================
+    // INDEX
+    // =========================
     public function index(Request $request)
     {
-        $classes = ClassModel::all();
+        $user = Auth::user();
+        $classes = ClassModel::where('archived', 0)->get();
 
-        $query = Grade::with(['student.class']);
+        $query = Grade::with([
+            'student.class',
+            'schedule.teacher',
+            'schedule.class'
+        ])->where('archived', 0);
 
+        // =========================
+        // STUDENT
+        // =========================
+        if ($user->role === 'student') {
+
+            $student = $user->student;
+
+            if (!$student) {
+                abort(403, 'Data student tidak ditemukan');
+            }
+
+            $query->where('student_id', $student->id);
+        }
+
+        // =========================
+        // TEACHER
+        // =========================
+        elseif ($user->role === 'teacher') {
+
+            $teacher = Teacher::where('user_id', $user->id)->first();
+
+            if ($teacher) {
+                $scheduleIds = Schedule::where('teacher_id', $teacher->id)
+                    ->where('archived', 0)
+                    ->pluck('id');
+
+                $query->whereIn('schedule_id', $scheduleIds);
+            }
+        }
+
+        // =========================
+        // FILTER CLASS
+        // =========================
         if ($request->class_id) {
             $query->whereHas('student', function ($q) use ($request) {
                 $q->where('class_id', $request->class_id);
             });
         }
 
+        // =========================
+        // FILTER MAJOR
+        // =========================
         if ($request->major) {
             $query->whereHas('student.class', function ($q) use ($request) {
                 $q->where('major', $request->major);
             });
         }
 
+        // =========================
+        // FILTER ACADEMIC YEAR
+        // =========================
         if ($request->academic_year) {
             $query->whereHas('student.class', function ($q) use ($request) {
                 $q->where('academic_year', $request->academic_year);
             });
         }
 
+        // =========================
+        // FILTER SEMESTER
+        // =========================
         if ($request->semester) {
             $query->whereHas('student.class', function ($q) use ($request) {
                 $q->where('semester', $request->semester);
@@ -45,96 +97,218 @@ class GradeController extends Controller
         return view('grade.grade-index', compact('data', 'classes'));
     }
 
-    public function create(Request $request)
+    // =========================
+    // ARCHIVED
+    // =========================
+    public function archived()
+{
+    $grades = Grade::with([
+        'student.class',
+        'schedule.teacher',
+        'schedule.class'
+    ])
+    ->where('archived', 1)
+    ->latest()
+    ->get();
+
+    return view('grade.grade-archived', compact('grades'));
+}
+
+    // =========================
+    // RESTORE
+    // =========================
+    public function restore(int $id, Request $request)
     {
-        $classes = ClassModel::all();
-        $teachers = Teacher::all();
+        $grade = Grade::where('archived', 1)
+            ->findOrFail($id);
 
-        $students = Student::with('class')
-            ->when($request->class_id, fn($q) => $q->where('class_id', $request->class_id))
-            ->when($request->major, function ($q) use ($request) {
-                $q->whereHas('class', fn($q2) => $q2->where('major', $request->major));
-            })
-            ->when($request->academic_year, function ($q) use ($request) {
-                $q->whereHas('class', fn($q2) => $q2->where('academic_year', $request->academic_year));
-            })
-            ->when($request->semester, function ($q) use ($request) {
-                $q->whereHas('class', fn($q2) => $q2->where('semester', $request->semester));
-            })
-            ->when($request->teacher_id, function ($q) use ($request) {
-                $q->whereHas('class', fn($q2) => $q2->where('teacher_id', $request->teacher_id));
-            })
-            ->get();
-
-        return view('grade.grade-add', compact('students', 'classes', 'teachers'));
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'subject' => 'required|string',
-            'student_id' => 'required|array',
+        $grade->update([
+            'archived' => 0
         ]);
 
-        $created = [];
-
-        foreach ($request->student_id as $index => $student_id) {
-            $created[] = Grade::create([
-                'student_id' => $student_id,
-                'subject' => $request->subject,
-                'assignment_score' => $request->assignment_score[$index] ?? 0,
-                'mid_exam_score' => $request->mid_exam_score[$index] ?? 0,
-                'final_exam_score' => $request->final_exam_score[$index] ?? 0,
-            ]);
-        }
-
-        // ✅ AJAX RESPONSE
         if ($request->ajax()) {
             return response()->json([
-                'status' => true,
-                'message' => 'Nilai berhasil disimpan',
-                'data' => $created
+                'success' => true,
+                'message' => 'Data nilai berhasil direstore'
             ]);
         }
 
-        return redirect()->route('grades.index')
-            ->with('success', 'Nilai berhasil disimpan');
+        return redirect()
+            ->route('grades.archived')
+            ->with('success', 'Data nilai berhasil direstore');
     }
 
+    // =========================
+    // CREATE
+    // =========================
+    public function create(Request $request)
+    {
+        $user = Auth::user();
+
+        $classes = ClassModel::where('archived', 0)->get();
+        $teachers = Teacher::where('archived', 0)->get();
+
+        $schedules = collect();
+        $students = collect();
+
+        $selectedTeacher = Teacher::where('user_id', $user->id)->first();
+
+        if ($user->role === 'teacher') {
+
+            if (!$selectedTeacher) {
+                return redirect()
+                    ->route('grades.index')
+                    ->with('error', 'Teacher tidak ditemukan');
+            }
+
+            $schedules = Schedule::with(['class', 'teacher'])
+                ->where('teacher_id', $selectedTeacher->id)
+                ->where('archived', 0)
+                ->get();
+
+            $classIds = $schedules->pluck('class_id')->unique();
+
+            $students = Student::with('class')
+                ->where('archived', 0)
+                ->whereIn('class_id', $classIds)
+                ->get();
+        }
+
+        else {
+
+            $schedules = Schedule::with(['class', 'teacher'])
+                ->where('archived', 0)
+                ->get();
+
+            $students = Student::with('class')
+                ->where('archived', 0)
+                ->when($request->class_id, function ($q) use ($request) {
+                    $q->where('class_id', $request->class_id);
+                })
+                ->get();
+        }
+
+        return view('grade.grade-add', compact(
+            'classes',
+            'teachers',
+            'schedules',
+            'students'
+        ));
+    }
+
+    // =========================
+    // STORE
+    // =========================
+    public function store(Request $request)
+    {
+        $request->validate([
+            'schedule_id' => 'required|exists:tbl_schedules,id',
+            'student_id' => 'required|array',
+            'subject' => 'required|string',
+        ]);
+
+        foreach ($request->student_id as $i => $student_id) {
+
+            Grade::create([
+                'schedule_id' => $request->schedule_id,
+                'student_id' => $student_id,
+                'subject' => $request->subject,
+                'assignment_score' => $request->assignment_score[$i] ?? 0,
+                'mid_exam_score' => $request->mid_exam_score[$i] ?? 0,
+                'final_exam_score' => $request->final_exam_score[$i] ?? 0,
+                'archived' => 0
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Nilai berhasil disimpan'
+        ]);
+    }
+
+    // =========================
+    // SHOW
+    // =========================
     public function show(int $id)
     {
-        $grade = Grade::with(['student.class'])->findOrFail($id);
-        $teachers = Teacher::all();
+        $grade = Grade::with([
+            'student.class',
+            'schedule.teacher',
+            'schedule.class'
+        ])->findOrFail($id);
 
-        return view('grade.grade-show', compact('grade', 'teachers'));
+        if ($grade->archived == 1) {
+            abort(404);
+        }
+
+        return view('grade.grade-show', compact('grade'));
     }
 
+    // =========================
+    // EDIT
+    // =========================
     public function edit(int $id)
     {
-        $grade = Grade::findOrFail($id);
+        $user = Auth::user();
 
-        // ambil subject unik saja
-        $subjects = Teacher::select('subject')->distinct()->get();
+        $grade = Grade::with([
+            'student.class',
+            'schedule.teacher'
+        ])->findOrFail($id);
 
-        return view('grade.grade-edit', compact('grade', 'subjects'));
+        if ($grade->archived == 1) {
+            abort(404);
+        }
+
+        $subjects = collect();
+
+        if ($user->role === 'teacher') {
+
+            $teacher = Teacher::where('user_id', $user->id)->first();
+
+            if ($teacher) {
+                $subjects = collect([
+                    (object)[
+                        'subject' => $teacher->subject
+                    ]
+                ]);
+            }
+        }
+
+        else {
+            $subjects = Teacher::select('subject')
+                ->where('archived', 0)
+                ->distinct()
+                ->orderBy('subject')
+                ->get();
+        }
+
+        return view('grade.grade-edit', compact(
+            'grade',
+            'subjects'
+        ));
     }
 
+    // =========================
+    // UPDATE
+    // =========================
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'subject' => 'required',
+            'assignment_score' => 'nullable|numeric|min:0|max:100',
+            'mid_exam_score' => 'nullable|numeric|min:0|max:100',
+            'final_exam_score' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $grade = Grade::findOrFail($id);
+        $grade = Grade::where('archived', 0)
+            ->findOrFail($id);
 
         $grade->update([
-            'subject' => $request->subject,
-            'assignment_score' => $request->assignment_score,
-            'mid_exam_score' => $request->mid_exam_score,
-            'final_exam_score' => $request->final_exam_score,
+            'assignment_score' => $request->assignment_score ?? 0,
+            'mid_exam_score' => $request->mid_exam_score ?? 0,
+            'final_exam_score' => $request->final_exam_score ?? 0,
         ]);
 
-        // ✅ AJAX RESPONSE
         if ($request->ajax()) {
             return response()->json([
                 'status' => true,
@@ -142,23 +316,32 @@ class GradeController extends Controller
             ]);
         }
 
-        return redirect()->route('grades.index')
+        return redirect()
+            ->route('grades.index')
             ->with('success', 'Nilai berhasil diupdate');
     }
 
+    // =========================
+    // DELETE => ARCHIVE
+    // =========================
     public function destroy(Request $request, int $id)
     {
-        $grade = Grade::findOrFail($id);
-        $grade->delete();
+        $grade = Grade::where('archived', 0)
+            ->findOrFail($id);
+
+        $grade->update([
+            'archived' => 1
+        ]);
 
         if ($request->ajax()) {
             return response()->json([
-                'status' => true,
-                'message' => 'Data berhasil dihapus'
+                'success' => true,
+                'message' => 'Data berhasil dipindahkan ke arsip'
             ]);
         }
 
-        return redirect()->route('grades.index')
-            ->with('success', 'Data berhasil dihapus');
+        return redirect()
+            ->route('grades.index')
+            ->with('success', 'Data berhasil dipindahkan ke arsip');
     }
 }

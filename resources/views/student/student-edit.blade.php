@@ -6,10 +6,25 @@
 
 <div class="space-y-6">
 
+    <!-- 🔥 BREADCRUMB -->
+    <nav class="text-sm text-gray-500">
+        <ol class="flex items-center space-x-2">
+            <li>
+                <a href="{{ route('students.index') }}" class="hover:text-blue-600">
+                    Siswa
+                </a>
+            </li>
+            <li>/</li>
+            <li class="text-gray-700 font-medium">
+                Edit
+            </li>
+        </ol>
+    </nav>
+
     <!-- ALERT AJAX -->
     <div id="alertBox"></div>
 
-    <!-- ERROR VALIDATION (fallback Laravel) -->
+    <!-- ERROR VALIDATION -->
     @if ($errors->any())
         <div class="mb-4 bg-red-100 text-red-700 p-3 rounded">
             @foreach ($errors->all() as $error)
@@ -34,9 +49,10 @@
 
             <input type="hidden" name="id" value="{{ $student->id }}">
 
+            <!-- ✅ AUTO-FOCUS -->
             <div>
                 <label class="text-sm font-medium">Email</label>
-                <input type="email" name="email"
+                <input type="email" name="email" id="firstInput"
                     value="{{ $student->user->email ?? '' }}"
                     class="w-full border rounded-lg px-3 py-2 text-sm">
             </div>
@@ -72,14 +88,12 @@
                 <label class="text-sm font-medium">Kelas</label>
                 <select name="class_id"
                     class="w-full border rounded-lg px-3 py-2 text-sm">
-
                     @foreach($classes as $class)
                         <option value="{{ $class->id }}"
                             {{ $student->class_id == $class->id ? 'selected' : '' }}>
                             {{ $class->name }} - {{ $class->major }}
                         </option>
                     @endforeach
-
                 </select>
             </div>
 
@@ -94,15 +108,12 @@
                 <label class="text-sm font-medium">Jenis Kelamin</label>
                 <select name="gender"
                     class="w-full border rounded-lg px-3 py-2 text-sm">
-
                     <option value="L" {{ $student->gender == 'L' ? 'selected' : '' }}>
                         Laki-laki
                     </option>
-
                     <option value="P" {{ $student->gender == 'P' ? 'selected' : '' }}>
                         Perempuan
                     </option>
-
                 </select>
             </div>
 
@@ -115,15 +126,9 @@
 
             <div>
                 <label class="text-sm font-medium">Tanggal Lahir</label>
-
                 <input type="date" name="birth_date"
                     value="{{ \Carbon\Carbon::parse($student->birth_date)->format('Y-m-d') }}"
                     class="w-full border rounded-lg px-3 py-2 text-sm">
-
-                <!-- TAMBAHAN FORMAT INDONESIA (tidak mengubah desain utama) -->
-                <p class="text-xs text-gray-500 mt-1">
-                    Format Indonesia: {{ \Carbon\Carbon::parse($student->birth_date)->format('d-m-Y') }}
-                </p>
             </div>
 
             <div>
@@ -143,19 +148,9 @@
                 <label class="text-sm font-medium">Status</label>
                 <select name="status"
                     class="w-full border rounded-lg px-3 py-2 text-sm">
-
-                    <option value="aktif" {{ $student->status == 'aktif' ? 'selected' : '' }}>
-                        Aktif
-                    </option>
-
-                    <option value="lulus" {{ $student->status == 'lulus' ? 'selected' : '' }}>
-                        Lulus
-                    </option>
-
-                    <option value="pindah" {{ $student->status == 'pindah' ? 'selected' : '' }}>
-                        Pindah
-                    </option>
-
+                    <option value="aktif" {{ $student->status == 'aktif' ? 'selected' : '' }}>Aktif</option>
+                    <option value="lulus" {{ $student->status == 'lulus' ? 'selected' : '' }}>Lulus</option>
+                    <option value="pindah" {{ $student->status == 'pindah' ? 'selected' : '' }}>Pindah</option>
                 </select>
             </div>
 
@@ -187,10 +182,28 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    // AUTO-FOCUS
+    const input = document.getElementById('firstInput');
+
+    if (input) {
+        input.focus();
+
+        // hanya jalankan untuk input yang support setSelectionRange
+        const supportedTypes = ['text', 'search', 'password', 'tel', 'url'];
+
+        if (supportedTypes.includes(input.type)) {
+            input.setSelectionRange(
+                input.value.length,
+                input.value.length
+            );
+        }
+    }
+
     if (typeof updateData !== 'undefined') {
-
-        updateData('#formEditSiswa', "{{ route('students.update', $student->id) }}");
-
+        updateData(
+            '#formEditSiswa',
+            "{{ route('students.update', $student->slug) }}"
+        );
     } else {
         console.error('updateData belum tersedia');
     }

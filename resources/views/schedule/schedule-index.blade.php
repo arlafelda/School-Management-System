@@ -4,25 +4,54 @@
 
 @section('content')
 
+@php
+$user = auth()->user();
+@endphp
+
+<!-- BREADCRUMB -->
+<div class="mb-4 text-sm text-gray-500">
+    <span class="text-gray-700 font-medium">
+        Dashboard
+    </span>
+
+    <span class="mx-2">/</span>
+
+    <span class="text-gray-700 font-medium">
+        Kelola Jadwal
+    </span>
+</div>
+
 <div class="space-y-6">
 
-    <!-- ALERT -->
     <div id="alertBox"></div>
 
-    <!-- HEADER -->
     <div class="flex justify-between items-start">
+
         <div>
             <h1 class="text-2xl font-bold">Kelola Jadwal</h1>
-            <p class="text-gray-500 text-sm">Manajemen jadwal pelajaran sekolah</p>
+            <p class="text-gray-500 text-sm">
+                Manajemen jadwal pelajaran sekolah
+            </p>
         </div>
 
-        <a href="{{ route('schedule.create') }}"
-           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-            + Tambah Jadwal
-        </a>
+        @if(in_array($user->role, ['super_admin', 'admin']))
+        <div class="flex gap-2">
+
+            <a href="{{ route('schedule.archived') }}"
+                class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
+                Data Arsip
+            </a>
+
+            <a href="{{ route('schedule.create') }}"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                + Tambah Jadwal
+            </a>
+
+        </div>
+        @endif
+
     </div>
 
-    <!-- FILTER -->
     <div class="bg-white p-4 rounded-lg shadow">
 
         <form method="GET" class="flex flex-wrap gap-3 items-center">
@@ -34,10 +63,10 @@
                 <option value="">Semua Kelas</option>
 
                 @foreach($classes as $class)
-                    <option value="{{ $class->id }}"
-                        {{ request('class_id') == $class->id ? 'selected' : '' }}>
-                        {{ $class->name }}
-                    </option>
+                <option value="{{ $class->id }}"
+                    {{ request('class_id') == $class->id ? 'selected' : '' }}>
+                    {{ $class->name }}
+                </option>
                 @endforeach
 
             </select>
@@ -62,7 +91,6 @@
 
     </div>
 
-    <!-- TABLE -->
     <div class="bg-white rounded-lg shadow overflow-x-auto">
 
         <table class="min-w-full text-sm">
@@ -75,7 +103,10 @@
                     <th class="p-4 text-center">Jurusan</th>
                     <th class="p-4 text-center">Mapel</th>
                     <th class="p-4 text-center">Guru</th>
+
+                    @if(in_array($user->role, ['super_admin', 'admin']))
                     <th class="p-4 text-center">Aksi</th>
+                    @endif
                 </tr>
             </thead>
 
@@ -83,8 +114,10 @@
 
                 @forelse($schedules as $schedule)
 
-                <!-- ROW BISA DIKLIK -->
-                <tr data-url="{{ route('schedule.show', $schedule->id) }}"
+                @if($user->role !== 'student' || optional($schedule->class)->id == optional($user->student)->class_id)
+
+                <tr id="row-{{ $schedule->id }}"
+                    data-url="{{ route('schedule.show', $schedule->id) }}"
                     class="schedule-row hover:bg-gray-50 transition cursor-pointer">
 
                     <td class="p-4 font-semibold text-blue-600">
@@ -111,40 +144,43 @@
                         {{ $schedule->teacher->name ?? '-' }}
                     </td>
 
-                    <!-- ACTION -->
+                    @if(in_array($user->role, ['super_admin', 'admin']))
                     <td class="p-4 text-center space-x-2">
 
-                        <!-- EDIT -->
                         <a href="{{ route('schedule.edit', $schedule->id) }}"
-                           onclick="event.stopPropagation()"
-                           class="text-blue-600 hover:underline">
+                            onclick="event.stopPropagation()"
+                            class="text-blue-600 hover:underline">
                             Edit
                         </a>
 
-                        <!-- DELETE -->
                         <form action="{{ route('schedule.delete', $schedule->id) }}"
-                              method="POST"
-                              class="inline formDelete"
-                              onclick="event.stopPropagation()">
+                            method="POST"
+                            class="inline formDelete"
+                            data-id="{{ $schedule->id }}"
+                            onclick="event.stopPropagation()">
 
                             @csrf
                             @method('DELETE')
 
                             <button type="submit"
                                 class="text-red-500 hover:underline">
-                                Hapus
+                                Arsipkan
                             </button>
 
                         </form>
 
                     </td>
+                    @endif
 
                 </tr>
+
+                @endif
 
                 @empty
 
                 <tr>
-                    <td colspan="7" class="text-center p-4 text-gray-500">
+                    <td colspan="{{ in_array($user->role, ['super_admin', 'admin']) ? '7' : '6' }}"
+                        class="text-center p-4 text-gray-500">
                         Data jadwal belum tersedia
                     </td>
                 </tr>
@@ -163,42 +199,42 @@
 
 
 @push('scripts')
-
 <script>
-window.addEventListener('load', function () {
+    document.addEventListener('DOMContentLoaded', function() {
 
-    // =====================
-    // CLICK ROW → DETAIL
-    // =====================
-    $(document).on('click', '.schedule-row', function () {
-        let url = $(this).data('url');
-        window.location.href = url;
-    });
+        $(document).on('click', '.schedule-row', function() {
+            let url = $(this).data('url');
+            window.location.href = url;
+        });
 
+        $(document).on('submit', '.formDelete', function(e) {
+            e.preventDefault();
 
-    // =====================
-    // DELETE AJAX
-    // =====================
-    $(document).on('submit', '.formDelete', function (e) {
-        e.preventDefault();
+            if (!confirm('Yakin ingin memindahkan jadwal ke arsip?')) return;
 
-        let url = this.action;
-        let row = $(this).closest('tr');
+            let url = this.action;
+            let id = $(this).data('id');
+            let row = $('#row-' + id);
 
-        deleteData(url, function () {
+            if (typeof deleteData !== 'function') {
+                console.error('deleteData function tidak ditemukan');
+                return;
+            }
 
-            row.remove();
+            deleteData(url, function() {
 
-            $('#alertBox').html(`
+                row.remove();
+
+                $('#alertBox').html(`
                 <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                    Data jadwal berhasil dihapus
+                    Data jadwal berhasil dipindahkan ke arsip
                 </div>
             `);
 
+            });
+
         });
+
     });
-
-});
 </script>
-
 @endpush

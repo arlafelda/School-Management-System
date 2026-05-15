@@ -4,48 +4,76 @@
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
+    <!-- 🧭 BREADCRUMB -->
+    <div class="px-6 pt-4 text-sm text-gray-500">
+        <a href="{{ route('extracurricular.index') }}" class="hover:text-blue-600">
+            Ekstrakurikuler
+        </a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 font-medium">
+            Tambah Data
+        </span>
+    </div>
+
     <!-- HEADER -->
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
-        <h2 class="font-semibold text-blue-700">
-            Tambah Ekstrakurikuler
-        </h2>
+
+        <div>
+            <h2 class="font-semibold text-blue-700 text-xl">
+                Tambah Ekstrakurikuler
+            </h2>
+            <p class="text-sm text-gray-500">
+                Input data kegiatan ekstrakurikuler
+            </p>
+        </div>
 
         <a href="{{ route('extracurricular.index') }}"
            class="text-sm bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300">
             ← Kembali
         </a>
+
     </header>
 
     <!-- CONTENT -->
     <main class="p-6">
 
-        <!-- ✅ ALERT -->
+        <!-- ALERT -->
         <div id="alertBox" class="max-w-3xl mx-auto mb-4"></div>
 
         <div class="bg-white p-6 rounded-lg shadow max-w-3xl mx-auto">
 
-            <!-- ✅ TAMBAH ID -->
+            <!-- FORM -->
             <form id="formEkskul" method="POST" action="{{ route('extracurricular.store') }}">
                 @csrf
 
-                <!-- NAMA -->
+                <!-- ✅ FIELD PERTAMA -->
                 <div class="mb-4">
-                    <label class="block mb-1 text-sm font-medium">Nama Ekskul</label>
-                    <input type="text" name="name"
-                           class="w-full border rounded-lg p-2 focus:outline-none focus:ring"
-                           required>
+                    <label class="block mb-1 text-sm font-medium">
+                        Nama Ekstrakurikuler
+                    </label>
+                    <input 
+                        id="firstInput"
+                        type="text"
+                        name="name"
+                        required
+                        autofocus
+                        class="w-full border rounded-lg p-2 focus:outline-none focus:ring">
                 </div>
 
                 <!-- PEMBINA -->
                 <div class="mb-4">
-                    <label class="block mb-1 text-sm font-medium">Pembina</label>
+                    <label class="block mb-1 text-sm font-medium">
+                        Pembina
+                    </label>
                     <select name="teacher_id"
                             class="w-full border rounded-lg p-2 focus:outline-none focus:ring">
 
                         <option value="">-- Pilih Guru --</option>
 
                         @foreach($teachers as $t)
-                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                            <option value="{{ $t->id }}">
+                                {{ $t->name }}
+                            </option>
                         @endforeach
 
                     </select>
@@ -53,13 +81,17 @@
 
                 <!-- SISWA -->
                 <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium">Pilih Siswa</label>
+                    <label class="block mb-2 text-sm font-medium">
+                        Pilih Siswa
+                    </label>
 
                     <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border p-3 rounded bg-gray-50">
 
                         @foreach($students as $s)
                             <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" name="student_ids[]" value="{{ $s->id }}">
+                                <input type="checkbox"
+                                       name="student_ids[]"
+                                       value="{{ $s->id }}">
                                 {{ $s->name }}
                             </label>
                         @endforeach
@@ -97,27 +129,35 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ✅ CEK JQUERY
+    // ✅ FORCE AUTO FOCUS (ANTI GAGAL)
+    setTimeout(() => {
+        let first = document.getElementById('firstInput');
+        if (first) {
+            first.focus();
+        }
+    }, 100);
+
+
     if (typeof window.$ === 'undefined') {
         console.error('jQuery belum load');
         return;
     }
 
-    // ✅ CEK FUNCTION AJAX
     if (typeof window.createData === 'function') {
 
-        window.createData('#formEkskul', "{{ route('extracurricular.store') }}", function(res) {
+        window.createData('#formEkskul', "{{ route('extracurricular.store') }}", {
+            onSuccess: function(res) {
 
-            // tampilkan alert
-            $('#alertBox').html(`
-                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                    ${res.message ?? 'Data berhasil ditambahkan'}
-                </div>
-            `);
+                $('#alertBox').html(`
+                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                        ${res.message ?? 'Data berhasil ditambahkan'}
+                    </div>
+                `);
 
-            // optional redirect
-            // window.location.href = "{{ route('extracurricular.index') }}";
-
+                // 🔁 reset + fokus lagi
+                document.getElementById('formEkskul').reset();
+                document.getElementById('firstInput').focus();
+            }
         });
 
     } else {

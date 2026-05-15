@@ -12,7 +12,10 @@ class StudentController extends Controller
 {
     public function index()
     {
-        $students = Student::with('user', 'class')->get();
+        $students = Student::with('user', 'class')
+            ->where('archived', 0)
+            ->get();
+
         return view('student.student-index', compact('students'));
     }
 
@@ -28,10 +31,8 @@ class StudentController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:tbl_users,email',
             'password' => 'required|min:6',
-
             'nisn' => 'required|unique:tbl_students,nisn',
             'nis' => 'required|unique:tbl_students,nis',
-
             'class_id' => 'required|exists:tbl_classes,id',
         ]);
 
@@ -40,7 +41,8 @@ class StudentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'student'
+            'role' => 'student',
+            'archived' => 0
         ]);
 
         // STUDENT
@@ -61,6 +63,7 @@ class StudentController extends Controller
             'mother_name' => $request->mother_name,
             'parent_phone' => $request->parent_phone,
             'parent_address' => $request->parent_address,
+            'archived' => 0
         ]);
 
         if ($request->expectsJson()) {
@@ -74,29 +77,34 @@ class StudentController extends Controller
             ->with('success', 'Akun student berhasil dibuat');
     }
 
-    public function show(int $id)
+    public function show(string $slug)
     {
-        $student = Student::with('user', 'class')->findOrFail($id);
+        $student = Student::with('user', 'class')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
         return view('student.student-show', compact('student'));
     }
 
-    public function edit(int $id)
+    public function edit(string $slug)
     {
-        $student = Student::findOrFail($id);
-        $classes = ClassModel::all(); // 🔥 WAJIB
+        $student = Student::where('slug', $slug)->firstOrFail();
+        $classes = ClassModel::all();
 
         return view('student.student-edit', compact('student', 'classes'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $slug)
     {
-        $student = Student::with('user')->findOrFail($id);
+        $student = Student::with('user')
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         $validated = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:tbl_users,email,' . $student->user_id,
-            'nisn' => 'required|unique:tbl_students,nisn,' . $id,
-            'nis' => 'required|unique:tbl_students,nis,' . $id,
+            'nisn' => 'required|unique:tbl_students,nisn,' . $student->id,
+            'nis' => 'required|unique:tbl_students,nis,' . $student->id,
             'class_id' => 'required|exists:tbl_classes,id',
         ]);
 
@@ -136,24 +144,63 @@ class StudentController extends Controller
             ->with('success', 'Data siswa berhasil diupdate');
     }
 
-    public function destroy(int $id, Request $request)
+    // ARCHIVE DELETE
+    public function destroy(string $slug, Request $request)
     {
-        $student = Student::findOrFail($id);
+        $student = Student::with('user')
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         if ($student->user) {
-            $student->user->delete();
+            $student->user->update([
+                'archived' => 1
+            ]);
         }
 
-        $student->delete();
+        $student->update([
+            'archived' => 1
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dihapus'
+                'message' => 'Data berhasil dipindahkan ke arsip'
             ]);
         }
 
         return redirect()->route('students.index')
-            ->with('success', 'Data siswa berhasil dihapus');
+            ->with('success', 'Data berhasil dipindahkan ke arsip');
+    }
+
+    // HALAMAN ARSIP
+    public function archived()
+    {
+        $students = Student::with('user', 'class')
+            ->where('archived', 1)
+            ->get();
+
+        return view('student.student-archived', compact('students'));
+    }
+
+    // RESTORE
+    public function restore(string $slug)
+    {
+        $student = Student::with('user')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        if ($student->user) {
+            $student->user->update([
+                'archived' => 0
+            ]);
+        }
+
+        $student->update([
+            'archived' => 0
+        ]);
+
+        return redirect()
+            ->route('students.archived')
+            ->with('success', 'Data berhasil direstore');
     }
 }
