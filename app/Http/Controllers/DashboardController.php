@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 use App\Models\User;
 use App\Models\Teacher;
+use App\Models\Subject;
 use App\Models\ClassModel;
 use App\Models\Schedule;
 use App\Models\Attendance;
+use App\Models\Student;
 
 class DashboardController extends Controller
 {
@@ -27,15 +30,14 @@ class DashboardController extends Controller
             ];
 
             return view('dashboard.super-admin-dashboard', [
-
                 'totalStudents' => User::where('role', 'student')->count(),
                 'totalTeachers' => Teacher::count(),
                 'totalAdmins'   => User::where('role', 'admin')->count(),
                 'totalClasses'  => ClassModel::count(),
                 'totalMajors'   => ClassModel::distinct('major')->count('major'),
-                'totalSubjects' => Teacher::distinct('subject')->count('subject'),
+                'totalSubjects' => Subject::count(),
 
-                'activities' => Schedule::with(['class', 'teacher'])
+                'activities' => Schedule::with(['classModel', 'teacher'])
                     ->latest()
                     ->take(5)
                     ->get(),
@@ -48,74 +50,131 @@ class DashboardController extends Controller
         if ($role === 'admin') {
 
             return view('dashboard.admin-dashboard', [
-
                 'totalStudents'  => User::where('role', 'student')->count(),
                 'totalTeachers'  => Teacher::count(),
                 'totalClasses'   => ClassModel::count(),
+                'totalMajors'    => ClassModel::distinct('major')->count('major'),
+                'totalSubjects'  => Subject::count(),
                 'totalSchedules' => Schedule::count(),
 
+                'activities' => Schedule::with(['classModel', 'teacher'])
+                    ->latest()
+                    ->take(5)
+                    ->get(),
             ]);
         }
 
         // ================= TEACHER =================
-if ($role === 'teacher') {
+        if ($role === 'teacher') {
 
-    $today = now()->format('l');
+            // ambil data teacher berdasarkan user login
+            $teacher = Teacher::where('user_id', $user->id)->first();
 
-    $todaySchedules = Schedule::with('class')
-        ->where('teacher_id', $user->id)
-        ->where('day', $today)
-        ->get();
+            if (!$teacher) {
+                abort(404, 'Data teacher tidak ditemukan');
+            }
 
-    // total jam mengajar
-    $totalTeaching = $todaySchedules->count();
+            // konversi hari ke Indonesia
+            $days = [
+                'Monday'    => 'Senin',
+                'Tuesday'   => 'Selasa',
+                'Wednesday' => 'Rabu',
+                'Thursday'  => 'Kamis',
+                'Friday'    => 'Jumat',
+                'Saturday'  => 'Sabtu',
+                'Sunday'    => 'Minggu',
+            ];
 
-    // total siswa
-    $totalStudents = User::where('role', 'student')->count();
+            $today = $days[now()->format('l')];
 
-    // sementara statis dulu
-    $attendancePercent = 100;
+            // jadwal guru hari ini
+            $todaySchedules = Schedule::with(['classModel', 'teacher'])
+                ->where('teacher_id', $teacher->id)
+                ->where('day', $today)
+                ->get();
 
-    return view('dashboard.teacher-dashboard', [
+            // total jadwal guru
+            $totalTeaching = Schedule::where('teacher_id', $teacher->id)
+                ->count();
 
-        'todaySchedules'    => $todaySchedules,
-        'totalTeaching'     => $totalTeaching,
-        'totalStudents'     => $totalStudents,
-        'attendancePercent' => $attendancePercent,
+            // total kelas yang diajar
+            $totalClasses = Schedule::where('teacher_id', $teacher->id)
+                ->distinct('class_id')
+                ->count('class_id');
 
-    ]);
-}
+            // total mata pelajaran
+            $totalSubjects = Subject::count();
+
+            // total siswa dari kelas yang diajar
+            $classIds = Schedule::where('teacher_id', $teacher->id)
+                ->pluck('class_id');
+
+            $totalStudents = Student::whereIn('class_id', $classIds)
+                ->count();
+
+            // total jadwal hari ini
+            $todayCount = $todaySchedules->count();
+
+            // sementara statis
+            $attendancePercent = 100;
+
+            return view('dashboard.teacher-dashboard', [
+                'todaySchedules'    => $todaySchedules,
+                'totalTeaching'     => $totalTeaching,
+                'totalStudents'     => $totalStudents,
+                'totalClasses'      => $totalClasses,
+                'totalSubjects'     => $totalSubjects,
+                'todayCount'        => $todayCount,
+                'attendancePercent' => $attendancePercent,
+            ]);
+        }
 
         // ================= STUDENT =================
         if ($role === 'student') {
 
-            $attendances = Attendance::where('student_id', $user->id)->get();
+            $student = $user->student;
+
+            // ambil absensi milik student login
+            $attendances = Attendance::where('student_id', $student->id)
+                ->get();
 
             $totalAttendance = $attendances->count();
 
+            // hitung hadir
             $presentCount = $attendances
-                ->where('status', 'present')
+                ->where('status', 'hadir')
                 ->count();
 
             $attendancePercent = $totalAttendance > 0
-                ? round(($presentCount / $totalAttendance) * 100)
+                ? round(($presentCount / $totalAttendance) * 100, 1)
                 : 0;
 
-            $today = now()->format('l');
+            // ubah hari ke Indonesia
+            $hariMap = [
+                'Monday'    => 'Senin',
+                'Tuesday'   => 'Selasa',
+                'Wednesday' => 'Rabu',
+                'Thursday'  => 'Kamis',
+                'Friday'    => 'Jumat',
+                'Saturday'  => 'Sabtu',
+                'Sunday'    => 'Minggu'
+            ];
 
+            $today = $hariMap[now()->format('l')];
+
+            // jadwal kelas siswa login hari ini
             $todaySchedules = Schedule::with(['teacher', 'class'])
+                ->where('class_id', $student->class_id)
                 ->where('day', $today)
                 ->get();
 
             return view('dashboard.student-dashboard', [
-
                 'attendancePercent' => $attendancePercent,
                 'totalAttendance'   => $totalAttendance,
                 'todaySchedules'    => $todaySchedules,
-
             ]);
         }
 
-        abort(403);
+        abort(403, 'Role tidak dikenali');
     }
 }

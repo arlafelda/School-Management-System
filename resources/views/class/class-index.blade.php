@@ -54,6 +54,47 @@ $user = auth()->user();
 
         <div id="alertBox"></div>
 
+        {{-- FILTER --}}
+        <div class="bg-white p-4 rounded-lg shadow mb-4">
+            <form method="GET" action="{{ route('class.index') }}">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                    <input type="text"
+                           name="search"
+                           value="{{ request('search') }}"
+                           placeholder="Cari nama kelas..."
+                           class="border rounded-lg px-3 py-2 w-full">
+
+                    <select name="level"
+                            class="border rounded-lg px-3 py-2 w-full">
+                        <option value="">Semua Tingkat</option>
+                        <option value="10" {{ request('level') == '10' ? 'selected' : '' }}>10</option>
+                        <option value="11" {{ request('level') == '11' ? 'selected' : '' }}>11</option>
+                        <option value="12" {{ request('level') == '12' ? 'selected' : '' }}>12</option>
+                    </select>
+
+                    <input type="text"
+                           name="major"
+                           value="{{ request('major') }}"
+                           placeholder="Filter jurusan..."
+                           class="border rounded-lg px-3 py-2 w-full">
+
+                    <div class="flex gap-2">
+                        <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Filter
+                        </button>
+
+                        <a href="{{ route('class.index') }}"
+                           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            Reset
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
         <div class="bg-white rounded-lg shadow overflow-x-auto">
 
             <table class="min-w-full text-sm">

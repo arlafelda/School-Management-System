@@ -11,6 +11,7 @@ use App\Http\Controllers\GradeController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExtracurricularController;
+use App\Http\Controllers\SubjectController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -88,32 +89,54 @@ Route::middleware(['auth', 'role:super_admin,admin'])
     ->prefix('teachers')
     ->group(function () {
 
+        // =====================
+        // LIST DATA
+        // =====================
         Route::get('/', [TeacherController::class, 'index'])
             ->name('teacher.index');
 
+        // =====================
+        // ARCHIVED PAGE
+        // =====================
         Route::get('/archived', [TeacherController::class, 'archived'])
             ->name('teacher.archived');
 
-        Route::put('/restore/{slug}', [TeacherController::class, 'restore'])
-            ->name('teacher.restore');
-
+        // =====================
+        // CREATE & STORE
+        // =====================
         Route::get('/create', [TeacherController::class, 'create'])
             ->name('teacher.create');
 
         Route::post('/', [TeacherController::class, 'store'])
             ->name('teacher.store');
 
-        Route::get('/{slug}', [TeacherController::class, 'show'])
-            ->name('teacher.show');
+        // =====================
+        // RESTORE (ARCHIVED -> ACTIVE)
+        // =====================
+        Route::put('/restore/{slug}', [TeacherController::class, 'restore'])
+            ->name('teacher.restore');
 
+        // =====================
+        // EDIT & UPDATE
+        // =====================
         Route::get('/{slug}/edit', [TeacherController::class, 'edit'])
             ->name('teacher.edit');
 
         Route::put('/{slug}', [TeacherController::class, 'update'])
             ->name('teacher.update');
 
+        // =====================
+        // DETAIL
+        // =====================
+        Route::get('/{slug}', [TeacherController::class, 'show'])
+            ->name('teacher.show');
+
+        // =====================
+        // DELETE (PERMANENT)
+        // FIX: teacher.destroy (SEBELUMNYA SALAH teacher.delete)
+        // =====================
         Route::delete('/{slug}', [TeacherController::class, 'destroy'])
-            ->name('teacher.delete');
+            ->name('teacher.destroy');
     });
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function () {
@@ -154,23 +177,11 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     )
         ->name('students.show');
 
-    Route::get(
-        '/students/{student:slug}/edit',
-        [StudentController::class, 'edit']
-    )
-        ->name('students.edit');
+    Route::get('/students/{student:slug}/edit',[StudentController::class, 'edit'])->name('students.edit');
 
-    Route::put(
-        '/students/{student:slug}',
-        [StudentController::class, 'update']
-    )
-        ->name('students.update');
+    Route::put('/students/{student:slug}',[StudentController::class, 'update'])->name('students.update');
 
-    Route::delete(
-        '/students/{student:slug}',
-        [StudentController::class, 'destroy']
-    )
-        ->name('students.delete');
+    Route::delete('/students/{student:slug}',[StudentController::class, 'destroy'])->name('students.delete');
 });
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function () {
@@ -196,11 +207,17 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::put('/classes/{class:slug}', [ClassesController::class, 'update'])
         ->name('class.update');
 
+    // archive
     Route::delete('/classes/{class:slug}', [ClassesController::class, 'destroy'])
-        ->name('class.delete');
+        ->name('class.destroy');
 
+    // restore
     Route::put('/classes/{slug}/restore', [ClassesController::class, 'restore'])
         ->name('class.restore');
+
+    // delete permanen
+    Route::delete('/classes/{slug}/delete', [ClassesController::class, 'delete'])
+        ->name('class.delete');
 });
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher,student'])
@@ -231,7 +248,12 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher,student'])
         Route::put('/{id}', [ScheduleController::class, 'update'])
             ->name('schedule.update');
 
+        // archive
         Route::delete('/{id}', [ScheduleController::class, 'destroy'])
+            ->name('schedule.destroy');
+
+        // delete permanen
+        Route::delete('/{id}/delete', [ScheduleController::class, 'delete'])
             ->name('schedule.delete');
     });
 
@@ -258,6 +280,7 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher,student'])
         // restore
         Route::put('/{id}/restore', [GradeController::class, 'restore'])
             ->name('grades.restore');
+
         // show
         Route::get('/{id}', [GradeController::class, 'show'])
             ->name('grades.show');
@@ -270,9 +293,13 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher,student'])
         Route::put('/{id}', [GradeController::class, 'update'])
             ->name('grades.update');
 
-        // delete -> archive
+        // archive
         Route::delete('/{id}', [GradeController::class, 'destroy'])
             ->name('grades.destroy');
+
+        // delete permanen
+        Route::delete('/{id}/delete', [GradeController::class, 'delete'])
+            ->name('grades.delete');
     });
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher,student'])->group(function () {
@@ -311,11 +338,17 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::put('/extracurricular/{extracurricular:slug}', [ExtracurricularController::class, 'update'])
         ->name('extracurricular.update');
 
+    // archive
     Route::delete('/extracurricular/{extracurricular:slug}', [ExtracurricularController::class, 'destroy'])
         ->name('extracurricular.destroy');
 
+    // restore
     Route::put('/extracurricular/{slug}/restore', [ExtracurricularController::class, 'restore'])
         ->name('extracurricular.restore');
+
+    // delete permanen
+    Route::delete('/extracurricular/{slug}/delete', [ExtracurricularController::class, 'delete'])
+        ->name('extracurricular.delete');
 });
 
 Route::middleware(['auth', 'role:student'])->group(function () {
@@ -326,3 +359,38 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     Route::post('/extracurricular/{extracurricular:slug}/join', [ExtracurricularController::class, 'join'])
         ->name('extracurricular.join');
 });
+
+Route::middleware(['auth', 'role:super_admin,admin,teacher'])
+    ->prefix('subjects')
+    ->group(function () {
+
+        Route::get('/', [SubjectController::class, 'index'])
+            ->name('subjects.index');
+
+        Route::get('/create', [SubjectController::class, 'create'])
+            ->name('subjects.create');
+
+        Route::post('/', [SubjectController::class, 'store'])
+            ->name('subjects.store');
+
+        Route::get('/archived', [SubjectController::class, 'archived'])
+            ->name('subjects.archived');
+
+        Route::get('/{slug}/edit', [SubjectController::class, 'edit'])
+            ->name('subjects.edit');
+
+        Route::put('/{slug}', [SubjectController::class, 'update'])
+            ->name('subjects.update');
+
+        // archive (soft delete)
+        Route::delete('/{slug}', [SubjectController::class, 'destroy'])
+            ->name('subjects.destroy');
+
+        // restore dari archived
+        Route::put('/{slug}/restore', [SubjectController::class, 'restore'])
+            ->name('subjects.restore');
+
+        // delete permanen
+        Route::delete('/{slug}/delete', [SubjectController::class, 'delete'])
+            ->name('subjects.delete');
+    });

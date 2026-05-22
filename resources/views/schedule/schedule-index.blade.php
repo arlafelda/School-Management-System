@@ -10,15 +10,9 @@ $user = auth()->user();
 
 <!-- BREADCRUMB -->
 <div class="mb-4 text-sm text-gray-500">
-    <span class="text-gray-700 font-medium">
-        Dashboard
-    </span>
-
+    <span class="text-gray-700 font-medium">Dashboard</span>
     <span class="mx-2">/</span>
-
-    <span class="text-gray-700 font-medium">
-        Kelola Jadwal
-    </span>
+    <span class="text-gray-700 font-medium">Kelola Jadwal</span>
 </div>
 
 <div class="space-y-6">
@@ -52,6 +46,7 @@ $user = auth()->user();
 
     </div>
 
+    <!-- FILTER -->
     <div class="bg-white p-4 rounded-lg shadow">
 
         <form method="GET" class="flex flex-wrap gap-3 items-center">
@@ -91,6 +86,7 @@ $user = auth()->user();
 
     </div>
 
+    <!-- TABLE -->
     <div class="bg-white rounded-lg shadow overflow-x-auto">
 
         <table class="min-w-full text-sm">
@@ -114,7 +110,7 @@ $user = auth()->user();
 
                 @forelse($schedules as $schedule)
 
-                @if($user->role !== 'student' || optional($schedule->class)->id == optional($user->student)->class_id)
+                @if($user->role !== 'student' || optional($schedule->classModel)->id == optional($user->student)->class_id)
 
                 <tr id="row-{{ $schedule->id }}"
                     data-url="{{ route('schedule.show', $schedule->id) }}"
@@ -128,16 +124,17 @@ $user = auth()->user();
                         {{ $schedule->start_time }} - {{ $schedule->end_time }}
                     </td>
 
+                    <!-- FIX RELASI -->
                     <td class="p-4 text-center">
-                        {{ $schedule->class->name ?? '-' }}
+                        {{ $schedule->classModel->name ?? '-' }}
                     </td>
 
                     <td class="p-4 text-center">
-                        {{ $schedule->class->major ?? '-' }}
+                        {{ $schedule->classModel->major ?? '-' }}
                     </td>
 
                     <td class="p-4 text-center">
-                        {{ $schedule->teacher->subject ?? '-' }}
+                        {{ $schedule->subject->name ?? '-' }}
                     </td>
 
                     <td class="p-4 text-center">
@@ -179,7 +176,7 @@ $user = auth()->user();
                 @empty
 
                 <tr>
-                    <td colspan="{{ in_array($user->role, ['super_admin', 'admin']) ? '7' : '6' }}"
+                    <td colspan="{{ in_array($user->role, ['super_admin', 'admin']) ? 7 : 6 }}"
                         class="text-center p-4 text-gray-500">
                         Data jadwal belum tersedia
                     </td>
@@ -200,41 +197,38 @@ $user = auth()->user();
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-        $(document).on('click', '.schedule-row', function() {
-            let url = $(this).data('url');
-            window.location.href = url;
-        });
+    $(document).on('click', '.schedule-row', function () {
+        window.location.href = $(this).data('url');
+    });
 
-        $(document).on('submit', '.formDelete', function(e) {
-            e.preventDefault();
+    $(document).on('submit', '.formDelete', function (e) {
+        e.preventDefault();
 
-            if (!confirm('Yakin ingin memindahkan jadwal ke arsip?')) return;
+        if (!confirm('Yakin ingin memindahkan jadwal ke arsip?')) return;
 
-            let url = this.action;
-            let id = $(this).data('id');
-            let row = $('#row-' + id);
+        let url = this.action;
+        let id = $(this).data('id');
+        let row = $('#row-' + id);
 
-            if (typeof deleteData !== 'function') {
-                console.error('deleteData function tidak ditemukan');
-                return;
-            }
+        if (typeof deleteData !== 'function') {
+            console.error('deleteData function tidak ditemukan');
+            return;
+        }
 
-            deleteData(url, function() {
+        deleteData(url, function () {
+            row.remove();
 
-                row.remove();
-
-                $('#alertBox').html(`
+            $('#alertBox').html(`
                 <div class="p-3 bg-green-100 text-green-700 rounded-lg">
                     Data jadwal berhasil dipindahkan ke arsip
                 </div>
             `);
-
-            });
-
         });
 
     });
+
+});
 </script>
 @endpush

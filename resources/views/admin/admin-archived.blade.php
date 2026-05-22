@@ -10,15 +10,13 @@
     <nav class="text-sm text-gray-500">
         <ol class="flex items-center space-x-2">
             <li>
-                <a href="{{ route('dashboard.super_admin') }}"
-                   class="hover:text-blue-600">
+                <a href="{{ route('dashboard.super_admin') }}" class="hover:text-blue-600">
                     Dashboard
                 </a>
             </li>
             <li>/</li>
             <li>
-                <a href="{{ route('admin.index') }}"
-                   class="hover:text-blue-600">
+                <a href="{{ route('admin.index') }}" class="hover:text-blue-600">
                     Admin
                 </a>
             </li>
@@ -29,24 +27,18 @@
         </ol>
     </nav>
 
-    <!-- ALERT -->
-    @if(session('success'))
-        <div class="bg-green-100 text-green-700 p-3 rounded-lg">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <!-- HEADER -->
     <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">
-            Arsip Admin
-        </h1>
+        <h1 class="text-2xl font-bold">Arsip Admin</h1>
 
         <a href="{{ route('admin.index') }}"
-           class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+           class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
             ← Kembali
         </a>
     </div>
+
+    <!-- ALERT -->
+    <div id="alertBox"></div>
 
     <!-- TABLE -->
     <div class="bg-white rounded-xl shadow border overflow-x-auto">
@@ -67,62 +59,64 @@
 
                 @forelse($admins as $user)
 
-                <tr class="border-b">
+                <tr id="row-{{ $user->id }}" class="border-b hover:bg-gray-50">
 
+                    <!-- USER -->
                     <td class="p-4">
-                        <p class="font-semibold">
-                            {{ $user->name }}
-                        </p>
-                        <p class="text-gray-500 text-xs">
-                            {{ $user->email }}
-                        </p>
+                        <p class="font-semibold">{{ $user->name }}</p>
+                        <p class="text-gray-500 text-xs">{{ $user->email }}</p>
                     </td>
 
+                    <!-- ROLE -->
                     <td class="p-4 text-center">
                         {{ ucfirst($user->role) }}
                     </td>
 
+                    <!-- ID -->
                     <td class="p-4 text-center">
                         #{{ $user->id }}
                     </td>
 
+                    <!-- STATUS -->
                     <td class="p-4 text-center">
                         <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
                             Archived
                         </span>
                     </td>
 
+                    <!-- ACTION -->
                     <td class="p-4 text-center">
 
-                        <form action="{{ route('admin.restore', $user->slug) }}"
-                              method="POST">
+                        <div class="flex justify-center gap-2">
 
-                            @csrf
-                            @method('PUT')
-
-                            <button type="submit"
-                                onclick="return confirm('Restore data ini?')"
-                                class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
-
+                            <!-- RESTORE -->
+                            <button
+                                class="btn-restore bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                                data-id="{{ $user->id }}"
+                                data-slug="{{ $user->slug }}">
                                 Restore
-
                             </button>
 
-                        </form>
+                            <!-- DELETE -->
+                            <button
+                                class="btn-delete bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                                data-id="{{ $user->id }}"
+                                data-slug="{{ $user->slug }}">
+                                Delete
+                            </button>
+
+                        </div>
 
                     </td>
 
                 </tr>
 
                 @empty
-
                 <tr>
-                    <td colspan="5"
-                        class="text-center p-6 text-gray-500">
+                    <td colspan="5" class="text-center p-6 text-gray-500">
                         Tidak ada data arsip
                     </td>
                 </tr>
-
                 @endforelse
 
             </tbody>
@@ -134,3 +128,64 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // =====================
+    // RESTORE ADMIN
+    // =====================
+    document.querySelectorAll('.btn-restore').forEach(btn => {
+
+        btn.addEventListener('click', function () {
+
+            const id = this.dataset.id;
+            const slug = this.dataset.slug;
+
+            restoreData(
+                `/admin/${slug}/restore`,
+                "Restore data ini?",
+                {
+                    onSuccess: function () {
+                        const row = document.getElementById('row-' + id);
+                        if (row) row.remove();
+                    }
+                }
+            );
+
+        });
+
+    });
+
+    // =====================
+    // DELETE ADMIN
+    // =====================
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+
+        btn.addEventListener('click', function () {
+
+            const id = this.dataset.id;
+            const slug = this.dataset.slug;
+
+            deleteData(
+                `/admin/${slug}`,
+                "Hapus permanen data ini? Data tidak bisa dikembalikan!",
+                {
+                    onSuccess: function () {
+                        const row = document.getElementById('row-' + id);
+                        if (row) row.remove();
+                    }
+                }
+            );
+
+        });
+
+    });
+
+});
+</script>
+
+@endpush

@@ -6,23 +6,34 @@
 
 <div class="space-y-6">
 
+    {{-- BREADCRUMB --}}
     <nav class="text-sm text-gray-500">
         <ol class="flex items-center space-x-2">
             <li>
-                <span class="text-gray-700 font-medium">Dashboard</span>
+                <span class="text-gray-700 font-medium">
+                    Dashboard
+                </span>
             </li>
             <li>/</li>
-            <li class="text-gray-700 font-medium">Guru</li>
+            <li class="text-gray-700 font-medium">
+                Guru
+            </li>
         </ol>
     </nav>
 
+    {{-- ALERT --}}
     <div id="alertBox"></div>
 
+    {{-- HEADER --}}
     <div class="flex justify-between items-center">
 
         <div>
-            <h1 class="text-2xl font-bold">Daftar Guru</h1>
-            <p class="text-gray-500 text-sm">Kelola data guru</p>
+            <h1 class="text-2xl font-bold">
+                Daftar Guru
+            </h1>
+            <p class="text-gray-500 text-sm">
+                Kelola data guru
+            </p>
         </div>
 
         <div class="flex gap-2">
@@ -41,6 +52,7 @@
 
     </div>
 
+    {{-- TABLE --}}
     <div class="bg-white rounded-xl shadow border overflow-x-auto">
 
         <table class="w-full text-sm min-w-[900px]">
@@ -65,6 +77,7 @@
                     class="hover:bg-gray-50 cursor-pointer"
                     data-url="{{ route('teacher.show', $teacher->slug) }}">
 
+                    {{-- NAME --}}
                     <td class="p-4 flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
                             {{ strtoupper(substr($teacher->name, 0, 1)) }}
@@ -75,9 +88,25 @@
                         </div>
                     </td>
 
-                    <td class="p-4 text-center">{{ $teacher->nip }}</td>
-                    <td class="p-4 text-center">{{ $teacher->subject }}</td>
+                    {{-- NIP --}}
+                    <td class="p-4 text-center">
+                        {{ $teacher->nip }}
+                    </td>
 
+                    {{-- SUBJECT --}}
+                    <td class="p-4 text-center">
+                        @if($teacher->subjects->count())
+                            @foreach($teacher->subjects as $subject)
+                                <span class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs mr-1 mb-1">
+                                    {{ $subject->name }}
+                                </span>
+                            @endforeach
+                        @else
+                            <span class="text-gray-400">-</span>
+                        @endif
+                    </td>
+
+                    {{-- POSITION --}}
                     <td class="p-4 text-center">
                         @if($teacher->position == 'wali_kelas')
                             <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
@@ -90,22 +119,31 @@
                         @endif
                     </td>
 
-                    <td class="p-4 text-center">{{ $teacher->phone }}</td>
-                    <td class="p-4 text-center">{{ $teacher->user->email ?? '-' }}</td>
+                    {{-- PHONE --}}
+                    <td class="p-4 text-center">
+                        {{ $teacher->phone ?? '-' }}
+                    </td>
 
+                    {{-- EMAIL --}}
+                    <td class="p-4 text-center">
+                        {{ $teacher->user->email ?? '-' }}
+                    </td>
+
+                    {{-- ACTION --}}
                     <td class="p-4 text-center space-x-2">
 
                         <a href="{{ route('teacher.edit', $teacher->slug) }}"
-                           class="text-blue-600 text-sm"
+                           class="text-blue-600"
                            onclick="event.stopPropagation()">
                             Edit
                         </a>
 
+                        {{-- FIXED ROUTE: teacher.destroy (BUKAN teacher.delete) --}}
                         <button
-                            class="text-red-500 text-sm btn-delete"
+                            type="button"
+                            class="btn-delete text-red-600"
                             data-id="{{ $teacher->id }}"
-                            data-url="{{ route('teacher.delete', $teacher->slug) }}"
-                            onclick="event.stopPropagation()">
+                            data-url="{{ route('teacher.destroy', $teacher->slug) }}">
                             Arsipkan
                         </button>
 
@@ -114,11 +152,12 @@
                 </tr>
 
                 @empty
-                    <tr>
-                        <td colspan="7" class="text-center p-6 text-gray-500">
-                            Data guru tidak tersedia
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="7"
+                        class="text-center p-6 text-gray-500">
+                        Data guru tidak tersedia
+                    </td>
+                </tr>
                 @endforelse
 
             </tbody>
@@ -134,58 +173,71 @@
 
 @push('scripts')
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-    document.addEventListener('click', function (e) {
-        let row = e.target.closest('tr[data-url]');
+    // =========================
+    // DETAIL CLICK ROW
+    // =========================
+    document.querySelectorAll('tr[data-url]').forEach(function(row){
 
-        if (row) {
-            let url = row.dataset.url;
-            if (url) {
-                window.location.href = url;
-            }
-        }
+        row.addEventListener('click', function(e){
+
+            if (
+                e.target.closest('.btn-delete') ||
+                e.target.closest('a')
+            ) return;
+
+            window.location.href = row.dataset.url;
+        });
+
     });
 
+    // =========================
+    // ARCHIVE (DELETE AJAX)
+    // =========================
+    document.querySelectorAll('.btn-delete').forEach(function(btn){
 
-    document.addEventListener('click', function (e) {
+        btn.addEventListener('click', function(e){
 
-        let btn = e.target.closest('.btn-delete');
-        if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
 
-        e.preventDefault();
+            let id  = this.dataset.id;
+            let url = this.dataset.url;
 
-        let url = btn.dataset.url;
-        let id = btn.dataset.id;
-        let row = document.getElementById('row-' + id);
+            // fallback kalau helper tidak ada
+            if (typeof deleteData !== 'undefined') {
 
-        if (!confirm('Yakin ingin memindahkan data ke arsip?')) {
-            return;
-        }
+                deleteData(
+                    url,
+                    'Yakin ingin memindahkan data ke arsip?',
+                    {
+                        onSuccess: function () {
 
-        if (typeof deleteData !== 'undefined') {
+                            let row = document.getElementById('row-' + id);
 
-            deleteData(url, function () {
+                            if (row) row.remove();
 
-                if (row) row.remove();
+                            let alertBox = document.getElementById('alertBox');
 
-                let alertBox = document.getElementById('alertBox');
+                            alertBox.innerHTML = `
+                                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                                    Guru berhasil dipindahkan ke arsip
+                                </div>
+                            `;
 
-                alertBox.innerHTML = `
-                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                        Guru berhasil dipindahkan ke arsip
-                    </div>
-                `;
+                            setTimeout(() => {
+                                alertBox.innerHTML = '';
+                            }, 3000);
+                        }
+                    }
+                );
 
-                setTimeout(() => {
-                    alertBox.innerHTML = '';
-                }, 3000);
+            } else {
+                alert('deleteData() tidak ditemukan. Pastikan script helper sudah dimuat.');
+            }
 
-            });
-
-        } else {
-            console.error('deleteData belum tersedia');
-        }
+        });
 
     });
 

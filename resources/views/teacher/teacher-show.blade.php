@@ -6,35 +6,44 @@
 
 <div class="space-y-6">
 
-    <!-- 🔥 BREADCRUMB -->
+    <!-- BREADCRUMB -->
     <nav class="text-sm text-gray-500">
         <ol class="flex items-center space-x-2">
             <li>
-                <a href="{{ route('teacher.index') }}" class="text-blue-600 hover:underline">
+                <a href="{{ route('teacher.index') }}"
+                   class="text-blue-600 hover:underline">
                     Guru
                 </a>
             </li>
+
             <li>/</li>
+
             <li class="text-gray-700 font-medium">
                 {{ $teacher->name }}
             </li>
         </ol>
     </nav>
 
+
     <!-- HEADER -->
     <div class="flex justify-between items-center">
-        <h2 class="text-xl font-bold text-blue-700">Profile Guru</h2>
+
+        <h2 class="text-xl font-bold text-blue-700">
+            Profile Guru
+        </h2>
 
         <a href="{{ route('teacher.index') }}"
            class="text-sm bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300">
             ← Kembali
         </a>
+
     </div>
+
 
     <!-- CARD -->
     <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow border p-6">
 
-        <!-- PROFILE -->
+        <!-- PROFILE HEADER -->
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
 
             <!-- AVATAR -->
@@ -44,40 +53,57 @@
 
             <!-- INFO -->
             <div class="text-center md:text-left">
-                <h2 class="text-2xl font-bold">{{ $teacher->name }}</h2>
+
+                <h2 class="text-2xl font-bold">
+                    {{ $teacher->name }}
+                </h2>
 
                 <p class="text-gray-500 text-sm">
                     {{ $teacher->user->email ?? '-' }}
                 </p>
 
                 <span class="inline-block mt-2 bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs">
-                    {{ ucfirst($teacher->position) }}
+                    {{ ucfirst($teacher->position ?? '-') }}
                 </span>
+
             </div>
 
         </div>
+
 
         <!-- DETAIL -->
         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
 
             <div>
                 <p class="text-gray-500">NIP</p>
-                <p class="font-semibold">{{ $teacher->nip }}</p>
+                <p class="font-semibold">
+                    {{ $teacher->nip }}
+                </p>
             </div>
 
             <div>
                 <p class="text-gray-500">Mata Pelajaran</p>
-                <p class="font-semibold">{{ $teacher->subject }}</p>
+                <p class="font-semibold">
+                    @if($teacher->subjects->count() > 0)
+                        {{ $teacher->subjects->pluck('name')->join(', ') }}
+                    @else
+                        -
+                    @endif
+                </p>
             </div>
 
             <div>
                 <p class="text-gray-500">No HP</p>
-                <p class="font-semibold">{{ $teacher->phone }}</p>
+                <p class="font-semibold">
+                    {{ $teacher->phone ?? '-' }}
+                </p>
             </div>
 
             <div>
                 <p class="text-gray-500">Email</p>
-                <p class="font-semibold">{{ $teacher->user->email ?? '-' }}</p>
+                <p class="font-semibold">
+                    {{ $teacher->user->email ?? '-' }}
+                </p>
             </div>
 
             <div>
@@ -90,25 +116,26 @@
             <div>
                 <p class="text-gray-500">Jabatan</p>
                 <p class="font-semibold">
-                    {{ ucfirst($teacher->position) }}
+                    {{ ucfirst($teacher->position ?? '-') }}
                 </p>
             </div>
 
             <div>
                 <p class="text-gray-500">Tanggal Dibuat</p>
                 <p class="font-semibold">
-                    {{ \Carbon\Carbon::parse($teacher->created_at)->locale('id')->translatedFormat('d F Y') }}
+                    {{ $teacher->created_at?->locale('id')->translatedFormat('d F Y') }}
                 </p>
             </div>
 
             <div>
                 <p class="text-gray-500">Terakhir Update</p>
                 <p class="font-semibold">
-                    {{ \Carbon\Carbon::parse($teacher->updated_at)->locale('id')->translatedFormat('d F Y') }}
+                    {{ $teacher->updated_at?->locale('id')->translatedFormat('d F Y') }}
                 </p>
             </div>
 
         </div>
+
 
         <!-- ACTION -->
         <div class="mt-8 flex flex-wrap gap-3">
@@ -118,14 +145,16 @@
                 ✏️ Edit Profile
             </a>
 
-            <form action="{{ route('teacher.delete', $teacher->slug) }}"
+
+            <form action="{{ route('teacher.destroy', $teacher->slug) }}"
                   method="POST"
                   onsubmit="return confirm('Yakin ingin menghapus guru ini?')">
 
                 @csrf
                 @method('DELETE')
 
-                <button class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600">
+                <button type="submit"
+                        class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600">
                     🗑️ Hapus
                 </button>
 

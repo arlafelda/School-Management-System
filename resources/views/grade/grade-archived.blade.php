@@ -8,15 +8,15 @@
 
     <!-- BREADCRUMB -->
     <div class="text-sm text-gray-500">
-        <a href="{{ route('dashboard') }}"
-           class="hover:text-blue-600">
+
+        <span class="text-gray-700 font-medium">
             Dashboard
-        </a>
+        </span>
 
         <span class="mx-2">/</span>
 
         <a href="{{ route('grades.index') }}"
-           class="hover:text-blue-600">
+            class="hover:text-blue-600">
             Nilai
         </a>
 
@@ -25,7 +25,9 @@
         <span class="text-gray-700 font-medium">
             Arsip Nilai
         </span>
+
     </div>
+
 
     <!-- HEADER -->
     <div class="flex justify-between items-center">
@@ -34,24 +36,35 @@
             <h1 class="text-2xl font-bold text-gray-800">
                 Arsip Nilai
             </h1>
+
             <p class="text-sm text-gray-500">
                 Data nilai yang telah diarsipkan
             </p>
         </div>
 
         <a href="{{ route('grades.index') }}"
-           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Kembali
         </a>
 
     </div>
 
-    <!-- ALERT -->
+
+    <!-- ALERT SUCCESS -->
     @if(session('success'))
         <div class="p-3 bg-green-100 text-green-700 rounded-lg">
             {{ session('success') }}
         </div>
     @endif
+
+
+    <!-- ALERT ERROR -->
+    @if(session('error'))
+        <div class="p-3 bg-red-100 text-red-700 rounded-lg">
+            {{ session('error') }}
+        </div>
+    @endif
+
 
     <!-- TABLE -->
     <div class="bg-white rounded-lg border overflow-x-auto">
@@ -75,70 +88,92 @@
 
                 @forelse($grades as $grade)
 
-                @php
-                    $tugas = $grade->assignment_score ?? 0;
-                    $uts   = $grade->mid_exam_score ?? 0;
-                    $uas   = $grade->final_exam_score ?? 0;
-                    $final = ($tugas + $uts + $uas) / 3;
-                @endphp
+                    @php
+                        $tugas = $grade->assignment_score ?? 0;
+                        $uts   = $grade->mid_exam_score ?? 0;
+                        $uas   = $grade->final_exam_score ?? 0;
+                        $final = ($tugas + $uts + $uas) / 3;
+                    @endphp
 
-                <tr class="border-t hover:bg-gray-50">
+                    <tr class="border-t hover:bg-gray-50">
 
-                    <td class="p-3">
-                        {{ $grade->student->name ?? '-' }}
-                    </td>
+                        <td class="p-3">
+                            {{ $grade->student->name ?? '-' }}
+                        </td>
 
-                    <td class="p-3 text-center">
-                        {{ $grade->student->class->name ?? '-' }}
-                    </td>
+                        <td class="p-3 text-center">
+                            {{ $grade->student->class->name ?? '-' }}
+                        </td>
 
-                    <td class="p-3 text-center">
-                        {{ $grade->subject }}
-                    </td>
+                        <td class="p-3 text-center">
+                            {{ $grade->schedule->subject->name ?? '-' }}
+                        </td>
 
-                    <td class="p-3 text-right">
-                        {{ number_format($tugas) }}
-                    </td>
+                        <td class="p-3 text-right">
+                            {{ number_format($tugas) }}
+                        </td>
 
-                    <td class="p-3 text-right">
-                        {{ number_format($uts) }}
-                    </td>
+                        <td class="p-3 text-right">
+                            {{ number_format($uts) }}
+                        </td>
 
-                    <td class="p-3 text-right">
-                        {{ number_format($uas) }}
-                    </td>
+                        <td class="p-3 text-right">
+                            {{ number_format($uas) }}
+                        </td>
 
-                    <td class="p-3 text-right text-blue-600 font-bold">
-                        {{ number_format($final, 1) }}
-                    </td>
+                        <td class="p-3 text-right text-blue-600 font-bold">
+                            {{ number_format($final, 1) }}
+                        </td>
 
-                    <td class="p-3 text-center">
+                        <td class="p-3 text-center">
 
-                        <form action="{{ route('grades.restore', $grade->id) }}"
-                              method="POST"
-                              onsubmit="return confirm('Restore data ini?')">
+                            <div class="flex justify-center gap-3">
 
-                            @csrf
-                            @method('PUT')
+                                <!-- Restore -->
+                                <form action="{{ route('grades.restore', $grade->id) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Restore data ini?')">
 
-                            <button type="submit"
-                                    class="text-green-600 hover:underline text-sm">
-                                Restore
-                            </button>
+                                    @csrf
+                                    @method('PUT')
 
-                        </form>
+                                    <button type="submit"
+                                        class="text-green-600 hover:underline text-sm">
+                                        Restore
+                                    </button>
 
-                    </td>
+                                </form>
 
-                </tr>
+
+                                <!-- Delete -->
+                                <form action="{{ route('grades.delete', $grade->id) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Hapus permanen data ini?')">
+
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit"
+                                        class="text-red-600 hover:underline text-sm">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
 
                 @empty
 
-                <tr>
-                    <td colspan="8" class="text-center py-6 text-gray-400">
-                        Tidak ada data archive
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="8"
+                            class="text-center py-6 text-gray-400">
+                            Tidak ada data archive
+                        </td>
+                    </tr>
 
                 @endforelse
 

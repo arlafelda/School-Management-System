@@ -31,8 +31,7 @@
         <!-- USER MANAGEMENT -->
         @if(in_array($user->role, ['super_admin', 'admin']))
         <div>
-            <button
-                type="button"
+            <button type="button"
                 onclick="toggleMenu('userMenu','arrowUser')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
 
@@ -69,12 +68,10 @@
         </div>
         @endif
 
-
         <!-- MASTER DATA -->
         @if(in_array($user->role, ['super_admin', 'admin', 'teacher']))
         <div>
-            <button
-                type="button"
+            <button type="button"
                 onclick="toggleMenu('masterMenu','arrowMaster')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
 
@@ -104,12 +101,10 @@
         </div>
         @endif
 
-
         <!-- AKADEMIK -->
         @if(in_array($user->role, ['super_admin', 'admin', 'teacher']))
         <div>
-            <button
-                type="button"
+            <button type="button"
                 onclick="toggleMenu('akademikMenu','arrowAkademik')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
 
@@ -117,14 +112,14 @@
 
                 <span id="arrowAkademik"
                     class="transition-transform
-                    {{ request()->routeIs('schedule.*','grades.*','attendance.*') ? 'rotate-180' : '' }}">
+                    {{ request()->routeIs('schedule.*','grades.*','attendance.*','subjects.*') ? 'rotate-180' : '' }}">
                     ▼
                 </span>
             </button>
 
             <div id="akademikMenu"
                 class="ml-4 mt-1 space-y-1
-                {{ request()->routeIs('schedule.*','grades.*','attendance.*') ? '' : 'hidden' }}">
+                {{ request()->routeIs('schedule.*','grades.*','attendance.*','subjects.*') ? '' : 'hidden' }}">
 
                 <a href="{{ route('schedule.index') }}"
                     class="block p-2 rounded {{ active('schedule.*') }}">
@@ -140,16 +135,21 @@
                     class="block p-2 rounded {{ active('attendance.*') }}">
                     Absensi
                 </a>
+
+                <!-- SUBJECT MENU -->
+                <a href="{{ route('subjects.index') }}"
+                    class="block p-2 rounded {{ active('subjects.*') }}">
+                    Mata Pelajaran
+                </a>
+
             </div>
         </div>
         @endif
 
-
         <!-- STUDENT -->
         @if($user->role === 'student')
         <div>
-            <button
-                type="button"
+            <button type="button"
                 onclick="toggleMenu('studentMenu','arrowStudent')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
 
@@ -189,11 +189,9 @@
         </div>
         @endif
 
-
         <!-- SISTEM -->
         <div>
-            <button
-                type="button"
+            <button type="button"
                 onclick="toggleMenu('systemMenu','arrowSystem')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
 
@@ -217,8 +215,7 @@
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button
-                        type="submit"
+                    <button type="submit"
                         class="w-full text-left p-2 bg-red-600 text-white rounded hover:bg-red-700">
                         Logout
                     </button>

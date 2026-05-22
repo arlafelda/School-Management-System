@@ -6,15 +6,14 @@
 
 <!-- BREADCRUMB -->
 <div class="mb-4 text-sm text-gray-500">
-    <a href="{{ route('dashboard') }}"
-       class="hover:text-blue-600">
+    <span class="text-gray-700 font-medium">
         Dashboard
-    </a>
+    </span>
 
     <span class="mx-2">/</span>
 
     <a href="{{ route('schedule.index') }}"
-       class="hover:text-blue-600">
+        class="hover:text-blue-600">
         Kelola Jadwal
     </a>
 
@@ -86,12 +85,12 @@
         <div class="mt-6 flex gap-3">
 
             <a href="{{ route('schedule.edit', $schedule->id) }}"
-               class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                 Edit Jadwal
             </a>
 
             <a href="{{ route('schedule.index') }}"
-               class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
                 Kembali
             </a>
 

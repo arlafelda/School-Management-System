@@ -6,17 +6,15 @@
 $user = auth()->user();
 
 $studentClass = $user->role === 'student'
-? optional(optional($user->student)->class)
-: null;
+    ? optional(optional($user->student)->class)
+    : null;
 @endphp
 
 <div class="p-8">
 
-    <!-- BREADCRUMB -->
+    {{-- BREADCRUMB --}}
     <div class="mb-4 text-sm text-gray-500">
-        <span class="text-gray-700 font-medium">
-            Dashboard
-        </span>
+        <span class="text-gray-700 font-medium">Dashboard</span>
         /
         <span class="text-gray-700 font-medium">
             Manajemen Absensi
@@ -24,7 +22,7 @@ $studentClass = $user->role === 'student'
     </div>
 
 
-    <!-- TITLE -->
+    {{-- TITLE --}}
     <div class="mb-6 flex justify-between items-center">
 
         <div>
@@ -39,18 +37,16 @@ $studentClass = $user->role === 'student'
 
         <div class="flex gap-3">
 
-            <!-- REKAP -->
             <a href="{{ route('attendance.recap') }}"
-                class="px-4 py-2 bg-green-500 text-white rounded-lg">
+               class="px-4 py-2 bg-green-500 text-white rounded-lg">
                 Rekap
             </a>
 
-            <!-- INPUT -->
             @if(in_array($user->role,['super_admin','admin','teacher']))
-            <a href="{{ route('attendance.create') }}"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                Input Absensi
-            </a>
+                <a href="{{ route('attendance.create') }}"
+                   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                    Input Absensi
+                </a>
             @endif
 
         </div>
@@ -58,47 +54,65 @@ $studentClass = $user->role === 'student'
     </div>
 
 
-    <!-- ================= FILTER ================= -->
+    {{-- FILTER --}}
     <form method="GET"
-        action="{{ route('attendance.index') }}"
-        class="bg-white p-4 rounded-xl shadow-sm mb-6 grid md:grid-cols-4 gap-4">
+          action="{{ route('attendance.index') }}"
+          class="bg-white p-4 rounded-xl shadow-sm mb-6 grid md:grid-cols-5 gap-4">
 
         {{-- CLASS --}}
         @if($user->role === 'student')
 
-        <input type="text"
-            value="{{ $studentClass->name ?? '-' }}"
-            class="border rounded-lg px-3 py-2 bg-gray-100"
-            disabled>
+            <input type="text"
+                   value="{{ $studentClass->name ?? '-' }}"
+                   class="border rounded-lg px-3 py-2 bg-gray-100"
+                   disabled>
 
-        <input type="hidden"
-            name="class_id"
-            value="{{ $studentClass->id ?? '' }}">
+            <input type="hidden"
+                   name="class_id"
+                   value="{{ $studentClass->id ?? '' }}">
 
         @else
 
-        <select name="class_id"
-            class="border rounded-lg px-3 py-2">
+            <select name="class_id"
+                    class="border rounded-lg px-3 py-2">
 
-            <option value="">
-                Semua Kelas
-            </option>
+                <option value="">
+                    Semua Kelas
+                </option>
 
-            @foreach($classes as $c)
-            <option value="{{ $c->id }}"
-                {{ request('class_id') == $c->id ? 'selected' : '' }}>
-                {{ $c->name }}
-            </option>
-            @endforeach
+                @foreach($classes as $c)
+                    <option value="{{ $c->id }}"
+                        {{ request('class_id') == $c->id ? 'selected' : '' }}>
+                        {{ $c->name }}
+                    </option>
+                @endforeach
 
-        </select>
+            </select>
 
         @endif
 
 
+        {{-- SUBJECT --}}
+        <select name="subject_id"
+                class="border rounded-lg px-3 py-2">
+
+            <option value="">
+                Semua Subject
+            </option>
+
+            @foreach($subjects as $subject)
+                <option value="{{ $subject->id }}"
+                    {{ request('subject_id') == $subject->id ? 'selected' : '' }}>
+                    {{ $subject->name }}
+                </option>
+            @endforeach
+
+        </select>
+
+
         {{-- STATUS --}}
         <select name="status"
-            class="border rounded-lg px-3 py-2">
+                class="border rounded-lg px-3 py-2">
 
             <option value="">
                 Semua Status
@@ -130,13 +144,14 @@ $studentClass = $user->role === 'student'
         {{-- DATE --}}
         <div>
             <input type="date"
-                id="tanggalInput"
-                name="date"
-                value="{{ request('date') }}"
-                class="border rounded-lg px-3 py-2 w-full">
+                   id="tanggalInput"
+                   name="date"
+                   value="{{ request('date') }}"
+                   class="border rounded-lg px-3 py-2 w-full">
 
             <small id="tanggalPreview"
-                class="text-gray-500 text-xs block mt-1"></small>
+                   class="text-gray-500 text-xs block mt-1">
+            </small>
         </div>
 
 
@@ -147,34 +162,7 @@ $studentClass = $user->role === 'student'
     </form>
 
 
-    <!-- STATS -->
-    <div class="grid md:grid-cols-3 gap-4 mb-6">
-
-        <div class="bg-white p-5 rounded-xl shadow-sm">
-            <p class="text-sm text-gray-500">Kehadiran</p>
-            <h3 class="text-2xl font-bold text-blue-600 text-right">
-                {{ number_format($persen, 1) }}%
-            </h3>
-        </div>
-
-        <div class="bg-white p-5 rounded-xl shadow-sm">
-            <p class="text-sm text-gray-500">Total Data</p>
-            <h3 class="text-2xl font-bold text-right">
-                {{ number_format($attendances->count()) }}
-            </h3>
-        </div>
-
-        <div class="bg-white p-5 rounded-xl shadow-sm">
-            <p class="text-sm text-gray-500">Hadir</p>
-            <h3 class="text-2xl font-bold text-purple-600 text-right">
-                {{ $attendances->where('status','hadir')->count() }}
-            </h3>
-        </div>
-
-    </div>
-
-
-    <!-- TABLE -->
+    {{-- TABLE --}}
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
 
         <table class="w-full text-sm">
@@ -195,99 +183,95 @@ $studentClass = $user->role === 'student'
 
                 @forelse($attendances as $i => $a)
 
-                @php
-                $isOwnerTeacher = false;
+                    @php
+                        $isOwnerTeacher = false;
 
-                if ($user->role === 'teacher') {
-                $isOwnerTeacher =
-                optional($a->schedule)->teacher &&
-                $a->schedule->teacher->user_id == $user->id;
-                }
-                @endphp
+                        if ($user->role === 'teacher') {
+                            $isOwnerTeacher =
+                                optional(optional($a->schedule)->teacher)->user_id
+                                == $user->id;
+                        }
 
-                <tr id="row-{{ $a->id }}"
-                    class="hover:bg-gray-50">
-
-                    <td class="p-3">
-                        {{ $i + 1 }}
-                    </td>
-
-                    <td class="p-3 font-medium">
-                        {{ $a->student->name ?? '-' }}
-                    </td>
-
-                    <td class="p-3">
-                        {{ $a->student->class->name ?? '-' }}
-                    </td>
-
-                    <td class="p-3">
-                        {{ $a->schedule->subject ?? ($a->schedule->teacher->subject ?? '-') }}
-                    </td>
-
-                    <td class="p-3">
-                        {{ \Carbon\Carbon::parse($a->date)->locale('id')->translatedFormat('d F Y') }}
-                    </td>
-
-                    <td class="p-3">
-
-                        @php
                         $statusClass = match($a->status) {
-                        'hadir' => 'bg-green-100 text-green-600',
-                        'izin' => 'bg-yellow-100 text-yellow-600',
-                        'sakit' => 'bg-blue-100 text-blue-600',
-                        default => 'bg-red-100 text-red-600'
+                            'hadir' => 'bg-green-100 text-green-600',
+                            'izin'  => 'bg-yellow-100 text-yellow-600',
+                            'sakit' => 'bg-blue-100 text-blue-600',
+                            default => 'bg-red-100 text-red-600'
                         };
-                        @endphp
+                    @endphp
 
-                        <span class="px-2 py-1 rounded text-xs {{ $statusClass }}">
-                            {{ ucfirst($a->status) }}
-                        </span>
+                    <tr id="row-{{ $a->id }}"
+                        class="hover:bg-gray-50">
 
-                    </td>
+                        <td class="p-3">
+                            {{ $i + 1 }}
+                        </td>
 
-                    <td class="p-3 text-right space-x-2">
+                        <td class="p-3 font-medium">
+                            {{ optional($a->student)->name ?? '-' }}
+                        </td>
 
-                        @if(in_array($user->role,['super_admin','admin']))
+                        <td class="p-3">
+                            {{ optional(optional($a->student)->class)->name ?? '-' }}
+                        </td>
 
-                        <a href="{{ route('attendance.edit',$a->id) }}"
-                            class="text-blue-500 hover:underline">
-                            Edit
-                        </a>
+                        <td class="p-3">
+                            {{ optional(optional($a->schedule)->subject)->name ?? '-' }}
+                        </td>
 
-                        <button
-                            data-id="{{ $a->id }}"
-                            data-url="{{ route('attendance.destroy',$a->id) }}"
-                            class="btn-delete text-red-500 hover:underline">
-                            Hapus
-                        </button>
+                        <td class="p-3">
+                            {{ \Carbon\Carbon::parse($a->date)->locale('id')->translatedFormat('d F Y') }}
+                        </td>
 
-                        @elseif($user->role === 'teacher' && $isOwnerTeacher)
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-xs {{ $statusClass }}">
+                                {{ ucfirst($a->status) }}
+                            </span>
+                        </td>
 
-                        <a href="{{ route('attendance.edit',$a->id) }}"
-                            class="text-blue-500 hover:underline">
-                            Edit
-                        </a>
+                        <td class="p-3 text-right space-x-2">
 
-                        @else
+                            @if(in_array($user->role,['super_admin','admin']))
 
-                        <span class="text-gray-400 text-xs">
-                            View Only
-                        </span>
+                                <a href="{{ route('attendance.edit',$a->id) }}"
+                                   class="text-blue-500 hover:underline">
+                                    Edit
+                                </a>
 
-                        @endif
+                                <button
+                                    data-id="{{ $a->id }}"
+                                    data-url="{{ route('attendance.destroy',$a->id) }}"
+                                    class="btn-delete text-red-500 hover:underline">
+                                    Hapus
+                                </button>
 
-                    </td>
+                            @elseif($user->role === 'teacher' && $isOwnerTeacher)
 
-                </tr>
+                                <a href="{{ route('attendance.edit',$a->id) }}"
+                                   class="text-blue-500 hover:underline">
+                                    Edit
+                                </a>
+
+                            @else
+
+                                <span class="text-gray-400 text-xs">
+                                    View Only
+                                </span>
+
+                            @endif
+
+                        </td>
+
+                    </tr>
 
                 @empty
 
-                <tr>
-                    <td colspan="7"
-                        class="p-6 text-center text-gray-400">
-                        Data tidak ditemukan
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="7"
+                            class="p-6 text-center text-gray-400">
+                            Data tidak ditemukan
+                        </td>
+                    </tr>
 
                 @endforelse
 
@@ -304,60 +288,69 @@ $studentClass = $user->role === 'student'
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-        const tanggalInput =
-            document.getElementById('tanggalInput');
+    const tanggalInput =
+        document.getElementById('tanggalInput');
 
-        const preview =
-            document.getElementById('tanggalPreview');
+    const preview =
+        document.getElementById('tanggalPreview');
 
-        function formatTanggalIndonesia(value) {
-            if (!value) return '';
 
-            const tgl = new Date(value);
+    function formatTanggalIndonesia(value) {
 
-            return tgl.toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
-        }
+        if (!value) return '';
 
-        if (tanggalInput && preview) {
+        return new Date(value).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+    }
+
+
+    if (tanggalInput && preview) {
+
+        preview.innerText =
+            formatTanggalIndonesia(tanggalInput.value);
+
+        tanggalInput.addEventListener('change', function () {
             preview.innerText =
-                formatTanggalIndonesia(tanggalInput.value);
+                formatTanggalIndonesia(this.value);
+        });
 
-            tanggalInput.addEventListener('change', function() {
-                preview.innerText =
-                    formatTanggalIndonesia(this.value);
-            });
-        }
+    }
 
 
-        if (typeof deleteData === 'undefined') {
-            console.error('ajax.js belum load');
-            return;
-        }
+    if (typeof deleteData === 'undefined') {
+        console.error('ajax.js belum load');
+        return;
+    }
 
-        document.querySelectorAll('.btn-delete')
-            .forEach(btn => {
 
-                btn.addEventListener('click', function() {
+    document.querySelectorAll('.btn-delete')
+        .forEach(function(btn){
 
-                    if (!confirm('Yakin hapus data ini?')) return;
+            btn.addEventListener('click', function(){
 
-                    let id = this.dataset.id;
-                    let url = this.dataset.url;
+                if (!confirm('Yakin hapus data ini?')) {
+                    return;
+                }
 
-                    deleteData(url, function() {
-                        document.getElementById('row-' + id)?.remove();
-                    });
+                let id = this.dataset.id;
+                let url = this.dataset.url;
 
+                deleteData(url, function () {
+                    document
+                        .getElementById('row-' + id)
+                        ?.remove();
                 });
 
             });
 
-    });
+        });
+
+});
 </script>
 @endpush

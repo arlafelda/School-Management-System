@@ -8,102 +8,161 @@
 
     <div class="max-w-3xl mx-auto">
 
-        <!-- 🔥 BREADCRUMB -->
-        <nav class="text-sm text-gray-500 mb-4">
-            <ol class="flex items-center space-x-2">
-                <li>
-                    <a href="{{ route('teacher.index') }}" class="text-blue-600 hover:underline">
-                        Guru
-                    </a>
-                </li>
-                <li>/</li>
-                <li>
-                    <a href="{{ route('teacher.show', $teacher->slug) }}" class="text-blue-600 hover:underline">
-                        {{ $teacher->name }}
-                    </a>
-                </li>
-                <li>/</li>
-                <li class="text-gray-700 font-medium">
-                    Edit
-                </li>
-            </ol>
-        </nav>
+        <!-- HEADER -->
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-blue-700">Edit Guru</h2>
+        </div>
 
-        <div class="bg-white p-6 md:p-8 rounded-xl shadow border">
+        <!-- FORM -->
+        <form id="formEditGuru"
+              action="{{ route('teacher.update', $teacher->slug) }}"
+              method="POST"
+              class="space-y-5">
 
-            <!-- HEADER -->
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-blue-700">Edit Guru</h2>
+            @csrf
+            @method('PUT')
+
+            <!-- NAMA -->
+            <div>
+                <label class="text-sm font-medium">Nama</label>
+                <input type="text"
+                       name="name"
+                       value="{{ old('name', $teacher->name) }}"
+                       class="w-full border p-2 rounded">
             </div>
 
-            <!-- FORM -->
-            <form id="formEditGuru"
-                  action="{{ route('teacher.update', $teacher->slug) }}"
-                  method="POST"
-                  class="space-y-5">
+            <!-- NIP -->
+            <div>
+                <label class="text-sm font-medium">NIP</label>
+                <input type="text"
+                       name="nip"
+                       value="{{ old('nip', $teacher->nip) }}"
+                       class="w-full border p-2 rounded">
+            </div>
 
-                @csrf
-                @method('PUT')
+            <!-- EMAIL (READONLY) -->
+            <div>
+                <label class="text-sm font-medium">Email</label>
+                <input type="email"
+                       value="{{ $teacher->user->email ?? '-' }}"
+                       disabled
+                       class="w-full border p-2 rounded bg-gray-100">
+            </div>
 
-                <!-- ✅ AUTO-FOCUS TARGET -->
-                <div>
-                    <label class="text-sm font-medium">Nama</label>
-                    <input type="text" name="name" id="firstInput"
-                           value="{{ $teacher->name }}"
-                           class="w-full border p-2 rounded">
+            <!-- PASSWORD (NEW ADDITION) -->
+            <div>
+                <label class="text-sm font-medium">Password Baru (opsional)</label>
+                <input type="password"
+                       name="password"
+                       placeholder="Kosongkan jika tidak ingin mengubah password"
+                       class="w-full border p-2 rounded">
+            </div>
+
+            <!-- SUBJECT REPEATER -->
+            <div>
+                <label class="text-sm font-medium">Mata Pelajaran</label>
+
+                <div id="subject-wrapper" class="space-y-2">
+
+                    @foreach($teacher->subjects as $subject)
+                        <div class="flex gap-2 subject-row">
+
+                            <select name="subject_ids[]" class="w-full border p-2 rounded">
+
+                                <option value="">Pilih Mata Pelajaran</option>
+
+                                @foreach($subjects as $s)
+                                    <option value="{{ $s->id }}"
+                                        {{ $subject->id == $s->id ? 'selected' : '' }}>
+                                        {{ $s->name }}
+                                    </option>
+                                @endforeach
+
+                            </select>
+
+                            <button type="button"
+                                    class="remove-subject px-3 bg-red-500 text-white rounded">
+                                X
+                            </button>
+
+                        </div>
+                    @endforeach
+
+                    @if($teacher->subjects->count() == 0)
+                        <div class="flex gap-2 subject-row">
+
+                            <select name="subject_ids[]" class="w-full border p-2 rounded">
+                                <option value="">Pilih Mata Pelajaran</option>
+                                @foreach($subjects as $s)
+                                    <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                @endforeach
+                            </select>
+
+                            <button type="button"
+                                    class="remove-subject hidden px-3 bg-red-500 text-white rounded">
+                                X
+                            </button>
+
+                        </div>
+                    @endif
+
                 </div>
 
-                <div>
-                    <label class="text-sm font-medium">NIP</label>
-                    <input type="text" name="nip" value="{{ $teacher->nip }}"
-                           class="w-full border p-2 rounded">
-                </div>
+                <!-- ADD SUBJECT -->
+                <button type="button"
+                        id="add-subject"
+                        class="mt-2 px-3 py-1 bg-green-600 text-white rounded text-sm">
+                    + Tambah Mata Pelajaran
+                </button>
 
-                <div>
-                    <label class="text-sm font-medium">Email</label>
-                    <input type="email" name="email" value="{{ $teacher->user->email ?? '' }}"
-                           class="w-full border p-2 rounded">
-                </div>
+            </div>
 
-                <div>
-                    <label class="text-sm font-medium">Mapel</label>
-                    <input type="text" name="subject" value="{{ $teacher->subject }}"
-                           class="w-full border p-2 rounded">
-                </div>
+            <!-- PHONE -->
+            <div>
+                <label class="text-sm font-medium">No HP</label>
+                <input type="text"
+                       name="phone"
+                       value="{{ old('phone', $teacher->phone) }}"
+                       class="w-full border p-2 rounded">
+            </div>
 
-                <div>
-                    <label class="text-sm font-medium">No HP</label>
-                    <input type="text" name="phone" value="{{ $teacher->phone }}"
-                           class="w-full border p-2 rounded">
-                </div>
+            <!-- POSITION -->
+            <div>
+                <label class="text-sm font-medium">Jabatan</label>
 
-                <div>
-                    <label class="text-sm font-medium">Jabatan</label>
-                    <select name="position" class="w-full border p-2 rounded">
-                        <option value="guru" {{ $teacher->position == 'guru' ? 'selected' : '' }}>Guru</option>
-                        <option value="wali_kelas" {{ $teacher->position == 'wali_kelas' ? 'selected' : '' }}>Wali Kelas</option>
-                    </select>
-                </div>
+                <select name="position" class="w-full border p-2 rounded">
 
-                <div class="flex justify-end gap-3">
-                    <a href="{{ route('teacher.index') }}"
-                       class="px-4 py-2 border rounded">
-                        Batal
-                    </a>
+                    <option value="guru"
+                        {{ $teacher->position == 'guru' ? 'selected' : '' }}>
+                        Guru
+                    </option>
 
-                    <button type="submit"
-                            class="px-5 py-2 bg-blue-600 text-white rounded">
-                        Update
-                    </button>
-                </div>
+                    <option value="wali_kelas"
+                        {{ $teacher->position == 'wali_kelas' ? 'selected' : '' }}>
+                        Wali Kelas
+                    </option>
 
-            </form>
+                </select>
+            </div>
 
-            <div id="alertBox" class="mt-4"></div>
+            <!-- BUTTON -->
+            <div class="flex justify-end gap-3">
 
-        </div>
+                <a href="{{ route('teacher.index') }}"
+                   class="px-5 py-2 border rounded-lg text-sm hover:bg-gray-100">
+                    ← Kembali
+                </a>
+
+                <button type="submit"
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                    Update
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
-
 </div>
 
 @endsection
@@ -113,22 +172,37 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // 🔥 AUTO-FOCUS SAAT HALAMAN DIBUKA
-    document.getElementById('firstInput')?.focus();
+    const wrapper = document.getElementById('subject-wrapper');
+    const addBtn = document.getElementById('add-subject');
 
-    if (typeof updateData !== 'undefined') {
+    // ➕ tambah mapel
+    addBtn.addEventListener('click', function () {
 
-        updateData('#formEditGuru', "{{ route('teacher.update', $teacher->slug) }}", {
-            onSuccess: function () {
+        const row = document.createElement('div');
+        row.classList.add('flex', 'gap-2', 'subject-row');
 
-                // 🔥 AUTO-FOCUS ULANG (opsional)
-                document.getElementById('firstInput')?.focus();
-            }
-        });
+        row.innerHTML = `
+            <select name="subject_ids[]" class="w-full border p-2 rounded">
+                <option value="">Pilih Mata Pelajaran</option>
+                @foreach($subjects as $s)
+                    <option value="{{ $s->id }}">{{ $s->name }}</option>
+                @endforeach
+            </select>
 
-    } else {
-        console.error('updateData belum tersedia');
-    }
+            <button type="button" class="remove-subject px-3 bg-red-500 text-white rounded">
+                X
+            </button>
+        `;
+
+        wrapper.appendChild(row);
+    });
+
+    // ❌ hapus mapel
+    wrapper.addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-subject')) {
+            e.target.closest('.subject-row').remove();
+        }
+    });
 
 });
 </script>

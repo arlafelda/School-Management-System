@@ -9,18 +9,21 @@
         <span class="text-gray-700 font-medium">
             Dashboard
         </span>
+
         <span class="mx-2">/</span>
 
         <a href="{{ route('grades.index') }}"
             class="hover:text-blue-600">
             Nilai
         </a>
+
         <span class="mx-2">/</span>
 
         <span class="text-gray-700 font-medium">
             Detail Nilai
         </span>
     </div>
+
 
     <!-- HEADER -->
     <div class="mb-6">
@@ -33,35 +36,35 @@
         </p>
     </div>
 
+
     @php
-    $tugas = $grade->assignment_score ?? 0;
-    $uts = $grade->mid_exam_score ?? 0;
-    $uas = $grade->final_exam_score ?? 0;
+        $tugas = $grade->assignment_score ?? 0;
+        $uts   = $grade->mid_exam_score ?? 0;
+        $uas   = $grade->final_exam_score ?? 0;
 
-    $final = ($tugas + $uts + $uas) / 3;
+        $final = ($tugas + $uts + $uas) / 3;
 
-    // STATUS NILAI
-    if ($final >= 90) {
-    $gradeLabel = 'Sangat Baik';
-    $gradeColor = 'text-green-600';
-    } elseif ($final >= 75) {
-    $gradeLabel = 'Baik';
-    $gradeColor = 'text-blue-600';
-    } elseif ($final >= 60) {
-    $gradeLabel = 'Cukup';
-    $gradeColor = 'text-yellow-600';
-    } else {
-    $gradeLabel = 'Perlu Perbaikan';
-    $gradeColor = 'text-red-600';
-    }
+        if ($final >= 90) {
+            $gradeLabel = 'Sangat Baik';
+            $gradeColor = 'text-green-600';
+        } elseif ($final >= 75) {
+            $gradeLabel = 'Baik';
+            $gradeColor = 'text-blue-600';
+        } elseif ($final >= 60) {
+            $gradeLabel = 'Cukup';
+            $gradeColor = 'text-yellow-600';
+        } else {
+            $gradeLabel = 'Perlu Perbaikan';
+            $gradeColor = 'text-red-600';
+        }
     @endphp
+
 
     <!-- CARD -->
     <div class="bg-white rounded-xl shadow border overflow-hidden max-w-4xl">
 
         <!-- HEADER CARD -->
         <div class="bg-blue-600 text-white px-6 py-5">
-
             <h1 class="text-xl font-semibold">
                 Detail Nilai Siswa
             </h1>
@@ -69,8 +72,8 @@
             <p class="text-sm opacity-80">
                 Informasi lengkap hasil akademik siswa
             </p>
-
         </div>
+
 
         <!-- CONTENT -->
         <div class="p-6 space-y-6">
@@ -83,7 +86,6 @@
                 </div>
 
                 <div>
-
                     <h2 class="font-semibold text-xl text-gray-800">
                         {{ $grade->student->name ?? '-' }}
                     </h2>
@@ -96,16 +98,15 @@
                         Kelas:
                         {{ $grade->student->class->name ?? '-' }}
                     </p>
-
                 </div>
 
             </div>
+
 
             <!-- INFO TABLE -->
             <div class="overflow-hidden border rounded-xl">
 
                 <table class="w-full text-sm">
-
                     <tbody class="divide-y">
 
                         <tr class="bg-gray-50">
@@ -124,11 +125,21 @@
                             </td>
 
                             <td class="p-3">
-                                {{ $grade->subject ?? '-' }}
+                                {{ $grade->schedule->subject->name ?? '-' }}
                             </td>
                         </tr>
 
                         <tr class="bg-gray-50">
+                            <td class="p-3 font-medium">
+                                Guru
+                            </td>
+
+                            <td class="p-3">
+                                {{ $grade->schedule->teacher->name ?? '-' }}
+                            </td>
+                        </tr>
+
+                        <tr>
                             <td class="p-3 font-medium">
                                 Tahun Ajaran
                             </td>
@@ -138,7 +149,7 @@
                             </td>
                         </tr>
 
-                        <tr>
+                        <tr class="bg-gray-50">
                             <td class="p-3 font-medium">
                                 Semester
                             </td>
@@ -149,10 +160,10 @@
                         </tr>
 
                     </tbody>
-
                 </table>
 
             </div>
+
 
             <!-- NILAI TABLE -->
             <div class="overflow-hidden border rounded-xl">
@@ -194,7 +205,8 @@
 
             </div>
 
-            <!-- STATUS NILAI -->
+
+            <!-- STATUS -->
             <div class="bg-gray-50 border rounded-xl p-5">
 
                 <div class="flex justify-between items-center">
@@ -223,31 +235,26 @@
 
             </div>
 
+
             <!-- BUTTON -->
             <div class="flex justify-between items-center pt-4 border-t">
 
                 <a href="{{ route('grades.index') }}"
-                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm transition">
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">
                     ← Kembali
                 </a>
 
-                @if(
-                auth()->user()->role === 'super_admin' ||
-                auth()->user()->role === 'admin' ||
-                auth()->user()->role === 'teacher'
-                )
-                <a href="{{ route('grades.edit', $grade->id) }}"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm shadow transition">
-                    Edit Nilai
-                </a>
+                @if(in_array(auth()->user()->role, ['super_admin','admin','teacher']))
+                    <a href="{{ route('grades.edit', $grade->id) }}"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm shadow">
+                        Edit Nilai
+                    </a>
                 @endif
 
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 @endsection

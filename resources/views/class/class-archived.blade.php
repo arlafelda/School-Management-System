@@ -5,13 +5,15 @@
 @section('content')
 
 @php
-$user = auth()->user();
+    $user = auth()->user();
 @endphp
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
+    <!-- BREADCRUMB -->
     <div class="px-6 pt-4 text-sm text-gray-500">
-        <a href="{{ route('class.index') }}" class="hover:text-blue-600">
+        <a href="{{ route('class.index') }}"
+           class="hover:text-blue-600">
             Kelas
         </a>
 
@@ -22,6 +24,7 @@ $user = auth()->user();
         </span>
     </div>
 
+    <!-- HEADER -->
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
 
         <div>
@@ -41,6 +44,7 @@ $user = auth()->user();
 
     </header>
 
+    <!-- MAIN -->
     <main class="p-6">
 
         <div id="alertBox"></div>
@@ -58,7 +62,7 @@ $user = auth()->user();
                         <th class="p-4 text-center">Jumlah Siswa</th>
 
                         @if(in_array($user->role, ['super_admin', 'admin']))
-                        <th class="p-4 text-center">Aksi</th>
+                            <th class="p-4 text-center">Aksi</th>
                         @endif
                     </tr>
                 </thead>
@@ -67,7 +71,8 @@ $user = auth()->user();
 
                     @forelse($classes as $class)
 
-                    <tr id="row-{{ $class->id }}" class="hover:bg-gray-50">
+                    <tr id="row-{{ $class->id }}"
+                        class="hover:bg-gray-50">
 
                         <td class="p-4 font-semibold text-gray-700">
                             {{ $class->name }}
@@ -92,19 +97,39 @@ $user = auth()->user();
                         @if(in_array($user->role, ['super_admin', 'admin']))
                         <td class="p-4 text-center">
 
-                            <form action="{{ route('class.restore', $class->slug) }}"
-                                  method="POST"
-                                  class="inline formRestore">
+                            <div class="flex justify-center gap-3">
 
-                                @csrf
-                                @method('PUT')
+                                <!-- Restore -->
+                                <form action="{{ route('class.restore', $class->slug) }}"
+                                      method="POST"
+                                      class="inline formRestore">
 
-                                <button type="submit"
-                                    class="text-green-600 hover:underline text-sm">
-                                    Restore
-                                </button>
+                                    @csrf
+                                    @method('PUT')
 
-                            </form>
+                                    <button type="submit"
+                                            class="text-green-600 hover:underline text-sm">
+                                        Restore
+                                    </button>
+
+                                </form>
+
+                                <!-- Delete -->
+                                <form action="{{ route('class.delete', $class->slug) }}"
+                                      method="POST"
+                                      class="inline formDelete">
+
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit"
+                                            class="text-red-600 hover:underline text-sm">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </div>
 
                         </td>
                         @endif
@@ -134,10 +159,12 @@ $user = auth()->user();
 
 @endsection
 
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
+    // RESTORE
     $(document).on('submit', '.formRestore', function (e) {
 
         e.preventDefault();
@@ -155,10 +182,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 _token: '{{ csrf_token() }}'
             },
             success: function(res) {
+
                 row.remove();
 
                 $('#alertBox').html(`
                     <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                        ${res.message}
+                    </div>
+                `);
+            }
+        });
+
+    });
+
+
+    // DELETE
+    $(document).on('submit', '.formDelete', function (e) {
+
+        e.preventDefault();
+
+        if (!confirm('Hapus permanen data ini?')) return;
+
+        let url = this.action;
+        let row = $(this).closest('tr');
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                _method: 'DELETE',
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(res) {
+
+                row.remove();
+
+                $('#alertBox').html(`
+                    <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">
                         ${res.message}
                     </div>
                 `);

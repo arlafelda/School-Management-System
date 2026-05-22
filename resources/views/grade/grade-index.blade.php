@@ -114,6 +114,7 @@ $user = auth()->user();
         <select name="academic_year"
             class="border p-2 rounded">
             <option value="">Tahun</option>
+
             @foreach($classes->unique('academic_year') as $c)
             <option value="{{ $c->academic_year }}"
                 {{ request('academic_year') == $c->academic_year ? 'selected' : '' }}>
@@ -121,6 +122,7 @@ $user = auth()->user();
             </option>
             @endforeach
         </select>
+
 
         <select name="semester"
             class="border p-2 rounded">
@@ -137,19 +139,21 @@ $user = auth()->user();
             </option>
         </select>
 
+
         <select name="major"
             class="border p-2 rounded">
             <option value="">Jurusan</option>
 
             @foreach($classes->unique('major') as $c)
-            @if($c->major)
-            <option value="{{ $c->major }}"
-                {{ request('major') == $c->major ? 'selected' : '' }}>
-                {{ $c->major }}
-            </option>
-            @endif
+                @if($c->major)
+                <option value="{{ $c->major }}"
+                    {{ request('major') == $c->major ? 'selected' : '' }}>
+                    {{ $c->major }}
+                </option>
+                @endif
             @endforeach
         </select>
+
 
         <select name="class_id"
             class="border p-2 rounded">
@@ -162,6 +166,7 @@ $user = auth()->user();
             </option>
             @endforeach
         </select>
+
 
         <button class="bg-blue-600 text-white rounded px-3 py-2">
             Filter
@@ -197,10 +202,10 @@ $user = auth()->user();
                 @forelse($data as $g)
 
                 @php
-                $tugas = $g->assignment_score ?? 0;
-                $uts = $g->mid_exam_score ?? 0;
-                $uas = $g->final_exam_score ?? 0;
-                $final = ($tugas + $uts + $uas) / 3;
+                    $tugas = $g->assignment_score ?? 0;
+                    $uts   = $g->mid_exam_score ?? 0;
+                    $uas   = $g->final_exam_score ?? 0;
+                    $final = ($tugas + $uts + $uas) / 3;
                 @endphp
 
                 <tr
@@ -217,7 +222,7 @@ $user = auth()->user();
                     </td>
 
                     <td class="p-3 text-center">
-                        {{ $g->subject ?? '-' }}
+                        {{ $g->schedule->subject->name ?? '-' }}
                     </td>
 
                     <td class="p-3 text-right">
@@ -286,50 +291,50 @@ $user = auth()->user();
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
 
-        if (typeof window.$ === 'undefined') {
-            console.error('jQuery belum load');
-            return;
-        }
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
 
-        // CLICK ROW
-        $(document).on('click', '.grade-row', function() {
-            let url = $(this).data('url');
-            if (url) window.location.href = url;
-        });
+    // CLICK ROW
+    $(document).on('click', '.grade-row', function() {
+        let url = $(this).data('url');
+        if (url) window.location.href = url;
+    });
 
-        // ARCHIVE
-        $(document).on('submit', '.formDelete', function(e) {
+    // ARCHIVE
+    $(document).on('submit', '.formDelete', function(e) {
 
-            e.preventDefault();
+        e.preventDefault();
 
-            if (!confirm('Pindahkan ke archive?')) return;
+        if (!confirm('Pindahkan ke archive?')) return;
 
-            let url = this.action;
-            let id = $(this).data('id');
-            let row = $('#row-' + id);
+        let url = this.action;
+        let id = $(this).data('id');
+        let row = $('#row-' + id);
 
-            if (typeof deleteData === 'function') {
+        if (typeof deleteData === 'function') {
 
-                deleteData(url, function(response) {
+            deleteData(url, function(response) {
 
-                    row.remove();
+                row.remove();
 
-                    $('#alertBox').html(`
+                $('#alertBox').html(`
                     <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
                         ${response.message ?? 'Data berhasil dipindahkan ke archive'}
                     </div>
                 `);
 
-                });
+            });
 
-            } else {
-                console.error('deleteData tidak ditemukan');
-            }
-
-        });
+        } else {
+            console.error('deleteData tidak ditemukan');
+        }
 
     });
+
+});
 </script>
 @endpush

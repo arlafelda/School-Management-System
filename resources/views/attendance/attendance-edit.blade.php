@@ -6,20 +6,20 @@
 $user = auth()->user();
 
 $studentClass = $user->role === 'student'
-? optional(optional($user->student)->class)
-: null;
+    ? optional(optional($user->student)->class)
+    : null;
 @endphp
 
 <div class="p-8 max-w-5xl mx-auto">
 
-    <!-- BREADCRUMB -->
+    {{-- BREADCRUMB --}}
     <div class="mb-4 text-sm text-gray-500">
         <span class="text-gray-700 font-medium">
             Dashboard
         </span>
         /
         <a href="{{ route('attendance.index') }}"
-            class="hover:text-blue-600">
+           class="hover:text-blue-600">
             Manajemen Absensi
         </a>
         /
@@ -29,7 +29,7 @@ $studentClass = $user->role === 'student'
     </div>
 
 
-    <!-- HEADER -->
+    {{-- HEADER --}}
     <div class="mb-6">
         <h2 class="text-2xl font-bold">
             Edit Absensi
@@ -41,7 +41,7 @@ $studentClass = $user->role === 'student'
     </div>
 
 
-    <!-- FILTER -->
+    {{-- FILTER --}}
     <div class="bg-white p-4 rounded-xl shadow-sm mb-6">
 
         <div class="grid md:grid-cols-3 gap-4">
@@ -49,24 +49,24 @@ $studentClass = $user->role === 'student'
             {{-- CLASS --}}
             @if($user->role === 'student')
 
-            <input type="text"
-                value="{{ $studentClass->name ?? '-' }}"
-                class="border rounded-lg px-3 py-2 bg-gray-100"
-                disabled>
+                <input type="text"
+                       value="{{ $studentClass->name ?? '-' }}"
+                       class="border rounded-lg px-3 py-2 bg-gray-100"
+                       disabled>
 
             @else
 
-            <select class="border rounded-lg px-3 py-2 bg-gray-100"
-                disabled>
+                <select class="border rounded-lg px-3 py-2 bg-gray-100"
+                        disabled>
 
-                @foreach($classes as $c)
-                <option
-                    {{ $attendance->student->class_id == $c->id ? 'selected' : '' }}>
-                    {{ $c->name }}
-                </option>
-                @endforeach
+                    @foreach($classes as $c)
+                        <option
+                            {{ optional($attendance->student)->class_id == $c->id ? 'selected' : '' }}>
+                            {{ $c->name }}
+                        </option>
+                    @endforeach
 
-            </select>
+                </select>
 
             @endif
 
@@ -74,33 +74,31 @@ $studentClass = $user->role === 'student'
             {{-- SCHEDULE --}}
             @if($user->role === 'teacher')
 
-            <input type="hidden"
-                name="schedule_id"
-                value="{{ $attendance->schedule_id }}">
-
-            <input type="text"
-                value="{{ $attendance->schedule->subject ?? '-' }}"
-                class="border rounded-lg px-3 py-2 bg-gray-100"
-                disabled>
+                <input type="text"
+                       value="{{ optional(optional($attendance->schedule)->subject)->name ?? '-' }}"
+                       class="border rounded-lg px-3 py-2 bg-gray-100"
+                       disabled>
 
             @else
 
-            <select name="schedule_id"
-                form="formEditAttendance"
-                class="border rounded-lg px-3 py-2">
+                <select name="schedule_id"
+                        form="formEditAttendance"
+                        class="border rounded-lg px-3 py-2">
 
-                @foreach($schedules as $s)
-                <option value="{{ $s->id }}"
-                    {{ $attendance->schedule_id == $s->id ? 'selected' : '' }}>
+                    @foreach($schedules as $s)
 
-                    {{ $s->teacher->subject ?? '-' }}
-                    -
-                    {{ $s->class->name ?? '-' }}
+                        <option value="{{ $s->id }}"
+                            {{ $attendance->schedule_id == $s->id ? 'selected' : '' }}>
 
-                </option>
-                @endforeach
+                            {{ optional($s->subject)->name ?? '-' }}
+                            -
+                            {{ optional($s->classModel)->name ?? '-' }}
 
-            </select>
+                        </option>
+
+                    @endforeach
+
+                </select>
 
             @endif
 
@@ -108,14 +106,14 @@ $studentClass = $user->role === 'student'
             {{-- DATE --}}
             <div>
                 <input type="date"
-                    id="tanggalInput"
-                    name="date"
-                    form="formEditAttendance"
-                    value="{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m-d') }}"
-                    class="border rounded-lg px-3 py-2 w-full">
+                       id="tanggalInput"
+                       name="date"
+                       form="formEditAttendance"
+                       value="{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m-d') }}"
+                       class="border rounded-lg px-3 py-2 w-full">
 
                 <small id="tanggalPreview"
-                    class="text-gray-500 text-xs block mt-1">
+                       class="text-gray-500 text-xs block mt-1">
                 </small>
             </div>
 
@@ -124,24 +122,24 @@ $studentClass = $user->role === 'student'
     </div>
 
 
-    <!-- ALERT -->
+    {{-- ALERT --}}
     <div id="alertBox" class="mb-4"></div>
 
 
-    <!-- FORM -->
+    {{-- FORM --}}
     <form id="formEditAttendance"
-        method="POST"
-        action="{{ route('attendance.update', $attendance->id) }}">
+          method="POST"
+          action="{{ route('attendance.update', $attendance->id) }}">
 
         @csrf
         @method('PUT')
 
         <input type="hidden"
-            name="schedule_id"
-            value="{{ $attendance->schedule_id }}">
+               name="schedule_id"
+               value="{{ $attendance->schedule_id }}">
 
 
-        <!-- TABLE -->
+        {{-- TABLE --}}
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
 
             <div class="p-4 border-b">
@@ -164,7 +162,7 @@ $studentClass = $user->role === 'student'
                     <tr class="border-t">
 
                         <td class="p-3 font-medium">
-                            {{ $attendance->student->name }}
+                            {{ optional($attendance->student)->name ?? '-' }}
                         </td>
 
                         <td class="p-3 text-center">
@@ -173,14 +171,14 @@ $studentClass = $user->role === 'student'
 
                                 @foreach(['hadir','izin','sakit','alpa'] as $status)
 
-                                <label>
-                                    <input type="radio"
-                                        name="status"
-                                        value="{{ $status }}"
-                                        {{ $attendance->status == $status ? 'checked' : '' }}>
+                                    <label>
+                                        <input type="radio"
+                                               name="status"
+                                               value="{{ $status }}"
+                                               {{ $attendance->status == $status ? 'checked' : '' }}>
 
-                                    {{ ucfirst($status) }}
-                                </label>
+                                        {{ ucfirst($status) }}
+                                    </label>
 
                                 @endforeach
 
@@ -197,16 +195,16 @@ $studentClass = $user->role === 'student'
         </div>
 
 
-        <!-- ACTION -->
+        {{-- ACTION --}}
         <div class="mt-6 flex justify-end gap-3">
 
             <a href="{{ route('attendance.index') }}"
-                class="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">
+               class="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">
                 Batal
             </a>
 
             <button type="submit"
-                class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
                 Update
             </button>
 
@@ -221,89 +219,86 @@ $studentClass = $user->role === 'student'
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-        /*
-        =========================
-        AUTO FOCUS
-        =========================
-        */
-        document.getElementById('tanggalInput')?.focus();
+    /*
+    =========================
+    AUTO FOCUS
+    =========================
+    */
+    document.getElementById('tanggalInput')?.focus();
 
 
-        /*
-        =========================
-        FORMAT TANGGAL INDONESIA
-        =========================
-        */
-        const tanggalInput =
-            document.getElementById('tanggalInput');
+    /*
+    =========================
+    FORMAT TANGGAL
+    =========================
+    */
+    const tanggalInput =
+        document.getElementById('tanggalInput');
 
-        const preview =
-            document.getElementById('tanggalPreview');
+    const preview =
+        document.getElementById('tanggalPreview');
 
-        function formatTanggalIndonesia(value) {
-            if (!value) return '';
+    function formatTanggalIndonesia(value) {
 
-            return new Date(value)
-                .toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-        }
+        if (!value) return '';
 
-        if (tanggalInput && preview) {
+        return new Date(value).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
 
+    }
+
+    if (tanggalInput && preview) {
+
+        preview.innerText =
+            formatTanggalIndonesia(tanggalInput.value);
+
+        tanggalInput.addEventListener('change', function () {
             preview.innerText =
-                formatTanggalIndonesia(
-                    tanggalInput.value
-                );
+                formatTanggalIndonesia(this.value);
+        });
 
-            tanggalInput.addEventListener(
-                'change',
-                function() {
-                    preview.innerText =
-                        formatTanggalIndonesia(
-                            this.value
-                        );
-                }
-            );
-        }
+    }
 
 
-        /*
-        =========================
-        AJAX UPDATE
-        =========================
-        */
-        if (typeof window.$ === 'undefined') {
-            console.error('jQuery belum load');
-            return;
-        }
+    /*
+    =========================
+    AJAX UPDATE
+    =========================
+    */
+    if (typeof window.$ === 'undefined') {
+        console.error('jQuery belum load');
+        return;
+    }
 
-        if (typeof window.updateData === 'function') {
+    if (typeof window.updateData === 'function') {
 
-            updateData(
-                '#formEditAttendance',
-                "{{ route('attendance.update', $attendance->id) }}",
-                function(res) {
+        updateData(
+            '#formEditAttendance',
+            "{{ route('attendance.update', $attendance->id) }}",
+            function(res){
 
-                    $('#alertBox').html(`
+                $('#alertBox').html(`
                     <div class="p-3 bg-green-100 text-green-700 rounded-lg">
                         ${res.message ?? 'Absensi berhasil diperbarui'}
                     </div>
                 `);
 
-                }
-            );
+            }
+        );
 
-        } else {
-            console.error(
-                'updateData tidak ditemukan (ajax.js belum ke-load)'
-            );
-        }
+    } else {
 
-    });
+        console.error(
+            'updateData tidak ditemukan (ajax.js belum ke-load)'
+        );
+
+    }
+
+});
 </script>
 @endpush

@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Teacher;
 use App\Models\User;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class TeacherController extends Controller
 {
     public function index()
     {
-        $teachers = Teacher::with('user')
+        $teachers = Teacher::with(['user', 'subjects'])
             ->where('archived', 0)
             ->latest()
             ->get();
@@ -22,7 +22,7 @@ class TeacherController extends Controller
 
     public function archived()
     {
-        $teachers = Teacher::with('user')
+        $teachers = Teacher::with(['user', 'subjects'])
             ->where('archived', 1)
             ->latest()
             ->get();
@@ -32,17 +32,20 @@ class TeacherController extends Controller
 
     public function create()
     {
-        return view('teacher.teacher-add');
+        $subjects = Subject::where('archived', 0)->get();
+
+        return view('teacher.teacher-add', compact('subjects'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:tbl_users,email',
             'password' => 'required|min:6',
             'nip' => 'required|unique:tbl_teachers,nip',
-            'subject' => 'nullable',
+            'subject_ids' => 'nullable|array',
+            'subject_ids.*' => 'exists:tbl_subjects,id',
             'phone' => 'nullable',
             'address' => 'nullable',
             'position' => 'nullable',
@@ -60,30 +63,22 @@ class TeacherController extends Controller
             'user_id' => $user->id,
             'name' => $request->name,
             'nip' => $request->nip,
-            'subject' => $request->subject,
             'phone' => $request->phone,
             'address' => $request->address,
             'position' => $request->position,
             'archived' => 0,
         ]);
 
-        $teacher->slug = Str::slug($request->name) . '-' . $teacher->id;
-        $teacher->save();
+        $teacher->subjects()->sync($request->subject_ids ?? []);
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Guru berhasil ditambahkan'
-            ]);
-        }
-
-        return redirect()->route('teacher.index')
+        return redirect()
+            ->route('teacher.index')
             ->with('success', 'Guru berhasil ditambahkan');
     }
 
     public function show(string $slug)
     {
-        $teacher = Teacher::with('user')
+        $teacher = Teacher::with(['user', 'subjects'])
             ->where('slug', $slug)
             ->where('archived', 0)
             ->firstOrFail();
@@ -93,12 +88,14 @@ class TeacherController extends Controller
 
     public function edit(string $slug)
     {
-        $teacher = Teacher::with('user')
+        $teacher = Teacher::with(['user', 'subjects'])
             ->where('slug', $slug)
             ->where('archived', 0)
             ->firstOrFail();
 
-        return view('teacher.teacher-edit', compact('teacher'));
+        $subjects = Subject::where('archived', 0)->get();
+
+        return view('teacher.teacher-edit', compact('teacher', 'subjects'));
     }
 
     public function update(Request $request, string $slug)
@@ -108,45 +105,52 @@ class TeacherController extends Controller
             ->where('archived', 0)
             ->firstOrFail();
 
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required',
             'nip' => 'required|unique:tbl_teachers,nip,' . $teacher->id,
-            'subject' => 'nullable',
+            'subject_ids' => 'nullable|array',
+            'subject_ids.*' => 'exists:tbl_subjects,id',
             'phone' => 'nullable',
             'address' => 'nullable',
             'position' => 'nullable',
+            'password' => 'nullable|min:6', // ✅ TAMBAHAN
         ]);
 
+        // UPDATE TEACHER
         $teacher->update([
             'name' => $request->name,
             'nip' => $request->nip,
-            'subject' => $request->subject,
             'phone' => $request->phone,
             'address' => $request->address,
             'position' => $request->position,
         ]);
 
-        $teacher->user->update([
-            'name' => $request->name,
+        // SYNC SUBJECT
+        $teacher->subjects()->sync($request->subject_ids ?? []);
+
+        // UPDATE USER NAME
+        $teacher->user?->update([
+            'name' => $request->name
         ]);
 
-        $teacher->slug = Str::slug($request->name) . '-' . $teacher->id;
-        $teacher->save();
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Guru berhasil diupdate'
+        // =========================
+        // UPDATE PASSWORD (OPSIONAL)
+        // =========================
+        if ($request->filled('password')) {
+            $teacher->user?->update([
+                'password' => Hash::make($request->password)
             ]);
         }
 
-        return redirect()->route('teacher.index')
+        return redirect()
+            ->route('teacher.index')
             ->with('success', 'Guru berhasil diupdate');
     }
 
     public function destroy(Request $request, string $slug)
     {
-        $teacher = Teacher::where('slug', $slug)
+        $teacher = Teacher::with('user')
+            ->where('slug', $slug)
             ->where('archived', 0)
             ->firstOrFail();
 
@@ -154,20 +158,46 @@ class TeacherController extends Controller
             'archived' => 1
         ]);
 
-        if ($teacher->user) {
-            $teacher->user->update([
-                'archived' => 1
-            ]);
-        }
+        $teacher->user?->update([
+            'archived' => 1
+        ]);
 
-        if ($request->expectsJson()) {
+        if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Guru berhasil dipindahkan ke arsip'
             ]);
         }
 
-        return redirect()->route('teacher.index')
+        return redirect()
+            ->route('teacher.index')
             ->with('success', 'Guru berhasil dipindahkan ke arsip');
+    }
+
+    public function restore(Request $request, string $slug)
+    {
+        $teacher = Teacher::with('user')
+            ->where('slug', $slug)
+            ->where('archived', 1)
+            ->firstOrFail();
+
+        $teacher->update([
+            'archived' => 0
+        ]);
+
+        $teacher->user?->update([
+            'archived' => 0
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Guru berhasil direstore'
+            ]);
+        }
+
+        return redirect()
+            ->route('teacher.archived')
+            ->with('success', 'Guru berhasil direstore');
     }
 }

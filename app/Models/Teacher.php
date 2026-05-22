@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\Subject;
+use App\Models\User;
+use App\Models\Schedule;
+use App\Models\Extracurricular;
 
 class Teacher extends Model
 {
@@ -13,7 +17,6 @@ class Teacher extends Model
         'user_id',
         'name',
         'nip',
-        'subject',
         'phone',
         'address',
         'archived',
@@ -21,17 +24,21 @@ class Teacher extends Model
         'slug',
     ];
 
+    protected $casts = [
+        'archived' => 'boolean',
+    ];
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($teacher) {
-            $teacher->slug = static::generateUniqueSlug($teacher->name);
+            $teacher->slug = self::generateUniqueSlug($teacher->name);
         });
 
         static::updating(function ($teacher) {
             if ($teacher->isDirty('name')) {
-                $teacher->slug = static::generateUniqueSlug(
+                $teacher->slug = self::generateUniqueSlug(
                     $teacher->name,
                     $teacher->id
                 );
@@ -39,22 +46,18 @@ class Teacher extends Model
         });
     }
 
-    public static function generateUniqueSlug(
-        string $name,
-        ?int $ignoreId = null
-    ): string {
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
         $slug = Str::slug($name);
-        $originalSlug = $slug;
+        $original = $slug;
         $count = 1;
 
         while (
-            static::where('slug', $slug)
-                ->when($ignoreId, function ($query) use ($ignoreId) {
-                    return $query->where('id', '!=', $ignoreId);
-                })
+            self::where('slug', $slug)
+                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
                 ->exists()
         ) {
-            $slug = $originalSlug . '-' . $count++;
+            $slug = $original . '-' . $count++;
         }
 
         return $slug;
@@ -65,9 +68,26 @@ class Teacher extends Model
         return 'slug';
     }
 
+    // ======================
+    // RELASI
+    // ======================
+
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * MANY TO MANY: teachers <-> subjects
+     */
+    public function subjects()
+    {
+        return $this->belongsToMany(
+            Subject::class,
+            'teacher_subject',
+            'teacher_id',
+            'subject_id'
+        );
     }
 
     public function schedules()
@@ -77,6 +97,6 @@ class Teacher extends Model
 
     public function extracurriculars()
     {
-        return $this->hasMany(Extracurricular::class);
+        return $this->hasMany(Extracurricular::class, 'teacher_id');
     }
 }

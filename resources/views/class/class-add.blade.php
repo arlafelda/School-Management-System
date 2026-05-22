@@ -4,7 +4,7 @@
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
-    <!-- 🧭 BREADCRUMB -->
+    <!-- BREADCRUMB -->
     <div class="px-6 pt-4 text-sm text-gray-500">
         <a href="{{ route('class.index') }}" class="hover:text-blue-600">
             Kelas
@@ -14,23 +14,15 @@
     </div>
 
     <!-- HEADER -->
-    <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
-
-        <div>
-            <h1 class="text-lg font-bold text-blue-700">
-                Tambah Kelas
-            </h1>
-            <p class="text-sm text-gray-500">
-                Input data kelas baru
-            </p>
-        </div>
-
+    <header class="bg-white border-b px-6 py-4">
+        <h1 class="text-lg font-bold text-blue-700">Tambah Kelas</h1>
+        <p class="text-sm text-gray-500">Input data kelas baru</p>
     </header>
 
     <!-- CONTENT -->
     <main class="p-6">
 
-        <!-- ALERT -->
+        <!-- ALERT AJAX -->
         <div id="alertBox" class="max-w-3xl mx-auto mb-4"></div>
 
         <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow">
@@ -41,15 +33,14 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    <!-- ✅ FIELD PERTAMA (AUTO FOCUS) -->
+                    <!-- Nama Kelas -->
                     <div>
                         <label class="text-sm font-medium">Nama Kelas</label>
-                        <input 
+                        <input
                             id="firstInput"
-                            type="text" 
-                            name="name" 
-                            required 
-                            autofocus
+                            type="text"
+                            name="name"
+                            required
                             class="w-full border rounded-lg px-3 py-2 mt-1">
                     </div>
 
@@ -98,9 +89,9 @@
                             class="w-full border rounded-lg px-3 py-2 mt-1">
                             <option value="">-- Pilih Guru --</option>
                             @foreach($teachers as $teacher)
-                            <option value="{{ $teacher->id }}">
-                                {{ $teacher->name }} - {{ $teacher->subject }}
-                            </option>
+                                <option value="{{ $teacher->id }}">
+                                    {{ $teacher->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -135,40 +126,39 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // ✅ FORCE AUTO FOCUS (ANTI GAGAL)
+    // AUTO FOCUS AMAN
     setTimeout(() => {
-        let first = document.getElementById('firstInput');
+        const first = document.getElementById('firstInput');
         if (first) first.focus();
     }, 100);
 
-
-    if (typeof window.$ === 'undefined') {
-        console.error('jQuery belum load');
+    // CEK AJAX HELPER
+    if (typeof window.createData !== 'function') {
+        console.error('ajax.js belum load');
         return;
     }
 
-    if (typeof window.createData === 'function') {
+    // AJAX CREATE
+    window.createData('#formClass', "{{ route('class.store') }}", {
+        onSuccess: function (res) {
 
-        window.createData('#formClass', "{{ route('class.store') }}", {
-            onSuccess: function(res) {
+            $('#alertBox').html(`
+                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
+                    ${res.message ?? 'Data berhasil disimpan'}
+                </div>
+            `);
 
-                $('#alertBox').html(`
-                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                        ${res.message ?? 'Data kelas berhasil ditambahkan'}
-                    </div>
-                `);
+            const form = document.getElementById('formClass');
+            form.reset();
 
-                // reset form + fokus lagi ke input pertama
-                document.getElementById('formClass').reset();
-                document.getElementById('firstInput').focus();
-            }
-        });
-
-    } else {
-        console.error('createData belum tersedia (ajax.js belum ke-load)');
-    }
+            setTimeout(() => {
+                const first = document.getElementById('firstInput');
+                if (first) first.focus();
+            }, 100);
+        }
+    });
 
 });
 </script>

@@ -172,6 +172,28 @@ class ExtracurricularController extends Controller
             ->with('success', 'Data berhasil direstore');
     }
 
+    public function delete(string $slug)
+    {
+        try {
+
+            $extracurricular = Extracurricular::where('slug', $slug)
+                ->where('archived', 1)
+                ->firstOrFail();
+
+            $extracurricular->delete();
+
+            return redirect()
+                ->route('extracurricular.archived')
+                ->with('success', 'Data berhasil dihapus permanen');
+
+        } catch (\Throwable $e) {
+
+            return redirect()
+                ->route('extracurricular.archived')
+                ->with('error', $e->getMessage());
+        }
+    }
+
     public function studentExtracurricular()
     {
         $extracurriculars = Extracurricular::with('teacher')

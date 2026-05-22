@@ -7,6 +7,7 @@ use App\Models\ClassModel;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -28,129 +29,154 @@ class AttendanceController extends Controller
         return Teacher::where('user_id', $user->id)->first();
     }
 
+
     // =====================
     // INDEX
     // =====================
     public function index(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $classes = ClassModel::all();
+        $classes = ClassModel::all();
+        $subjects = Subject::all();
 
-    $query = Attendance::with([
-        'student.class',
-        'schedule.teacher'
-    ]);
+        $query = Attendance::with([
+            'student.class',
+            'schedule.teacher',
+            'schedule.subject',
+            'schedule.classModel'
+        ]);
 
-    /*
-    =====================
-    STUDENT
-    =====================
-    */
-    if ($user->role === 'student') {
+        /*
+        =====================
+        STUDENT
+        =====================
+        */
+        if ($user->role === 'student') {
 
-        $student = Student::with('class')
-            ->where('user_id', $user->id)
-            ->first();
+            $student = Student::with('class')
+                ->where('user_id', $user->id)
+                ->first();
 
-        if ($student) {
+            if ($student) {
 
-            // hanya data student sendiri
-            $query->where('student_id', $student->id);
+                $query->where('student_id', $student->id);
 
-            // paksa class_id sesuai kelas student
-            $request->merge([
-                'class_id' => $student->class_id
-            ]);
+                $request->merge([
+                    'class_id' => $student->class_id
+                ]);
 
-        } else {
-            $query->whereRaw('1 = 0');
+            } else {
+
+                $query->whereRaw('1=0');
+
+            }
         }
-    }
 
-    /*
-    =====================
-    TEACHER
-    =====================
-    */
-    elseif ($user->role === 'teacher') {
+        /*
+        =====================
+        TEACHER
+        =====================
+        */
+        elseif ($user->role === 'teacher') {
 
-        $teacher = $this->getTeacher();
+            $teacher = $this->getTeacher();
 
-        if ($teacher) {
-            $scheduleIds = Schedule::where(
-                'teacher_id',
-                $teacher->id
-            )->pluck('id');
+            if ($teacher) {
 
-            $query->whereIn(
-                'schedule_id',
-                $scheduleIds
-            );
-        } else {
-            $query->whereRaw('1 = 0');
+                $scheduleIds = Schedule::where(
+                    'teacher_id',
+                    $teacher->id
+                )->pluck('id');
+
+                $query->whereIn(
+                    'schedule_id',
+                    $scheduleIds
+                );
+
+            } else {
+
+                $query->whereRaw('1=0');
+
+            }
         }
-    }
 
-    /*
-    =====================
-    FILTER CLASS
-    =====================
-    */
-    if ($request->class_id) {
-        $query->whereHas('student', function ($q) use ($request) {
-            $q->where(
-                'class_id',
-                $request->class_id
+        /*
+        =====================
+        FILTER CLASS
+        =====================
+        */
+        if ($request->class_id) {
+
+            $query->whereHas('student', function ($q) use ($request) {
+                $q->where(
+                    'class_id',
+                    $request->class_id
+                );
+            });
+
+        }
+
+        /*
+        =====================
+        FILTER SUBJECT
+        =====================
+        */
+        if ($request->subject_id) {
+
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->where(
+                    'subject_id',
+                    $request->subject_id
+                );
+            });
+
+        }
+
+        /*
+        =====================
+        FILTER STATUS
+        =====================
+        */
+        if ($request->status) {
+            $query->where(
+                'status',
+                $request->status
             );
-        });
-    }
+        }
 
-    /*
-    =====================
-    FILTER STATUS
-    =====================
-    */
-    if ($request->status) {
-        $query->where(
-            'status',
-            $request->status
-        );
-    }
+        /*
+        =====================
+        FILTER DATE
+        =====================
+        */
+        if ($request->date) {
+            $query->whereDate(
+                'date',
+                $request->date
+            );
+        }
 
-    /*
-    =====================
-    FILTER DATE
-    =====================
-    */
-    if ($request->date) {
-        $query->whereDate(
-            'date',
-            $request->date
-        );
-    }
+        $attendances = $query->latest()->get();
 
-    $attendances = $query->latest()->get();
+        $total = $attendances->count();
 
-    $total = $attendances->count();
+        $hadir = $attendances
+            ->where('status', 'hadir')
+            ->count();
 
-    $hadir = $attendances
-        ->where('status', 'hadir')
-        ->count();
+        $persen = $total
+            ? round(($hadir / $total) * 100, 1)
+            : 0;
 
-    $persen = $total
-        ? round(($hadir / $total) * 100, 1)
-        : 0;
-
-    return view(
-        'attendance.attendance-index',
-        compact(
+        return view('attendance.attendance-index', compact(
             'attendances',
             'classes',
+            'subjects',
             'persen'
-        )
-    );
-}
+        ));
+    }
+
 
     // =====================
     // CREATE
@@ -164,14 +190,10 @@ class AttendanceController extends Controller
         }
 
         $classes = ClassModel::all();
+        $subjects = Subject::all();
 
         $date = $request->date ?? date('Y-m-d');
 
-        /*
-    =========================
-    KONVERSI HARI INDONESIA
-    =========================
-    */
         $hariMap = [
             'Monday'    => 'Senin',
             'Tuesday'   => 'Selasa',
@@ -189,79 +211,86 @@ class AttendanceController extends Controller
         $students = collect();
 
         /*
-    =========================
-    TEACHER
-    =========================
-    */
+        =====================
+        TEACHER
+        =====================
+        */
         if ($user->role === 'teacher') {
 
             $teacher = $this->getTeacher();
 
-            if (!$teacher) {
-                return redirect()
-                    ->route('attendance.index')
-                    ->with('error', 'Teacher tidak ditemukan');
-            }
-
-            $schedules = Schedule::with('class')
-                ->where('teacher_id', $teacher->id)
-                ->where('day', $today)
-                ->get();
+            $schedules = Schedule::with([
+                'classModel:id,name',
+                'subject:id,name'
+            ])
+            ->where('teacher_id', $teacher->id)
+            ->where('day', $today)
+            ->get();
         }
 
         /*
-    =========================
-    ADMIN / SUPER ADMIN
-    =========================
-    */ else {
+        =====================
+        ADMIN
+        =====================
+        */
+        else {
 
-            $schedules = Schedule::with(['teacher', 'class'])
-                ->where('day', $today)
-                ->get();
+            $schedules = Schedule::with([
+                'teacher:id,name',
+                'classModel:id,name',
+                'subject:id,name'
+            ])
+            ->where('day', $today)
+            ->get();
         }
 
         /*
-    =========================
-    FILTER STUDENT BERDASARKAN
-    schedule_id YANG DIPILIH
-    =========================
-    */
+        =====================
+        GET STUDENTS
+        =====================
+        */
         if ($request->schedule_id) {
 
-            $selectedSchedule = Schedule::where('id', $request->schedule_id)
+            $selectedSchedule = Schedule::with('subject')
+                ->where('id', $request->schedule_id)
                 ->where('day', $today)
                 ->first();
 
             if ($selectedSchedule) {
+
                 $students = Student::with('class')
-                    ->where('class_id', $selectedSchedule->class_id)
+                    ->where(
+                        'class_id',
+                        $selectedSchedule->class_id
+                    )
                     ->get();
             }
         }
 
         /*
-    =========================
-    CEK ABSENSI SUDAH ADA?
-    =========================
-    */
+        =====================
+        CHECK ATTENDANCE
+        =====================
+        */
         $attendanceExists = false;
 
         if ($request->schedule_id) {
+
             $attendanceExists = Attendance::where(
                 'schedule_id',
                 $request->schedule_id
             )
-                ->whereDate('date', $date)
-                ->exists();
+            ->whereDate('date', $date)
+            ->exists();
         }
 
-        $showForm =
-            $request->schedule_id &&
-            !$attendanceExists &&
-            $students->count() > 0;
+        $showForm = $request->schedule_id
+            && !$attendanceExists
+            && $students->count() > 0;
 
         return view('attendance.attendance-add', compact(
             'classes',
+            'subjects',
             'schedules',
             'students',
             'date',
@@ -270,6 +299,7 @@ class AttendanceController extends Controller
         ));
     }
 
+
     // =====================
     // STORE
     // =====================
@@ -277,11 +307,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        // =====================
-        // BLOCK STUDENT ACCESS
-        // =====================
         if ($user->role === 'student') {
-
             return response()->json([
                 'status' => false,
                 'message' => 'Student tidak memiliki akses'
@@ -290,12 +316,11 @@ class AttendanceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'schedule_id' => 'required|exists:tbl_schedules,id',
-            'date' => 'required|date',
-            'student_id' => 'required|array'
+            'date'        => 'required|date',
+            'student_id'  => 'required|array'
         ]);
 
         if ($validator->fails()) {
-
             return response()->json([
                 'status' => false,
                 'message' => 'Validasi gagal',
@@ -303,44 +328,23 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        // =====================
-        // TEACHER SECURITY
-        // =====================
-        if ($user->role === 'teacher') {
+        foreach ($request->student_id as $studentId) {
 
-            $teacher = $this->getTeacher();
-
-            $scheduleValid = Schedule::where('id', $request->schedule_id)
-                ->where('teacher_id', $teacher->id)
-                ->exists();
-
-            if (!$scheduleValid) {
-
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Tidak memiliki akses'
-                ], 403);
-            }
-        }
-
-        $attendanceExists = Attendance::where('schedule_id', $request->schedule_id)
-            ->whereDate('date', $request->date)
-            ->exists();
-
-        if ($attendanceExists) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Absensi untuk jadwal dan tanggal ini sudah ada. Silakan edit data absensi yang sudah dibuat.'
-            ], 409);
-        }
-
-        foreach ($request->student_id as $index => $studentId) {
             $status = $request->attendance[$studentId] ?? null;
-            if (!$status) continue;
+
+            if (!$status) {
+                continue;
+            }
 
             Attendance::updateOrCreate(
-                ['student_id' => $studentId, 'schedule_id' => $request->schedule_id, 'date' => $request->date],
-                ['status' => $status]
+                [
+                    'student_id'  => $studentId,
+                    'schedule_id' => $request->schedule_id,
+                    'date'        => $request->date
+                ],
+                [
+                    'status' => $status
+                ]
             );
         }
 
@@ -350,171 +354,48 @@ class AttendanceController extends Controller
         ]);
     }
 
+
     // =====================
     // EDIT
     // =====================
     public function edit(int $id)
-{
-    $user = Auth::user();
+    {
+        $attendance = Attendance::with([
+            'student.class',
+            'schedule.teacher',
+            'schedule.subject',
+            'schedule.classModel'
+        ])->findOrFail($id);
 
-    /*
-    =====================
-    BLOCK STUDENT ACCESS
-    =====================
-    */
-    if ($user->role === 'student') {
-        abort(403, 'Student tidak memiliki akses');
-    }
-
-    $attendance = Attendance::with([
-        'student.class',
-        'schedule.teacher',
-        'schedule.class'
-    ])->findOrFail($id);
-
-    /*
-    =====================
-    TEACHER SECURITY
-    =====================
-    */
-    if ($user->role === 'teacher') {
-
-        $teacher = $this->getTeacher();
-
-        if (
-            !$teacher ||
-            $attendance->schedule->teacher_id != $teacher->id
-        ) {
-            abort(403, 'Anda tidak memiliki akses');
-        }
-    }
-
-    /*
-    =====================
-    LOAD FILTER DATA
-    =====================
-    */
-    $classes = ClassModel::all();
-
-    if ($user->role === 'teacher') {
-
-        $teacher = $this->getTeacher();
+        $classes = ClassModel::all();
+        $subjects = Subject::all();
 
         $schedules = Schedule::with([
             'teacher',
-            'class'
-        ])
-        ->where('teacher_id', $teacher->id)
-        ->get();
-
-        $attendances = Attendance::with([
-            'student.class',
-            'schedule.teacher'
-        ])
-        ->whereHas('schedule', function ($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })
-        ->get();
-
-    } else {
-
-        $schedules = Schedule::with([
-            'teacher',
-            'class'
+            'classModel',
+            'subject'
         ])->get();
 
-        $attendances = Attendance::with([
-            'student.class',
-            'schedule.teacher'
-        ])->get();
-    }
-
-    /*
-    =====================
-    HITUNG PERSENTASE
-    =====================
-    */
-    $total = $attendances->count();
-
-    $hadir = $attendances
-        ->where('status', 'hadir')
-        ->count();
-
-    $persen = $total
-        ? round(($hadir / $total) * 100, 1)
-        : 0;
-
-    return view(
-        'attendance.attendance-edit',
-        compact(
+        return view('attendance.attendance-edit', compact(
             'attendance',
             'classes',
-            'schedules',
-            'attendances',
-            'persen'
-        )
-    );
-}
+            'subjects',
+            'schedules'
+        ));
+    }
+
 
     // =====================
     // UPDATE
     // =====================
     public function update(Request $request, int $id)
     {
-        $user = Auth::user();
-
-        // =====================
-        // BLOCK STUDENT ACCESS
-        // =====================
-        if ($user->role === 'student') {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Student tidak memiliki akses'
-            ], 403);
-        }
-
-        $attendance = Attendance::with('schedule')
-            ->findOrFail($id);
-
-        // =====================
-        // TEACHER SECURITY
-        // =====================
-        if ($user->role === 'teacher') {
-
-            $teacher = $this->getTeacher();
-
-            if (
-                !$teacher ||
-                $attendance->schedule->teacher_id != $teacher->id
-            ) {
-
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Tidak memiliki akses'
-                ], 403);
-            }
-        }
-
-        $validator = Validator::make($request->all(), [
-            'schedule_id' => 'required',
-            'date' => 'required|date',
-            'status' => 'required'
-        ]);
-
-        if ($validator->fails()) {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        $attendance = Attendance::findOrFail($id);
 
         $attendance->update([
             'schedule_id' => $request->schedule_id,
-            'date' => $request->date,
-            'status' => $request->status,
+            'date'        => $request->date,
+            'status'      => $request->status,
         ]);
 
         return response()->json([
@@ -523,125 +404,129 @@ class AttendanceController extends Controller
         ]);
     }
 
-    // =====================
-    // DELETE
-    // =====================
-    public function destroy(int $id)
-    {
-        $user = Auth::user();
-
-        // =====================
-        // BLOCK STUDENT ACCESS
-        // =====================
-        if ($user->role === 'student') {
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Student tidak memiliki akses'
-            ], 403);
-        }
-
-        $attendance = Attendance::with('schedule')
-            ->findOrFail($id);
-
-        // =====================
-        // TEACHER SECURITY
-        // =====================
-        if ($user->role === 'teacher') {
-
-            $teacher = $this->getTeacher();
-
-            if (
-                !$teacher ||
-                $attendance->schedule->teacher_id != $teacher->id
-            ) {
-
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Tidak memiliki akses'
-                ], 403);
-            }
-        }
-
-        $attendance->delete();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Absensi berhasil dihapus'
-        ]);
-    }
 
     // =====================
     // RECAP
     // =====================
     public function recap(Request $request)
+{
+    $user = Auth::user();
+
+    $classes = ClassModel::all();
+    $subjects = Subject::all();
+
+    $query = Attendance::with([
+        'student.class',
+        'schedule.subject'
+    ]);
+
+    /*
+    =====================
+    STUDENT
+    =====================
+    */
+    if ($user->role === 'student') {
+
+        $student = Student::where('user_id', $user->id)->first();
+
+        if ($student) {
+            $query->where('student_id', $student->id);
+        } else {
+            $query->whereRaw('1=0');
+        }
+    }
+
+    /*
+    =====================
+    TEACHER
+    =====================
+    */
+    elseif ($user->role === 'teacher') {
+
+        $teacher = $this->getTeacher();
+
+        if ($teacher) {
+
+            $scheduleIds = Schedule::where('teacher_id', $teacher->id)
+                ->pluck('id');
+
+            $query->whereIn('schedule_id', $scheduleIds);
+
+        } else {
+            $query->whereRaw('1=0');
+        }
+    }
+
+    /*
+    =====================
+    FILTER MAJOR
+    =====================
+    */
+    if ($request->major) {
+        $query->whereHas('student.class', function ($q) use ($request) {
+            $q->where('major', $request->major);
+        });
+    }
+
+    /*
+    =====================
+    FILTER CLASS
+    =====================
+    */
+    if ($request->class_id) {
+        $query->whereHas('student', function ($q) use ($request) {
+            $q->where('class_id', $request->class_id);
+        });
+    }
+
+    /*
+    =====================
+    FILTER SUBJECT (BARU)
+    =====================
+    */
+    if ($request->subject_id) {
+        $query->whereHas('schedule', function ($q) use ($request) {
+            $q->where('subject_id', $request->subject_id);
+        });
+    }
+
+    /*
+    =====================
+    REKAP DATA
+    =====================
+    */
+    $rekap = $query->get()
+        ->groupBy('student_id')
+        ->map(function ($items) {
+
+            $first = $items->first();
+
+            return (object)[
+                'student' => $first->student,
+                'hadir'   => $items->where('status', 'hadir')->count(),
+                'izin'    => $items->where('status', 'izin')->count(),
+                'alpa'    => $items->where('status', 'alpa')->count(),
+            ];
+        });
+
+    return view('attendance.attendance-recap', compact(
+        'rekap',
+        'classes',
+        'subjects'
+    ));
+}
+
+
+    // =====================
+    // DELETE
+    // =====================
+    public function destroy(int $id)
     {
-        $user = Auth::user();
+        Attendance::findOrFail($id)->delete();
 
-        $classes = ClassModel::all();
-
-        $query = Attendance::with('student.class');
-
-        // =====================
-        // STUDENT ONLY OWN RECAP
-        // =====================
-        if ($user->role === 'student') {
-
-            $student = Student::where('user_id', $user->id)->first();
-
-            if ($student) {
-
-                $query->where('student_id', $student->id);
-            } else {
-
-                $query->whereRaw('1 = 0');
-            }
-        }
-
-        // =====================
-        // TEACHER ONLY OWN SCHEDULE
-        // =====================
-        elseif ($user->role === 'teacher') {
-
-            $teacher = $this->getTeacher();
-
-            if ($teacher) {
-
-                $scheduleIds = Schedule::where('teacher_id', $teacher->id)
-                    ->pluck('id');
-
-                $query->whereIn('schedule_id', $scheduleIds);
-            }
-        }
-
-        // =====================
-        // FILTER CLASS
-        // =====================
-        if (
-            in_array($user->role, ['super_admin', 'admin', 'teacher'])
-            && $request->class_id
-        ) {
-
-            $query->whereHas('student', function ($s) use ($request) {
-
-                $s->where('class_id', $request->class_id);
-            });
-        }
-
-        $rekap = $query
-            ->selectRaw('
-                student_id,
-                SUM(CASE WHEN status="hadir" THEN 1 ELSE 0 END) as hadir,
-                SUM(CASE WHEN status="izin" THEN 1 ELSE 0 END) as izin,
-                SUM(CASE WHEN status="sakit" THEN 1 ELSE 0 END) as sakit,
-                SUM(CASE WHEN status="alpa" THEN 1 ELSE 0 END) as alpa
-            ')
-            ->groupBy('student_id')
-            ->get();
-
-        return view('attendance.attendance-recap', compact(
-            'rekap',
-            'classes'
-        ));
+        return response()->json([
+            'status' => true,
+            'message' => 'Absensi berhasil dihapus'
+        ]);
     }
 }

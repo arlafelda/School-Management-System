@@ -4,22 +4,28 @@
 
 <div class="min-h-screen bg-gray-100 text-gray-800">
 
+    <!-- BREADCRUMB -->
     <div class="px-6 pt-4 text-sm text-gray-500">
-        <a href="{{ route('extracurricular.index') }}" class="hover:text-blue-600">
+        <a href="{{ route('extracurricular.index') }}"
+           class="hover:text-blue-600">
             Master Data
         </a>
+
         <span class="mx-2">/</span>
+
         <span class="text-gray-700 font-medium">
             Archived Extracurricular
         </span>
     </div>
 
+    <!-- HEADER -->
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
 
         <div>
             <h1 class="text-xl font-bold text-gray-700">
                 Archived Extracurricular
             </h1>
+
             <p class="text-sm text-gray-500">
                 Data ekstrakurikuler yang diarsipkan
             </p>
@@ -32,11 +38,20 @@
 
     </header>
 
+    <!-- MAIN -->
     <main class="p-6">
 
+        <!-- ALERT SUCCESS -->
         @if(session('success'))
             <div class="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
                 {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- ALERT ERROR -->
+        @if(session('error'))
+            <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+                {{ session('error') }}
             </div>
         @endif
 
@@ -73,20 +88,41 @@
 
                         <td class="p-3 text-center">
 
-                            <form action="{{ route('extracurricular.restore', $d->slug) }}"
-                                  method="POST"
-                                  class="inline">
+                            <div class="flex justify-center gap-2">
 
-                                @csrf
-                                @method('PUT')
+                                <!-- Restore -->
+                                <form action="{{ route('extracurricular.restore', $d->slug) }}"
+                                      method="POST"
+                                      class="inline">
 
-                                <button type="submit"
-                                        onclick="return confirm('Yakin ingin restore data ini?')"
-                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
-                                    Restore
-                                </button>
+                                    @csrf
+                                    @method('PUT')
 
-                            </form>
+                                    <button type="submit"
+                                            onclick="return confirm('Yakin ingin restore data ini?')"
+                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
+                                        Restore
+                                    </button>
+
+                                </form>
+
+                                <!-- Delete -->
+                                <form action="{{ route('extracurricular.delete', $d->slug) }}"
+                                      method="POST"
+                                      class="inline">
+
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit"
+                                            onclick="return confirm('Hapus permanen data ini? Data tidak bisa dikembalikan!')"
+                                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </div>
 
                         </td>
 
@@ -95,7 +131,8 @@
                     @empty
 
                     <tr>
-                        <td colspan="4" class="text-center py-6 text-gray-400">
+                        <td colspan="4"
+                            class="text-center py-6 text-gray-400">
                             Tidak ada data archive
                         </td>
                     </tr>
