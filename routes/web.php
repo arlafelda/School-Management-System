@@ -394,3 +394,7 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])
         Route::delete('/{slug}/delete', [SubjectController::class, 'delete'])
             ->name('subjects.delete');
     });
+
+Route::get('/test-rapot', function () {
+    return view('reports.pdf');
+})->name('reports.pdf');

@@ -33,12 +33,18 @@
 
             <!-- TITLE -->
             <div class="mb-6">
-                <h1 class="text-2xl font-bold">Tambah Admin</h1>
-                <p class="text-gray-500 text-sm">Isi data admin baru</p>
+                <h1 class="text-2xl font-bold">
+                    Tambah Admin
+                </h1>
+                <p class="text-gray-500 text-sm">
+                    Isi data admin baru
+                </p>
             </div>
 
             <!-- ALERT -->
-            <div id="alertBox" class="hidden mb-4 p-3 rounded text-sm"></div>
+            <div id="alertBox"
+                 class="hidden mb-4 p-3 rounded text-sm">
+            </div>
 
             <!-- CARD FORM -->
             <div class="bg-white p-6 md:p-8 rounded-xl shadow border">
@@ -48,53 +54,95 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                        <!-- INPUT PERTAMA (AUTO-FOCUS TARGET) -->
+                        <!-- NAMA -->
                         <div class="md:col-span-2">
-                            <label class="text-sm font-medium">Nama Lengkap *</label>
+                            <label class="text-sm font-medium">
+                                Nama Lengkap
+                                <span class="text-red-500">*</span>
+                            </label>
+
                             <input
                                 type="text"
                                 name="name"
                                 id="firstInput"
-                                class="mt-1 w-full px-4 py-2 border rounded-lg"
+                                placeholder="Masukkan nama lengkap admin"
+                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                 required>
                         </div>
 
+                        <!-- EMAIL -->
                         <div>
-                            <label class="text-sm font-medium">Email *</label>
-                            <input type="email"
-                                   name="email"
-                                   class="mt-1 w-full px-4 py-2 border rounded-lg"
-                                   required>
+                            <label class="text-sm font-medium">
+                                Email
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="contoh@email.com"
+                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                required>
                         </div>
 
+                        <!-- PASSWORD -->
                         <div>
-                            <label class="text-sm font-medium">Password *</label>
-                            <input type="password"
-                                   name="password"
-                                   class="mt-1 w-full px-4 py-2 border rounded-lg"
-                                   required>
+                            <label class="text-sm font-medium">
+                                Password
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="Minimal 8 karakter"
+                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                required>
+
+                            <small class="text-gray-400 text-xs">
+                                Minimal 8 karakter
+                            </small>
                         </div>
 
+                        <!-- STATUS -->
                         <div class="md:col-span-2">
-                            <label class="text-sm font-medium">Status</label>
-                            <select name="archived"
-                                    class="mt-1 w-full px-4 py-2 border rounded-lg">
-                                <option value="0">Aktif</option>
-                                <option value="1">Nonaktif</option>
+                            <label class="text-sm font-medium">
+                                Status
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <select
+                                name="archived"
+                                required
+                                class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+
+                                <option value="" disabled>
+                                    -- Pilih Status --
+                                </option>
+
+                                <option value="0" selected>
+                                    Aktif
+                                </option>
+
+                                <option value="1">
+                                    Nonaktif
+                                </option>
+
                             </select>
                         </div>
 
                     </div>
 
+                    <!-- BUTTON -->
                     <div class="flex justify-end gap-3 pt-4">
 
                         <a href="{{ route('admin.index') }}"
-                           class="px-5 py-2 border rounded-lg">
+                           class="px-5 py-2 border rounded-lg hover:bg-gray-100">
                             Batal
                         </a>
 
                         <button type="submit"
-                                class="px-5 py-2 bg-blue-600 text-white rounded-lg">
+                                class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             Simpan
                         </button>
 
@@ -117,35 +165,50 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // AUTO-FOCUS SAAT HALAMAN DIBUKA
+    // AUTO FOCUS INPUT PERTAMA
     document.getElementById('firstInput')?.focus();
 
     if (typeof window.createData === 'function') {
 
-        window.createData('#addForm', "{{ route('admin.store') }}", {
-            onSuccess: function (data) {
+        window.createData(
+            '#addForm',
+            "{{ route('admin.store') }}",
+            {
+                onSuccess: function(data) {
 
-                let alertBox = document.getElementById('alertBox');
+                    let alertBox =
+                        document.getElementById('alertBox');
 
-                alertBox.classList.remove('hidden');
-                alertBox.className = "mb-4 p-3 rounded text-sm bg-green-100 text-green-700";
-                alertBox.innerText = data.message;
+                    alertBox.classList.remove('hidden');
+                    alertBox.className =
+                        "mb-4 p-3 rounded text-sm bg-green-100 text-green-700";
 
-                document.getElementById('addForm').reset();
+                    alertBox.innerText =
+                        data.message;
 
-                // AUTO-FOCUS LAGI SETELAH RESET
-                document.getElementById('firstInput')?.focus();
-            },
+                    document
+                        .getElementById('addForm')
+                        .reset();
 
-            onError: function (err) {
+                    document
+                        .getElementById('firstInput')
+                        ?.focus();
+                },
 
-                let alertBox = document.getElementById('alertBox');
+                onError: function(err) {
 
-                alertBox.classList.remove('hidden');
-                alertBox.className = "mb-4 p-3 rounded text-sm bg-red-100 text-red-700";
-                alertBox.innerText = err.error || 'Terjadi kesalahan';
+                    let alertBox =
+                        document.getElementById('alertBox');
+
+                    alertBox.classList.remove('hidden');
+                    alertBox.className =
+                        "mb-4 p-3 rounded text-sm bg-red-100 text-red-700";
+
+                    alertBox.innerText =
+                        err.error || 'Terjadi kesalahan';
+                }
             }
-        });
+        );
 
     } else {
         console.error('ajax.js belum ke-load!');

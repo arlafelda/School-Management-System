@@ -55,27 +55,31 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Nama Subject
+                        <span class="text-red-500">*</span>
                     </label>
 
-                    <input type="text"
-                           id="firstInput"
-                           name="name"
-                           required
-                           class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
-                           placeholder="Masukkan nama subject">
+                    <input
+                        type="text"
+                        id="firstInput"
+                        name="name"
+                        required
+                        placeholder="Masukkan nama subject"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 {{-- CODE --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Code
+                        <span class="text-red-500">*</span>
                     </label>
 
-                    <input type="text"
-                           name="code"
-                           required
-                           class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
-                           placeholder="Contoh: MTK001">
+                    <input
+                        type="text"
+                        name="code"
+                        required
+                        placeholder="Contoh: MTK001"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 {{-- DESCRIPTION --}}
@@ -84,10 +88,11 @@
                         Description
                     </label>
 
-                    <textarea name="description"
-                              rows="4"
-                              class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
-                              placeholder="Masukkan deskripsi subject"></textarea>
+                    <textarea
+                        name="description"
+                        rows="4"
+                        placeholder="Masukkan deskripsi subject (opsional)"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
 
                 {{-- BUTTON --}}
@@ -98,8 +103,9 @@
                         Kembali
                     </a>
 
-                    <button type="submit"
-                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition">
+                    <button
+                        type="submit"
+                        class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition">
                         Simpan
                     </button>
 
@@ -120,6 +126,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
+    // AUTO FOCUS INPUT PERTAMA
     document.getElementById('firstInput')?.focus();
 
     if (typeof createData !== 'undefined') {

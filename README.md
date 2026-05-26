@@ -1,61 +1,84 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Evaluasi Lengkap Semua Fitur School Management System Terhadap Standard Quality Project
+Berikut evaluasi semua fitur proyek terhadap 20 standar kualitas. Saya kelompokkan per fitur utama, dengan penilaian ✅ (sudah memenuhi) atau ❌ (belum). Catatan perbaikan disertakan untuk yang ❌.
 
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Role Access Documentation](ROLE_ACCESS.md)
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. Autentikasi & User Management (Login, Register, Role)
+✅ 16. Fitur Login, Register: Sudah ada route dan view.
+✅ 17. Autentikasi (pembeda Admin/User): Middleware role berfungsi, tampilan berbeda per role.
+❌ 1. Tidak ada error: Terminal php artisan serve error (exit code 1) – periksa dependencies.
+❌ 2. Tombol/aksi berfungsi: Belum ada validasi reset password atau aktivasi akun.
+❌ 3-5. Form input: Belum ada autofocus, placeholder, tanda * di form login/register.
+❌ 13. AJAX dengan loading: Form login belum pakai AJAX/loading bar.
+❌ 20. Slug/breadcrumbs: Belum ada breadcrumbs di halaman user.
+2. Manajemen Siswa (Student CRUD)
+✅ 14. Tampilan clean/rapi: View sudah rapi dengan Tailwind.
+✅ 15. Responsif: Grid responsive.
+✅ 18. JOIN: Query pakai relasi dengan class/user.
+❌ 1. Error: Belum dicek error di view student.
+❌ 2. Tombol/aksi: CRUD mungkin belum lengkap validasi.
+❌ 3-5. Form: Belum ada autofocus/placeholder/* di form tambah/edit siswa.
+❌ 7. DataTable: Table belum pakai DataTable.
+❌ 13. AJAX/loading: Belum ada loading bar di submit form.
+❌ 19. Kecepatan query: Belum diukur, mungkin lambat jika data banyak.
+❌ 20. Slug/breadcrumbs: Belum ada.
+3. Manajemen Guru (Teacher CRUD)
+✅ 14-15. Clean/rapi dan responsif.
+✅ 18. JOIN: Relasi dengan user/subject.
+❌ 1-2. Error dan tombol: Sama seperti student, belum dicek lengkap.
+❌ 3-5. Form: Belum ada autofocus/placeholder/*.
+❌ 7. DataTable: Table belum pakai.
+❌ 13. AJAX/loading: Belum.
+❌ 19-20. Kecepatan dan slug/breadcrumbs.
+4. Manajemen Kelas (Class CRUD)
+✅ 14-15. Clean/rapi, responsif.
+✅ 18. JOIN: Relasi dengan student/schedule.
+❌ 1-5. Error, tombol, form input: Belum lengkap.
+❌ 7. DataTable: Belum.
+❌ 13. AJAX/loading: Belum.
+❌ 19-20. Kecepatan dan slug/breadcrumbs.
+5. Manajemen Jadwal (Schedule CRUD)
+✅ 14-15. Clean/rapi, responsif.
+✅ 18. JOIN: Relasi dengan teacher/class.
+❌ 1-5. Error, tombol, form: Belum.
+❌ 7. DataTable: Belum.
+❌ 13. AJAX/loading: Belum.
+❌ 19-20. Kecepatan dan slug/breadcrumbs.
+6. Manajemen Nilai (Grade CRUD)
+✅ 14-15. Clean/rapi, responsif.
+✅ 18. JOIN: Relasi dengan student/schedule.
+❌ 1-5. Error, tombol, form: Belum.
+❌ 7. DataTable: Belum.
+❌ 8. Angka format: Belum dicek number_format rata kanan.
+❌ 13. AJAX/loading: Belum.
+❌ 19-20. Kecepatan dan slug/breadcrumbs.
+7. Absensi (Attendance CRUD, Recap)
+✅ 8. Angka format: Sudah pakai number_format.
+✅ 9. Tanggal Indonesia: Sudah pakai Carbon locale 'id'.
+✅ 14-15. Clean/rapi, responsif.
+✅ 18. JOIN: Relasi dengan student/schedule.
+❌ 1. Error: Masih ada error di console (php artisan serve).
+❌ 2. Tombol/aksi: Tombol "Input Absensi" muncul walau sudah tercatat.
+❌ 3-5. Form: Belum autofocus/placeholder/* di form input.
+❌ 7. DataTable: Table belum pakai.
+❌ 13. AJAX/loading: Sudah pakai AJAX, tapi belum loading bar.
+❌ 19. Kecepatan: Belum diukur.
+❌ 20. Slug/breadcrumbs: Belum.
+8. Dashboard (per Role)
+✅ 14-15. Clean/rapi, responsif.
+✅ 17. Autentikasi: Tampilan berbeda per role.
+❌ 1. Error: Belum dicek.
+❌ 8. Angka format: Belum dicek rata kanan.
+❌ 19. Kecepatan: Query dashboard mungkin lambat.
+❌ 20. Slug/breadcrumbs: Belum.
+9. Layout & Navigation
+✅ 10. Font size: Sudah pakai Tailwind (text-xl, text-sm).
+✅ 11. Padding/margin: Rapi dengan Tailwind.
+✅ 15. Responsif: Navigation responsif.
+❌ 6. Upload gambar: Tidak ada fitur upload.
+❌ 12. Gambar konsisten: Tidak ada gambar.
+❌ 20. Slug/breadcrumbs: Belum ada breadcrumbs.
+Kesimpulan Umum
+Yang sudah baik: Autentikasi, responsivitas, JOIN, tampilan clean, format tanggal/angka di absensi.
+Yang perlu perbaikan prioritas: Error console, DataTable di semua table, AJAX/loading bar, form UX (autofocus/placeholder/*), breadcrumbs/slug.
+Rekomendasi: Mulai dari fitur absensi, lalu terapkan ke fitur lain. Jika kamu ingin bantu implementasi salah satu (misalnya tambah DataTable), beri tahu!
+Grok Code Fast 1 • 1x

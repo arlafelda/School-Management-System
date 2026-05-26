@@ -47,33 +47,56 @@
 
         <!-- NAMA -->
         <div>
-            <label class="block text-sm font-medium mb-1">Nama</label>
-            <input type="text" name="name" id="firstInput" required
+            <label class="block text-sm font-medium mb-1">
+                Nama Lengkap <span class="text-red-500">*</span>
+            </label>
+            <input
+                type="text"
+                name="name"
+                id="firstInput"
+                required
+                placeholder="Masukkan nama lengkap guru"
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
         </div>
 
         <!-- NIP -->
         <div>
-            <label class="block text-sm font-medium mb-1">NIP</label>
-            <input type="text" name="nip" required
+            <label class="block text-sm font-medium mb-1">
+                NIP <span class="text-red-500">*</span>
+            </label>
+            <input
+                type="text"
+                name="nip"
+                required
+                placeholder="Masukkan NIP guru"
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
         </div>
 
         <!-- EMAIL -->
         <div>
-            <label class="block text-sm font-medium mb-1">Email</label>
-            <input type="email" name="email" required
+            <label class="block text-sm font-medium mb-1">
+                Email <span class="text-red-500">*</span>
+            </label>
+            <input
+                type="email"
+                name="email"
+                required
+                placeholder="contoh@email.com"
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
         </div>
 
-        <!-- SUBJECT (DYNAMIC MULTI INPUT) -->
+        <!-- SUBJECT -->
         <div>
-            <label class="block text-sm font-medium mb-1">Mata Pelajaran</label>
+            <label class="block text-sm font-medium mb-1">
+                Mata Pelajaran <span class="text-red-500">*</span>
+            </label>
 
             <div id="subject-wrapper" class="space-y-2">
 
                 <div class="flex gap-2 subject-row">
-                    <select name="subject_ids[]"
+                    <select
+                        name="subject_ids[]"
+                        required
                         class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
 
                         <option value="">Pilih Mata Pelajaran</option>
@@ -86,7 +109,8 @@
 
                     </select>
 
-                    <button type="button"
+                    <button
+                        type="button"
                         class="remove-subject hidden px-3 bg-red-500 text-white rounded">
                         X
                     </button>
@@ -94,7 +118,9 @@
 
             </div>
 
-            <button type="button" id="add-subject"
+            <button
+                type="button"
+                id="add-subject"
                 class="mt-2 text-sm text-blue-600 hover:underline">
                 + Tambah Mata Pelajaran
             </button>
@@ -102,15 +128,25 @@
 
         <!-- PHONE -->
         <div>
-            <label class="block text-sm font-medium mb-1">No. HP</label>
-            <input type="text" name="phone"
+            <label class="block text-sm font-medium mb-1">
+                No. HP <span class="text-red-500">*</span>
+            </label>
+            <input
+                type="text"
+                name="phone"
+                required
+                placeholder="Contoh: 081234567890"
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
         </div>
 
         <!-- POSITION -->
         <div>
-            <label class="block text-sm font-medium mb-1">Jabatan</label>
-            <select name="position"
+            <label class="block text-sm font-medium mb-1">
+                Jabatan <span class="text-red-500">*</span>
+            </label>
+            <select
+                name="position"
+                required
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
 
                 <option value="">Pilih Jabatan</option>
@@ -122,22 +158,31 @@
 
         <!-- PASSWORD -->
         <div>
-            <label class="block text-sm font-medium mb-1">Password</label>
-            <input type="password" name="password" required
+            <label class="block text-sm font-medium mb-1">
+                Password <span class="text-red-500">*</span>
+            </label>
+            <input
+                type="password"
+                name="password"
+                required
+                placeholder="Masukkan password"
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
         </div>
 
         <!-- BUTTON -->
         <div class="flex justify-end gap-3 pt-4">
+
             <a href="{{ route('teacher.index') }}"
                 class="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100">
                 Kembali
             </a>
 
-            <button type="submit"
+            <button
+                type="submit"
                 class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
                 Simpan
             </button>
+
         </div>
 
     </form>
@@ -157,24 +202,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (firstInput) firstInput.focus();
 
-    // CREATE ROW SUBJECT
+    // CREATE SUBJECT ROW
     function createRow() {
         const row = document.createElement('div');
         row.className = "flex gap-2 subject-row";
 
         row.innerHTML = `
-            <select name="subject_ids[]"
+            <select
+                name="subject_ids[]"
+                required
                 class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
 
                 <option value="">Pilih Mata Pelajaran</option>
 
                 @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                    <option value="{{ $subject->id }}">
+                        {{ $subject->name }}
+                    </option>
                 @endforeach
 
             </select>
 
-            <button type="button"
+            <button
+                type="button"
                 class="remove-subject px-3 bg-red-500 text-white rounded">
                 X
             </button>
@@ -200,23 +250,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
         createData('#formGuru', "{{ route('teacher.store') }}", {
             onSuccess: function () {
+
                 document.getElementById('formGuru').reset();
 
-                // reset hanya 1 row saja
                 wrapper.innerHTML = `
                     <div class="flex gap-2 subject-row">
-                        <select name="subject_ids[]"
+                        <select
+                            name="subject_ids[]"
+                            required
                             class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
 
                             <option value="">Pilih Mata Pelajaran</option>
 
                             @foreach($subjects as $subject)
-                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                <option value="{{ $subject->id }}">
+                                    {{ $subject->name }}
+                                </option>
                             @endforeach
 
                         </select>
 
-                        <button type="button"
+                        <button
+                            type="button"
                             class="remove-subject hidden px-3 bg-red-500 text-white rounded">
                             X
                         </button>

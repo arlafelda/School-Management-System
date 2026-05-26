@@ -6,7 +6,7 @@
 
 <div class="space-y-6">
 
-    <!-- 🔥 BREADCRUMB -->
+    <!-- BREADCRUMB -->
     <nav class="text-sm text-gray-500">
         <ol class="flex items-center space-x-2">
             <li class="text-gray-700 font-medium">Dashboard</li>
@@ -48,15 +48,45 @@
 
                 <div class="grid grid-cols-2 gap-4">
 
-                    <!-- ✅ AUTO-FOCUS -->
-                    <input type="email" name="email" id="firstInput" placeholder="Email Login"
-                        class="border rounded-lg px-3 py-2 text-sm" required>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Email Login
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="email"
+                            name="email"
+                            id="firstInput"
+                            placeholder="Masukkan email login"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                    </div>
 
-                    <input type="password" name="password" placeholder="Password"
-                        class="border rounded-lg px-3 py-2 text-sm" required>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Password
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Masukkan password"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                    </div>
 
-                    <input type="password" name="password_confirmation" placeholder="Konfirmasi Password"
-                        class="border rounded-lg px-3 py-2 text-sm col-span-2" required>
+                    <div class="col-span-2">
+                        <label class="text-sm font-medium">
+                            Konfirmasi Password
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="password"
+                            name="password_confirmation"
+                            placeholder="Ulangi password"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                    </div>
 
                 </div>
             </div>
@@ -67,52 +97,148 @@
 
                 <div class="grid grid-cols-2 gap-4">
 
-                    <input type="text" name="name" placeholder="Nama Siswa"
-                        class="border rounded-lg px-3 py-2 text-sm" required>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Nama Siswa
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Masukkan nama siswa"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                    </div>
 
-                    <input type="text" name="nisn" placeholder="NISN"
-                        class="border rounded-lg px-3 py-2 text-sm" required>
+                    <div>
+                        <label class="text-sm font-medium">
+                            NISN
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="nisn"
+                            placeholder="Masukkan NISN"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                    </div>
 
-                    <input type="text" name="nis" placeholder="NIS"
-                        class="border rounded-lg px-3 py-2 text-sm" required>
+                    <div>
+                        <label class="text-sm font-medium">
+                            NIS
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="nis"
+                            placeholder="Masukkan NIS"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                    </div>
 
-                    <select name="class_id" class="border rounded-lg px-3 py-2 text-sm" required>
-                        <option value="">Pilih Kelas</option>
-                        @foreach($classes as $class)
-                            <option value="{{ $class->id }}">
-                                {{ $class->name }} - {{ $class->major }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Kelas
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="class_id"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                            <option value="">Pilih Kelas</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}">
+                                    {{ $class->name }} - {{ $class->major }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <input type="text" name="major" placeholder="Jurusan"
-                        class="border rounded-lg px-3 py-2 text-sm">
+                    <div>
+                        <label class="text-sm font-medium">
+                            Jurusan
+                        </label>
+                        <input
+                            type="text"
+                            name="major"
+                            placeholder="Masukkan jurusan"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
+                    </div>
 
-                    <select name="gender" class="border rounded-lg px-3 py-2 text-sm">
-                        <option value="">Jenis Kelamin</option>
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Jenis Kelamin
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="gender"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                            <option value="">Pilih jenis kelamin</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
 
-                    <select name="status" class="border rounded-lg px-3 py-2 text-sm">
-                        <option value="aktif">Aktif</option>
-                        <option value="lulus">Lulus</option>
-                        <option value="pindah">Pindah</option>
-                    </select>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Status
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="status"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
+                            required>
+                            <option value="">Pilih status</option>
+                            <option value="aktif">Aktif</option>
+                            <option value="lulus">Lulus</option>
+                            <option value="pindah">Pindah</option>
+                        </select>
+                    </div>
 
                 </div>
 
-                <input type="text" name="birth_place" placeholder="Tempat Lahir"
-                    class="border rounded-lg px-3 py-2 text-sm mt-4 w-full">
+                <div class="mt-4">
+                    <label class="text-sm font-medium">
+                        Tempat Lahir
+                    </label>
+                    <input
+                        type="text"
+                        name="birth_place"
+                        placeholder="Masukkan tempat lahir"
+                        class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
+                </div>
 
-                <input type="date" name="birth_date"
-                    class="border rounded-lg px-3 py-2 text-sm mt-4 w-full">
+                <div class="mt-4">
+                    <label class="text-sm font-medium">
+                        Tanggal Lahir
+                    </label>
+                    <input
+                        type="date"
+                        name="birth_date"
+                        class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
+                </div>
 
-                <textarea name="address" placeholder="Alamat"
-                    class="w-full border rounded-lg px-3 py-2 text-sm mt-4"></textarea>
+                <div class="mt-4">
+                    <label class="text-sm font-medium">
+                        Alamat
+                    </label>
+                    <textarea
+                        name="address"
+                        placeholder="Masukkan alamat lengkap"
+                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                </div>
 
-                <input type="text" name="phone" placeholder="No HP"
-                    class="w-full border rounded-lg px-3 py-2 text-sm mt-4">
+                <div class="mt-4">
+                    <label class="text-sm font-medium">
+                        No HP
+                    </label>
+                    <input
+                        type="text"
+                        name="phone"
+                        placeholder="Masukkan nomor HP"
+                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                </div>
 
             </div>
 
@@ -122,17 +248,48 @@
 
                 <div class="grid grid-cols-2 gap-4">
 
-                    <input type="text" name="father_name" placeholder="Nama Ayah"
-                        class="border rounded-lg px-3 py-2 text-sm">
+                    <div>
+                        <label class="text-sm font-medium">
+                            Nama Ayah
+                        </label>
+                        <input
+                            type="text"
+                            name="father_name"
+                            placeholder="Masukkan nama ayah"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
+                    </div>
 
-                    <input type="text" name="mother_name" placeholder="Nama Ibu"
-                        class="border rounded-lg px-3 py-2 text-sm">
+                    <div>
+                        <label class="text-sm font-medium">
+                            Nama Ibu
+                        </label>
+                        <input
+                            type="text"
+                            name="mother_name"
+                            placeholder="Masukkan nama ibu"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
+                    </div>
 
-                    <input type="text" name="parent_phone" placeholder="No HP Orang Tua"
-                        class="border rounded-lg px-3 py-2 text-sm">
+                    <div>
+                        <label class="text-sm font-medium">
+                            No HP Orang Tua
+                        </label>
+                        <input
+                            type="text"
+                            name="parent_phone"
+                            placeholder="Masukkan nomor HP orang tua"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
+                    </div>
 
-                    <textarea name="parent_address" placeholder="Alamat Orang Tua"
-                        class="border rounded-lg px-3 py-2 text-sm"></textarea>
+                    <div>
+                        <label class="text-sm font-medium">
+                            Alamat Orang Tua
+                        </label>
+                        <textarea
+                            name="parent_address"
+                            placeholder="Masukkan alamat orang tua"
+                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"></textarea>
+                    </div>
 
                 </div>
             </div>
@@ -141,12 +298,12 @@
             <div class="flex justify-end gap-3 pt-4">
 
                 <a href="{{ route('students.index') }}"
-                    class="px-4 py-2 border rounded-lg text-sm">
+                   class="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100">
                     Kembali
                 </a>
 
                 <button type="submit"
-                    class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm">
+                        class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700">
                     Simpan
                 </button>
 
@@ -165,8 +322,8 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // 🔥 AUTO-FOCUS SAAT HALAMAN DIBUKA
     const input = document.getElementById('firstInput');
+
     if (input) input.focus();
 
     if (typeof createData !== 'undefined') {
@@ -176,7 +333,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 document.getElementById('formSiswa').reset();
 
-                // 🔥 AUTO-FOCUS ULANG SETELAH SUBMIT
                 if (input) input.focus();
             }
         });
