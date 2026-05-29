@@ -21,21 +21,35 @@ class Schedule extends Model
         'archived',
     ];
 
-    // TEACHER
     public function teacher()
     {
-        return $this->belongsTo(Teacher::class, 'teacher_id');
+        return $this->belongsTo(
+            Teacher::class,
+            'teacher_id'
+        );
     }
 
-    // CLASS
     public function classModel()
     {
-        return $this->belongsTo(ClassModel::class, 'class_id');
+        return $this->belongsTo(
+            ClassModel::class,
+            'class_id'
+        );
     }
 
-    // SUBJECT (langsung dari schedule)
+    public function class()
+    {
+        return $this->belongsTo(
+            ClassModel::class,
+            'class_id'
+        );
+    }
+
     public function subject()
     {
-        return $this->belongsTo(Subject::class, 'subject_id');
+        return $this->belongsTo(
+            Subject::class,
+            'subject_id'
+        );
     }
 }

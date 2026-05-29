@@ -12,6 +12,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -141,41 +142,17 @@ Route::middleware(['auth', 'role:super_admin,admin'])
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function () {
 
-    Route::get(
-        '/students',
-        [StudentController::class, 'index']
-    )
-        ->name('students.index');
+    Route::get('/students',[StudentController::class, 'index'])->name('students.index');
 
-    Route::get(
-        '/students/create',
-        [StudentController::class, 'create']
-    )
-        ->name('students.create');
+    Route::get('/students/create',[StudentController::class, 'create'])->name('students.create');
 
-    Route::post(
-        '/students',
-        [StudentController::class, 'store']
-    )
-        ->name('students.store');
+    Route::post('/students',[StudentController::class, 'store'])->name('students.store');
 
-    Route::get(
-        '/students/archived',
-        [StudentController::class, 'archived']
-    )
-        ->name('students.archived');
+    Route::get('/students/archived',[StudentController::class, 'archived'])->name('students.archived');
 
-    Route::put(
-        '/students/{slug}/restore',
-        [StudentController::class, 'restore']
-    )
-        ->name('students.restore');
+    Route::put('/students/{slug}/restore',[StudentController::class, 'restore'])->name('students.restore');
 
-    Route::get(
-        '/students/{student:slug}',
-        [StudentController::class, 'show']
-    )
-        ->name('students.show');
+    Route::get('/students/{student:slug}',[StudentController::class, 'show'])->name('students.show');
 
     Route::get('/students/{student:slug}/edit',[StudentController::class, 'edit'])->name('students.edit');
 
@@ -395,6 +372,31 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])
             ->name('subjects.delete');
     });
 
-Route::get('/test-rapot', function () {
-    return view('reports.pdf');
-})->name('reports.pdf');
+// Route::get('/test-rapot', function () {
+//     return view('reports.pdf');
+// })->name('reports.pdf');
+
+Route::get(
+    '/students/{slug}/raport',
+    [ReportController::class, 'raport']
+)->name('students.raport');
+
+Route::get(
+    '/students/{slug}/raport/print',
+    [ReportController::class, 'print']
+)->name('students.raport.print');
+
+Route::get(
+    '/students/{slug}/raport/download',
+    [ReportController::class, 'downloadPdf']
+)->name('students.raport.download');
+
+Route::get(
+    '/my-raport',
+    [ReportController::class, 'myRaport']
+)->name('student.my.raport');
+
+Route::get(
+    '/student/raport',
+    [ReportController::class, 'studentRaport']
+)->name('student.raport');

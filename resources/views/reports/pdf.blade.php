@@ -2,14 +2,21 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapot Siswa</title>
 
-    {{-- Tailwind CSS --}}
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Rapot {{ $student->name }}
+    </title>
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         @media print {
+
             .no-print {
                 display: none;
             }
@@ -22,172 +29,281 @@
                 box-shadow: none !important;
                 border-radius: 0 !important;
             }
+
         }
     </style>
 </head>
+
 <body class="bg-gray-100 py-10 px-4 text-gray-800">
 
-    {{-- DATA DUMMY --}}
-    @php
-        $student = [
-            'name' => 'Arlafelda Meindra Widayat',
-            'nis' => '362358302169',
-            'nisn' => '1234567890',
-            'class' => 'XII RPL 1',
-            'semester' => 'Genap',
-            'tahun_ajaran' => '2025/2026'
-        ];
+    {{-- FILTER RAPOT --}}
+    <div class="max-w-5xl mx-auto mb-4 no-print">
 
-        $grades = [
-            ['subject' => 'Matematika', 'score' => 90, 'grade' => 'A'],
-            ['subject' => 'Bahasa Indonesia', 'score' => 88, 'grade' => 'A'],
-            ['subject' => 'Bahasa Inggris', 'score' => 85, 'grade' => 'B'],
-            ['subject' => 'Pemrograman Web', 'score' => 95, 'grade' => 'A'],
-            ['subject' => 'Basis Data', 'score' => 92, 'grade' => 'A'],
-        ];
+        <form
+            action=""
+            method="GET"
+            class="flex flex-wrap gap-4 items-end"
+        >
 
-        $attendance = [
-            'hadir' => 20,
-            'izin' => 2,
-            'sakit' => 1,
-            'alpha' => 0
-        ];
+            <div>
+                <label class="block text-sm font-semibold mb-1">
+                    Semester
+                </label>
 
-        $extracurricular = [
-            'Basket',
-            'Pramuka'
-        ];
-    @endphp
+                <select
+                    name="semester"
+                    class="border rounded-lg px-4 py-2"
+                >
+                    <option value="">
+                        Pilih Semester
+                    </option>
+
+                    <option
+                        value="ganjil"
+                        {{ request('semester') == 'ganjil' ? 'selected' : '' }}
+                    >
+                        Ganjil
+                    </option>
+
+                    <option
+                        value="genap"
+                        {{ request('semester') == 'genap' ? 'selected' : '' }}
+                    >
+                        Genap
+                    </option>
+
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-1">
+                    Tahun Ajaran
+                </label>
+
+                <input
+                    type="text"
+                    name="academic_year"
+                    value="{{ request('academic_year') }}"
+                    placeholder="2025/2026"
+                    class="border rounded-lg px-4 py-2"
+                >
+            </div>
+
+            <button
+                type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl shadow"
+            >
+                Filter Rapot
+            </button>
+
+        </form>
+
+    </div>
 
 
-    {{-- TOMBOL CETAK --}}
-    <div class="max-w-5xl mx-auto mb-6 flex justify-end no-print">
+    {{-- ERROR MESSAGE --}}
+    @if(isset($error))
 
-        <button
-            onclick="window.print()"
+    <div class="max-w-5xl mx-auto mb-4">
+
+        <div class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl">
+
+            {{ $error }}
+
+        </div>
+
+    </div>
+
+    @endif
+
+
+    <div class="max-w-5xl mx-auto mb-6 flex justify-end gap-4 no-print">
+
+    <a
+        href="{{ url()->previous() }}"
+        class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition duration-300 flex items-center gap-2"
+    >
+        ← Kembali
+    </a>
+
+
+        <a
+            href="{{ route('students.raport.print', [
+                'slug' => $student->slug,
+                'semester' => request('semester'),
+                'academic_year' => request('academic_year')
+            ]) }}"
+            target="_blank"
             class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition duration-300 flex items-center gap-2"
         >
-            🖨️ Cetak PDF
-        </button>
+            🖨️ Print Rapot
+        </a>
+
+        <a
+            href="{{ route('students.raport.download', [
+                'slug' => $student->slug,
+                'semester' => request('semester'),
+                'academic_year' => request('academic_year')
+            ]) }}"
+            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition duration-300 flex items-center gap-2"
+        >
+            ⬇️ Download PDF
+        </a>
 
     </div>
 
 
     <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden print-container">
 
-        {{-- HEADER SEKOLAH --}}
         <div class="border-b-4 border-blue-700 px-8 py-6 text-center bg-gradient-to-r from-blue-700 to-indigo-700 text-white">
+
             <h1 class="text-3xl font-bold tracking-wide">
                 POLIWANGI
             </h1>
 
             <p class="text-sm mt-2">
-                Jl. Raya Jember No.KM13, Kawang, Labanasem, Kec. Kabat, Kabupaten Banyuwangi, Jawa Timur 68461
+                Jl. Raya Jember No.KM13,
+                Banyuwangi,
+                Jawa Timur
             </p>
 
             <p class="text-sm">
                 Telp: 08*********
             </p>
+
         </div>
+
 
 
         <div class="p-8 space-y-8">
 
-            {{-- IDENTITAS SISWA --}}
             <div>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
 
                     <h2 class="text-xl font-bold text-blue-700">
                         Identitas Siswa
                     </h2>
+
                 </div>
 
+
                 <div class="overflow-hidden border border-gray-200 rounded-xl">
+
                     <table class="w-full">
+
                         <tbody class="divide-y divide-gray-200">
 
                             <tr>
+
                                 <td class="w-1/3 px-5 py-3 font-semibold bg-gray-50">
                                     Nama
                                 </td>
 
                                 <td class="px-5 py-3">
-                                    {{ $student['name'] }}
+                                    {{ $student->name }}
                                 </td>
+
                             </tr>
 
+
                             <tr>
+
                                 <td class="px-5 py-3 font-semibold bg-gray-50">
                                     NIS
                                 </td>
 
                                 <td class="px-5 py-3">
-                                    {{ $student['nis'] }}
+                                    {{ $student->nis }}
                                 </td>
+
                             </tr>
 
+
                             <tr>
+
                                 <td class="px-5 py-3 font-semibold bg-gray-50">
                                     NISN
                                 </td>
 
                                 <td class="px-5 py-3">
-                                    {{ $student['nisn'] }}
+                                    {{ $student->nisn }}
                                 </td>
+
                             </tr>
 
+
                             <tr>
+
                                 <td class="px-5 py-3 font-semibold bg-gray-50">
                                     Kelas
                                 </td>
 
                                 <td class="px-5 py-3">
-                                    {{ $student['class'] }}
+                                    {{ $student->class->name ?? '-' }}
                                 </td>
+
                             </tr>
 
+
                             <tr>
+
                                 <td class="px-5 py-3 font-semibold bg-gray-50">
                                     Semester
                                 </td>
 
                                 <td class="px-5 py-3">
-                                    {{ $student['semester'] }}
+                                    {{ request('semester') ?? $student->class->semester ?? '-' }}
                                 </td>
+
                             </tr>
 
+
                             <tr>
+
                                 <td class="px-5 py-3 font-semibold bg-gray-50">
                                     Tahun Ajaran
                                 </td>
 
                                 <td class="px-5 py-3">
-                                    {{ $student['tahun_ajaran'] }}
+                                    {{ request('academic_year') ?? $student->class->academic_year ?? '-' }}
                                 </td>
+
                             </tr>
 
                         </tbody>
+
                     </table>
+
                 </div>
+
             </div>
 
 
-            {{-- NILAI --}}
+
             <div>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="w-2 h-8 bg-green-600 rounded-full"></div>
 
                     <h2 class="text-xl font-bold text-green-700">
                         Nilai Mata Pelajaran
                     </h2>
+
                 </div>
 
+
                 <div class="overflow-hidden border border-gray-200 rounded-xl">
+
                     <table class="w-full">
 
                         <thead class="bg-green-100 text-green-800">
+
                             <tr>
+
                                 <th class="px-4 py-3 text-center">
                                     No
                                 </th>
@@ -197,18 +313,30 @@
                                 </th>
 
                                 <th class="px-4 py-3 text-center">
-                                    Nilai
+                                    Tugas
                                 </th>
 
                                 <th class="px-4 py-3 text-center">
-                                    Predikat
+                                    UTS
                                 </th>
+
+                                <th class="px-4 py-3 text-center">
+                                    UAS
+                                </th>
+
+                                <th class="px-4 py-3 text-center">
+                                    Nilai Akhir
+                                </th>
+
                             </tr>
+
                         </thead>
+
 
                         <tbody class="divide-y divide-gray-200">
 
-                            @foreach($grades as $index => $grade)
+                            @forelse($student->grades as $index => $grade)
+
                             <tr>
 
                                 <td class="px-4 py-3 text-center">
@@ -216,102 +344,190 @@
                                 </td>
 
                                 <td class="px-4 py-3">
-                                    {{ $grade['subject'] }}
-                                </td>
-
-                                <td class="px-4 py-3 text-center font-semibold">
-                                    {{ $grade['score'] }}
+                                    {{ $grade->subject->name ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-center">
-                                    <span class="px-3 py-1 text-sm font-bold rounded-full
-                                        {{ $grade['grade'] == 'A'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-yellow-100 text-yellow-700' }}">
-                                        {{ $grade['grade'] }}
-                                    </span>
+                                    {{ $grade->assignment_score }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center">
+                                    {{ $grade->mid_exam_score }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center">
+                                    {{ $grade->final_exam_score }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center font-bold text-green-700">
+                                    {{ $grade->final_score }}
                                 </td>
 
                             </tr>
-                            @endforeach
+
+                            @empty
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="text-center px-4 py-5 text-gray-500"
+                                >
+                                    Belum ada data nilai
+                                </td>
+
+                            </tr>
+
+                            @endforelse
 
                         </tbody>
+
                     </table>
+
                 </div>
+
             </div>
 
 
-            {{-- ABSENSI --}}
+
             <div>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="w-2 h-8 bg-yellow-500 rounded-full"></div>
 
                     <h2 class="text-xl font-bold text-yellow-600">
-                        Rekap Kehadiran
+                        Rekap Kehadiran Mata Pelajaran
                     </h2>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-                    <div class="bg-green-100 rounded-xl p-5 text-center">
-                        <h3 class="text-sm font-semibold text-green-700">
-                            Hadir
-                        </h3>
-
-                        <p class="text-3xl font-bold text-green-800 mt-2">
-                            {{ $attendance['hadir'] }}
-                        </p>
-                    </div>
-
-                    <div class="bg-blue-100 rounded-xl p-5 text-center">
-                        <h3 class="text-sm font-semibold text-blue-700">
-                            Izin
-                        </h3>
-
-                        <p class="text-3xl font-bold text-blue-800 mt-2">
-                            {{ $attendance['izin'] }}
-                        </p>
-                    </div>
-
-                    <div class="bg-yellow-100 rounded-xl p-5 text-center">
-                        <h3 class="text-sm font-semibold text-yellow-700">
-                            Sakit
-                        </h3>
-
-                        <p class="text-3xl font-bold text-yellow-800 mt-2">
-                            {{ $attendance['sakit'] }}
-                        </p>
-                    </div>
-
-                    <div class="bg-red-100 rounded-xl p-5 text-center">
-                        <h3 class="text-sm font-semibold text-red-700">
-                            Alpha
-                        </h3>
-
-                        <p class="text-3xl font-bold text-red-800 mt-2">
-                            {{ $attendance['alpha'] }}
-                        </p>
-                    </div>
 
                 </div>
+
+
+                <div class="overflow-hidden border border-gray-200 rounded-xl">
+
+                    <table class="w-full">
+
+                        <thead class="bg-yellow-100 text-yellow-800">
+
+                            <tr>
+
+                                <th class="px-4 py-3 text-center">
+                                    No
+                                </th>
+
+                                <th class="px-4 py-3 text-left">
+                                    Mata Pelajaran
+                                </th>
+
+                                <th class="px-4 py-3 text-center">
+                                    Masuk
+                                </th>
+
+                                <th class="px-4 py-3 text-center">
+                                    Izin
+                                </th>
+
+                                <th class="px-4 py-3 text-center">
+                                    Sakit
+                                </th>
+
+                                <th class="px-4 py-3 text-center">
+                                    Alpa
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody class="divide-y divide-gray-200 bg-white">
+
+                            @php
+
+                                $attendanceBySubject = $student->attendances
+                                    ->groupBy(function ($attendance) {
+                                        return $attendance->schedule->subject->name ?? 'Tidak Ada Subject';
+                                    });
+
+                            @endphp
+
+
+                            @forelse($attendanceBySubject as $subject => $attendances)
+
+                            <tr>
+
+                                <td class="px-4 py-3 text-center">
+                                    {{ $loop->iteration }}
+                                </td>
+
+                                <td class="px-4 py-3 font-semibold">
+                                    {{ $subject }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center text-green-700 font-bold">
+                                    {{ $attendances->where('status', 'hadir')->count() }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center text-blue-700 font-bold">
+                                    {{ $attendances->where('status', 'izin')->count() }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center text-yellow-700 font-bold">
+                                    {{ $attendances->where('status', 'sakit')->count() }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center text-red-700 font-bold">
+                                    {{ $attendances->where('status', 'alpa')->count() }}
+                                </td>
+
+                            </tr>
+
+                            @empty
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="text-center px-4 py-5 text-gray-500"
+                                >
+                                    Belum ada data kehadiran
+                                </td>
+
+                            </tr>
+
+                            @endforelse
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
             </div>
 
 
-            {{-- EKSTRAKURIKULER --}}
+
             <div>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="w-2 h-8 bg-purple-600 rounded-full"></div>
 
                     <h2 class="text-xl font-bold text-purple-700">
                         Ekstrakurikuler
                     </h2>
+
                 </div>
 
+
                 <div class="overflow-hidden border border-gray-200 rounded-xl">
+
                     <table class="w-full">
 
                         <thead class="bg-purple-100 text-purple-800">
+
                             <tr>
+
                                 <th class="px-4 py-3 text-center">
                                     No
                                 </th>
@@ -319,12 +535,16 @@
                                 <th class="px-4 py-3 text-left">
                                     Nama Ekstrakurikuler
                                 </th>
+
                             </tr>
+
                         </thead>
+
 
                         <tbody class="divide-y divide-gray-200">
 
-                            @foreach($extracurricular as $i => $item)
+                            @forelse($student->extracurriculars as $i => $item)
+
                             <tr>
 
                                 <td class="px-4 py-3 text-center">
@@ -332,40 +552,65 @@
                                 </td>
 
                                 <td class="px-4 py-3">
-                                    {{ $item }}
+                                    {{ $item->name }}
                                 </td>
 
                             </tr>
-                            @endforeach
+
+                            @empty
+
+                            <tr>
+
+                                <td
+                                    colspan="2"
+                                    class="text-center px-4 py-5 text-gray-500"
+                                >
+                                    Belum ada data ekstrakurikuler
+                                </td>
+
+                            </tr>
+
+                            @endforelse
 
                         </tbody>
 
                     </table>
+
                 </div>
+
             </div>
 
 
-            {{-- CATATAN --}}
+
             <div>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="w-2 h-8 bg-indigo-600 rounded-full"></div>
 
                     <h2 class="text-xl font-bold text-indigo-700">
                         Catatan Wali Kelas
                     </h2>
+
                 </div>
 
+
                 <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5">
-                    Pertahankan prestasi belajar dan tingkatkan kedisiplinan.
+
+                    {{ $student->note ?? 'Pertahankan prestasi belajar dan tingkatkan kedisiplinan.' }}
+
                 </div>
+
             </div>
 
 
-            {{-- TANDA TANGAN --}}
+
             <div class="pt-10">
+
                 <div class="grid grid-cols-2 gap-8 text-center">
 
                     <div>
+
                         <p class="font-semibold">
                             Wali Kelas
                         </p>
@@ -373,11 +618,18 @@
                         <div class="h-24"></div>
 
                         <p class="border-t border-gray-400 inline-block px-10 pt-2">
-                            (__________________)
+
+                            (
+                            {{ $student->class->teacher->name ?? '....................' }}
+                            )
+
                         </p>
+
                     </div>
 
+
                     <div>
+
                         <p class="font-semibold">
                             Kepala Sekolah
                         </p>
@@ -387,12 +639,15 @@
                         <p class="border-t border-gray-400 inline-block px-10 pt-2">
                             (__________________)
                         </p>
+
                     </div>
 
                 </div>
+
             </div>
 
         </div>
+
     </div>
 
 </body>

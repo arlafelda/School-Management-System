@@ -12,7 +12,7 @@ class Student extends Model
 
     protected $fillable = [
         'user_id',
-        'slug', // ✔ WAJIB DITAMBAHKAN
+        'slug',
         'nisn',
         'nis',
         'name',
@@ -25,29 +25,30 @@ class Student extends Model
         'class_id',
         'major',
         'status',
+        'semester',
         'father_name',
         'mother_name',
         'parent_phone',
         'parent_address',
     ];
 
-    // 🔥 ROUTE MODEL BINDING SLUG
     public function getRouteKeyName()
     {
         return 'slug';
     }
 
-    // 🔥 AUTO SLUG SAAT CREATE
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($student) {
-            $student->slug = Str::slug($student->name) . '-' . rand(1000,9999);
+
+            $student->slug =
+                Str::slug($student->name). '-' .rand(1000, 9999);
+
         });
     }
 
-    // RELASI USER LOGIN
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -55,16 +56,35 @@ class Student extends Model
 
     public function class()
     {
-        return $this->belongsTo(ClassModel::class, 'class_id');
+        return $this->belongsTo(
+            ClassModel::class,
+            'class_id'
+        );
+    }
+
+    public function grades()
+    {
+        return $this->hasMany(
+            Grade::class,
+            'student_id'
+        );
     }
 
     public function attendances()
     {
-        return $this->hasMany(Attendance::class, 'student_id');
+        return $this->hasMany(
+            Attendance::class,
+            'student_id'
+        );
     }
 
     public function extracurriculars()
     {
-        return $this->belongsToMany(Extracurricular::class, 'tbl_extracurricular_students');
+        return $this->belongsToMany(
+            Extracurricular::class,
+            'tbl_extracurricular_students',
+            'student_id',
+            'extracurricular_id'
+        );
     }
 }

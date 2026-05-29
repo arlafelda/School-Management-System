@@ -1,12 +1,12 @@
 @php
-    $user = auth()->user();
+$user = auth()->user();
 
-    function active($routes)
-    {
-        return request()->routeIs($routes)
-            ? 'bg-blue-100 text-blue-700 font-semibold'
-            : 'hover:bg-gray-100';
-    }
+function active($routes)
+{
+return request()->routeIs($routes)
+? 'bg-blue-100 text-blue-700 font-semibold'
+: 'hover:bg-gray-100';
+}
 @endphp
 
 <!-- SIDEBAR -->
@@ -185,6 +185,10 @@
                     class="block p-2 rounded {{ active('student.extracurricular') }}">
                     Ekstrakurikuler
                 </a>
+                <a href="{{ route('student.raport') }}"
+                    class="block p-2 rounded {{ active('student.raport') }}">
+                    Rapot Saya
+                </a>
             </div>
         </div>
         @endif
@@ -228,13 +232,13 @@
 
 <!-- SCRIPT -->
 <script>
-window.toggleMenu = function(menuId, arrowId) {
-    const menu = document.getElementById(menuId);
-    const arrow = document.getElementById(arrowId);
+    window.toggleMenu = function(menuId, arrowId) {
+        const menu = document.getElementById(menuId);
+        const arrow = document.getElementById(arrowId);
 
-    if (!menu || !arrow) return;
+        if (!menu || !arrow) return;
 
-    menu.classList.toggle('hidden');
-    arrow.classList.toggle('rotate-180');
-};
+        menu.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+    };
 </script>

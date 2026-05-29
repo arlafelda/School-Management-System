@@ -22,9 +22,6 @@ class Grade extends Model
         'final_exam_score'
     ];
 
-    // =========================
-    // RELASI KE STUDENT
-    // =========================
     public function student()
     {
         return $this->belongsTo(
@@ -33,9 +30,6 @@ class Grade extends Model
         );
     }
 
-    // =========================
-    // RELASI KE SCHEDULE
-    // =========================
     public function schedule()
     {
         return $this->belongsTo(
@@ -44,9 +38,6 @@ class Grade extends Model
         );
     }
 
-    // =========================
-    // RELASI KE SUBJECT
-    // =========================
     public function subject()
     {
         return $this->belongsTo(
@@ -55,9 +46,6 @@ class Grade extends Model
         );
     }
 
-    // =========================
-    // RELASI KE CLASS (lewat student)
-    // =========================
     public function class()
     {
         return $this->hasOneThrough(
@@ -70,9 +58,6 @@ class Grade extends Model
         );
     }
 
-    // =========================
-    // AUTO HITUNG NILAI AKHIR
-    // =========================
     public function getFinalScoreAttribute()
     {
         return round(
@@ -83,5 +68,24 @@ class Grade extends Model
             ) / 3,
             1
         );
+    }
+
+    public function getGradeLetterAttribute()
+    {
+        $score = $this->final_score;
+
+        if ($score >= 90) {
+            return 'A';
+        }
+
+        if ($score >= 80) {
+            return 'B';
+        }
+
+        if ($score >= 70) {
+            return 'C';
+        }
+
+        return 'D';
     }
 }

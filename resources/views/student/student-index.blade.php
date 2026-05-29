@@ -20,9 +20,9 @@
 
     <!-- SUCCESS SESSION -->
     @if(session('success'))
-        <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
-            {{ session('success') }}
-        </div>
+    <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
+        {{ session('success') }}
+    </div>
     @endif
 
     <!-- HEADER -->
@@ -36,13 +36,13 @@
 
             <!-- tombol arsip -->
             <a href="{{ route('students.archived') }}"
-               class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm shadow">
+                class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm shadow">
                 Arsip
             </a>
 
             <!-- tambah siswa -->
             <a href="{{ route('students.create') }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow">
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow">
                 + Tambah Siswa
             </a>
 
@@ -77,7 +77,7 @@
                     <!-- NAME -->
                     <td class="p-4">
                         <a href="{{ $student->slug ? route('students.show', $student->slug) : '#' }}"
-                           class="flex items-center gap-3">
+                            class="flex items-center gap-3">
 
                             <div class="w-10 h-10 bg-green-600 text-white flex items-center justify-center rounded-full text-sm font-bold">
                                 {{ strtoupper(substr($student->name, 0, 1)) }}
@@ -128,28 +128,28 @@
                         <div class="flex justify-center gap-3 flex-wrap">
 
                             <!-- LIHAT RAPOT -->
-                            <a href="javascript:void(0)"
-                               class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-xs hover:bg-purple-200">
+                            <a href="{{ route('students.raport', $student->slug) }}"
+                                class="text-green-600 text-sm">
                                 Rapot
                             </a>
 
                             <!-- EDIT -->
                             <a href="{{ $student->slug ? route('students.edit', $student->slug) : '#' }}"
-                               class="text-blue-600 text-sm">
+                                class="text-blue-600 text-sm">
                                 Edit
                             </a>
 
                             <!-- DELETE -->
                             <form class="formDelete"
-                                  action="{{ $student->slug ? route('students.delete', $student->slug) : '#' }}"
-                                  method="POST"
-                                  onclick="event.stopPropagation()">
+                                action="{{ $student->slug ? route('students.delete', $student->slug) : '#' }}"
+                                method="POST"
+                                onclick="event.stopPropagation()">
 
                                 @csrf
                                 @method('DELETE')
 
                                 <button type="submit"
-                                        class="text-red-500 text-sm">
+                                    class="text-red-500 text-sm">
                                     Hapus
                                 </button>
 
@@ -176,38 +176,38 @@
 
 @push('scripts')
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
 
-    document.addEventListener('submit', function(e) {
+        document.addEventListener('submit', function(e) {
 
-        if (e.target.classList.contains('formDelete')) {
+            if (e.target.classList.contains('formDelete')) {
 
-            e.preventDefault();
+                e.preventDefault();
 
-            let form = e.target;
-            let url  = form.action;
-            let row  = form.closest('tr');
+                let form = e.target;
+                let url = form.action;
+                let row = form.closest('tr');
 
-            if (typeof deleteData !== 'undefined') {
+                if (typeof deleteData !== 'undefined') {
 
-                deleteData(url, function() {
+                    deleteData(url, function() {
 
-                    if (row) row.remove();
+                        if (row) row.remove();
 
-                    document.getElementById('alertBox').innerHTML = `
+                        document.getElementById('alertBox').innerHTML = `
                         <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-lg">
                             Data berhasil dihapus
                         </div>
                     `;
-                });
+                    });
 
-            } else {
-                console.error('deleteData belum tersedia');
+                } else {
+                    console.error('deleteData belum tersedia');
+                }
             }
-        }
+
+        });
 
     });
-
-});
 </script>
 @endpush
