@@ -3,9 +3,9 @@ $user = auth()->user();
 
 function active($routes)
 {
-return request()->routeIs($routes)
-? 'bg-blue-100 text-blue-700 font-semibold'
-: 'hover:bg-gray-100';
+    return request()->routeIs($routes)
+        ? 'bg-blue-100 text-blue-700 font-semibold'
+        : 'hover:bg-gray-100';
 }
 @endphp
 
@@ -16,8 +16,13 @@ return request()->routeIs($routes)
 
     <!-- HEADER -->
     <div class="p-6 border-b">
-        <h1 class="font-bold text-blue-800">Institution Hub</h1>
-        <p class="text-xs text-gray-500 capitalize">{{ $user->role }}</p>
+        <h1 class="font-bold text-blue-800">
+            Institution Hub
+        </h1>
+
+        <p class="text-xs text-gray-500 capitalize">
+            {{ $user->role }}
+        </p>
     </div>
 
     <nav class="p-4 space-y-2 text-sm">
@@ -25,12 +30,16 @@ return request()->routeIs($routes)
         <!-- DASHBOARD -->
         <a href="{{ route('dashboard.' . $user->role) }}"
             class="flex items-center p-3 rounded-lg transition {{ active('dashboard.*') }}">
+
             Dashboard
+
         </a>
 
         <!-- USER MANAGEMENT -->
         @if(in_array($user->role, ['super_admin', 'admin']))
+
         <div>
+
             <button type="button"
                 onclick="toggleMenu('userMenu','arrowUser')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
@@ -40,8 +49,11 @@ return request()->routeIs($routes)
                 <span id="arrowUser"
                     class="transition-transform
                     {{ request()->routeIs('admin.*','teacher.*','students.*') ? 'rotate-180' : '' }}">
+
                     ▼
+
                 </span>
+
             </button>
 
             <div id="userMenu"
@@ -49,28 +61,41 @@ return request()->routeIs($routes)
                 {{ request()->routeIs('admin.*','teacher.*','students.*') ? '' : 'hidden' }}">
 
                 @if($user->role === 'super_admin')
+
                 <a href="{{ route('admin.index') }}"
                     class="block p-2 rounded {{ active('admin.*') }}">
+
                     Admin
+
                 </a>
+
                 @endif
 
                 <a href="{{ route('teacher.index') }}"
                     class="block p-2 rounded {{ active('teacher.*') }}">
+
                     Teacher
+
                 </a>
 
                 <a href="{{ route('students.index') }}"
                     class="block p-2 rounded {{ active('students.*') }}">
+
                     Students
+
                 </a>
+
             </div>
+
         </div>
+
         @endif
 
         <!-- MASTER DATA -->
         @if(in_array($user->role, ['super_admin', 'admin', 'teacher']))
+
         <div>
+
             <button type="button"
                 onclick="toggleMenu('masterMenu','arrowMaster')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
@@ -80,8 +105,11 @@ return request()->routeIs($routes)
                 <span id="arrowMaster"
                     class="transition-transform
                     {{ request()->routeIs('class.*','extracurricular.*') ? 'rotate-180' : '' }}">
+
                     ▼
+
                 </span>
+
             </button>
 
             <div id="masterMenu"
@@ -90,20 +118,29 @@ return request()->routeIs($routes)
 
                 <a href="{{ route('class.index') }}"
                     class="block p-2 rounded {{ active('class.*') }}">
+
                     Kelas
+
                 </a>
 
                 <a href="{{ route('extracurricular.index') }}"
                     class="block p-2 rounded {{ active('extracurricular.*') }}">
+
                     Ekstrakurikuler
+
                 </a>
+
             </div>
+
         </div>
+
         @endif
 
         <!-- AKADEMIK -->
         @if(in_array($user->role, ['super_admin', 'admin', 'teacher']))
+
         <div>
+
             <button type="button"
                 onclick="toggleMenu('akademikMenu','arrowAkademik')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
@@ -112,43 +149,73 @@ return request()->routeIs($routes)
 
                 <span id="arrowAkademik"
                     class="transition-transform
-                    {{ request()->routeIs('schedule.*','grades.*','attendance.*','subjects.*') ? 'rotate-180' : '' }}">
+                    {{ request()->routeIs('schedule.*','grades.*','attendance.*','subjects.*','teacher.homeroom.students') ? 'rotate-180' : '' }}">
+
                     ▼
+
                 </span>
+
             </button>
 
             <div id="akademikMenu"
                 class="ml-4 mt-1 space-y-1
-                {{ request()->routeIs('schedule.*','grades.*','attendance.*','subjects.*') ? '' : 'hidden' }}">
+                {{ request()->routeIs('schedule.*','grades.*','attendance.*','subjects.*','teacher.homeroom.students') ? '' : 'hidden' }}">
 
                 <a href="{{ route('schedule.index') }}"
                     class="block p-2 rounded {{ active('schedule.*') }}">
+
                     Jadwal
+
                 </a>
 
                 <a href="{{ route('grades.index') }}"
                     class="block p-2 rounded {{ active('grades.*') }}">
+
                     Nilai
+
                 </a>
 
                 <a href="{{ route('attendance.index') }}"
                     class="block p-2 rounded {{ active('attendance.*') }}">
+
                     Absensi
+
                 </a>
 
-                <!-- SUBJECT MENU -->
                 <a href="{{ route('subjects.index') }}"
                     class="block p-2 rounded {{ active('subjects.*') }}">
+
                     Mata Pelajaran
+
                 </a>
 
+                {{-- KHUSUS WALI KELAS --}}
+                @if(
+                    $user->role === 'teacher' &&
+                    $user->teacher &&
+                    \App\Models\ClassModel::where('teacher_id', $user->teacher->id)->exists()
+                )
+
+                <a href="{{ route('teacher.homeroom.students') }}"
+                    class="block p-2 rounded {{ active('teacher.homeroom.students') }}">
+
+                    Siswa Kelas Saya
+
+                </a>
+
+                @endif
+
             </div>
+
         </div>
+
         @endif
 
         <!-- STUDENT -->
         @if($user->role === 'student')
+
         <div>
+
             <button type="button"
                 onclick="toggleMenu('studentMenu','arrowStudent')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
@@ -158,8 +225,11 @@ return request()->routeIs($routes)
                 <span id="arrowStudent"
                     class="transition-transform
                     {{ request()->routeIs('student.*','grades.*','attendance.*','schedule.*','extracurricular.*') ? 'rotate-180' : '' }}">
+
                     ▼
+
                 </span>
+
             </button>
 
             <div id="studentMenu"
@@ -168,33 +238,48 @@ return request()->routeIs($routes)
 
                 <a href="{{ route('grades.index') }}"
                     class="block p-2 rounded {{ active('grades.*') }}">
+
                     Nilai Saya
+
                 </a>
 
                 <a href="{{ route('attendance.index') }}"
                     class="block p-2 rounded {{ active('attendance.*') }}">
+
                     Absensi Saya
+
                 </a>
 
                 <a href="{{ route('schedule.index') }}"
                     class="block p-2 rounded {{ active('schedule.*') }}">
+
                     Jadwal Kelas
+
                 </a>
 
                 <a href="{{ route('student.extracurricular') }}"
                     class="block p-2 rounded {{ active('student.extracurricular') }}">
+
                     Ekstrakurikuler
+
                 </a>
+
                 <a href="{{ route('student.raport') }}"
                     class="block p-2 rounded {{ active('student.raport') }}">
+
                     Rapot Saya
+
                 </a>
+
             </div>
+
         </div>
+
         @endif
 
         <!-- SISTEM -->
         <div>
+
             <button type="button"
                 onclick="toggleMenu('systemMenu','arrowSystem')"
                 class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-gray-100">
@@ -204,8 +289,11 @@ return request()->routeIs($routes)
                 <span id="arrowSystem"
                     class="transition-transform
                     {{ request()->routeIs('profile.*') ? 'rotate-180' : '' }}">
+
                     ▼
+
                 </span>
+
             </button>
 
             <div id="systemMenu"
@@ -214,31 +302,42 @@ return request()->routeIs($routes)
 
                 <a href="{{ route('profile.edit') }}"
                     class="block p-2 rounded hover:bg-gray-100">
+
                     Profile
+
                 </a>
 
                 <form method="POST" action="{{ route('logout') }}">
+
                     @csrf
+
                     <button type="submit"
                         class="w-full text-left p-2 bg-red-600 text-white rounded hover:bg-red-700">
+
                         Logout
+
                     </button>
+
                 </form>
+
             </div>
+
         </div>
 
     </nav>
+
 </aside>
 
 <!-- SCRIPT -->
 <script>
-    window.toggleMenu = function(menuId, arrowId) {
-        const menu = document.getElementById(menuId);
-        const arrow = document.getElementById(arrowId);
+window.toggleMenu = function(menuId, arrowId) {
 
-        if (!menu || !arrow) return;
+    const menu = document.getElementById(menuId);
+    const arrow = document.getElementById(arrowId);
 
-        menu.classList.toggle('hidden');
-        arrow.classList.toggle('rotate-180');
-    };
+    if (!menu || !arrow) return;
+
+    menu.classList.toggle('hidden');
+    arrow.classList.toggle('rotate-180');
+};
 </script>

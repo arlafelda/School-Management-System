@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\ClassModel;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
@@ -203,4 +204,38 @@ class StudentController extends Controller
             ->route('students.archived')
             ->with('success', 'Data berhasil direstore');
     }
+
+    public function homeroomStudents()
+{
+    // ambil user login
+    $user = auth::user();
+
+    // cek apakah user memiliki relasi teacher
+    if (!$user || !$user->teacher) {
+        abort(403, 'Akun teacher tidak ditemukan.');
+    }
+
+    // ambil data teacher
+    $teacher = $user->teacher;
+
+    // cek apakah teacher menjadi wali kelas
+    $class = ClassModel::where('teacher_id', $teacher->id)
+        ->first();
+
+    // jika bukan wali kelas
+    if (!$class) {
+        abort(403, 'Anda bukan wali kelas.');
+    }
+
+    // ambil siswa berdasarkan kelas wali kelas
+    $students = Student::with(['user', 'class'])
+        ->where('class_id', $class->id)
+        ->where('archived', 0)
+        ->get();
+
+    return view(
+        'student.student-index',
+        compact('students')
+    );
+}
 }

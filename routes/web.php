@@ -140,6 +140,15 @@ Route::middleware(['auth', 'role:super_admin,admin'])
             ->name('teacher.destroy');
     });
 
+    Route::middleware(['auth', 'role:teacher'])->group(function () {
+
+    Route::get(
+        '/teacher/homeroom-students',
+        [StudentController::class, 'homeroomStudents']
+    )->name('teacher.homeroom.students');
+
+});
+
 Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function () {
 
     Route::get('/students',[StudentController::class, 'index'])->name('students.index');

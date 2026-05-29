@@ -4,6 +4,21 @@
 
 @section('content')
 
+@php
+    $user = auth()->user();
+
+    // cek apakah teacher adalah wali kelas
+    $isHomeroomTeacher = false;
+
+    if ($user->role === 'teacher' && $user->teacher) {
+
+        $isHomeroomTeacher = \App\Models\ClassModel::where(
+            'teacher_id',
+            $user->teacher->id
+        )->exists();
+    }
+@endphp
+
 <div class="space-y-6">
 
     <!-- 🔥 BREADCRUMB -->
@@ -32,6 +47,9 @@
             Daftar Siswa
         </h1>
 
+        {{-- HANYA ADMIN & SUPER ADMIN --}}
+        @if(in_array($user->role, ['super_admin', 'admin']))
+
         <div class="flex gap-2">
 
             <!-- tombol arsip -->
@@ -47,6 +65,9 @@
             </a>
 
         </div>
+
+        @endif
+
     </div>
 
     <!-- TABLE -->
@@ -133,6 +154,9 @@
                                 Rapot
                             </a>
 
+                            {{-- HANYA ADMIN & SUPER ADMIN BISA EDIT/HAPUS --}}
+                            @if(in_array($user->role, ['super_admin', 'admin']))
+
                             <!-- EDIT -->
                             <a href="{{ $student->slug ? route('students.edit', $student->slug) : '#' }}"
                                 class="text-blue-600 text-sm">
@@ -154,6 +178,8 @@
                                 </button>
 
                             </form>
+
+                            @endif
 
                         </div>
 

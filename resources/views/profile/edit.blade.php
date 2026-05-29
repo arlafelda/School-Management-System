@@ -13,7 +13,7 @@
             Profile
         </h2>
 
-        <a href="{{ route('dashboard.superadmin') }}"
+        <a href="{{ route('dashboard.super_admin') }}"
             class="text-sm bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300">
             ← Kembali
         </a>
