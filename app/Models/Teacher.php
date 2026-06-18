@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use App\Models\Subject;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Models\Extracurricular;
 
 class Teacher extends Model
 {
+    use HasFactory;
     protected $table = 'tbl_teachers';
 
     protected $fillable = [

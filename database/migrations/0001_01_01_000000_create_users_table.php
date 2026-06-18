@@ -6,22 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug')->unique()->nullable(); // 🔥 FIX PENTING
             $table->string('email')->unique();
             $table->string('password');
 
-            $table->enum('role', ['super_admin', 'admin', 'teacher', 'student'])->default('student');
+            $table->enum('role', ['super_admin', 'admin', 'teacher', 'student'])
+                ->default('student');
 
             $table->integer('archived')->default(0);
+
             $table->timestamp('creation_time')->nullable();
             $table->integer('create_id')->nullable();
+
             $table->timestamp('update_time')->nullable();
             $table->integer('update_id')->nullable();
 
@@ -44,12 +45,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('tbl_users'); // 🔥 FIX PENTING
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

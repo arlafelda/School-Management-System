@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Extracurricular extends Model
 {
+    use HasFactory;
     protected $table = 'tbl_extracurriculars';
 
     protected $fillable = [

@@ -12,17 +12,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_schedules', function (Blueprint $table) {
+
             $table->id();
+
+            // Kelas
+            $table->foreignId('class_id')
+                ->constrained('tbl_classes')
+                ->cascadeOnDelete();
+
+            // Mata pelajaran
+            $table->foreignId('subject_id')
+                ->nullable()
+                ->constrained('tbl_subjects')
+                ->nullOnDelete();
+
+            // Hari
             $table->string('day');
+
+            // Jam mulai
             $table->time('start_time');
+
+            // Jam selesai
             $table->time('end_time');
-            $table->unsignedBigInteger('teacher_id');
+
+            // Status arsip
+            $table->boolean('archived')->default(false);
+
+            // Guru pengajar
+            $table->foreignId('teacher_id')
+                ->constrained('tbl_teachers')
+                ->cascadeOnDelete();
+
             $table->timestamps();
 
-            $table->foreign('teacher_id')
-                ->references('id')
-                ->on('tbl_teachers')
-                ->onDelete('cascade');
         });
     }
 

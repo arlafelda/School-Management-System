@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class AdminController extends Controller
 {
     // =========================
-    // INDEX (admin aktif)
+    // INDEX
     // =========================
     public function index()
     {
@@ -31,7 +31,7 @@ class AdminController extends Controller
     }
 
     // =========================
-    // STORE
+    // STORE (ANTI ERROR 500)
     // =========================
     public function store(Request $request)
     {
@@ -50,22 +50,25 @@ class AdminController extends Controller
                 'role' => 'admin',
                 'archived' => 0,
                 'creation_time' => now(),
-                'create_id' => Auth::id(),
+                'create_id' => Auth::id() ?? 0,
+                'update_time' => now(),
+                'update_id' => Auth::id() ?? 0,
             ]);
 
+            // 🔥 AUTO SLUG WAJIB UNIK
             $admin->slug = Str::slug($request->name) . '-' . $admin->id;
             $admin->save();
 
             return response()->json([
                 'success' => true,
-                'data' => $admin,
-                'message' => 'Admin berhasil dibuat'
+                'message' => 'Admin berhasil dibuat',
+                'data' => $admin
             ]);
-
         } catch (\Throwable $e) {
 
             return response()->json([
                 'success' => false,
+                'message' => 'Terjadi kesalahan',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -111,39 +114,39 @@ class AdminController extends Controller
                 'email' => 'required|email|unique:tbl_users,email,' . $admin->id,
             ]);
 
-            $newSlug = Str::slug($request->name) . '-' . uniqid();
+            $newSlug = Str::slug($request->name) . '-' . $admin->id;
 
-            $data = [
+            $admin->update([
                 'name' => $request->name,
                 'email' => $request->email,
                 'slug' => $newSlug,
                 'update_time' => now(),
-                'update_id' => Auth::id(),
-            ];
+                'update_id' => Auth::id() ?? 0,
+            ]);
 
             if ($request->filled('password')) {
-                $data['password'] = Hash::make($request->password);
+                $admin->update([
+                    'password' => Hash::make($request->password)
+                ]);
             }
-
-            $admin->update($data);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Admin berhasil diupdate',
                 'slug' => $newSlug
             ]);
-
         } catch (\Throwable $e) {
 
             return response()->json([
                 'success' => false,
+                'message' => 'Gagal update admin',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     // =========================
-    // ARCHIVE (DELETE)
+    // ARCHIVE (SOFT DELETE)
     // =========================
     public function destroy(string $slug)
     {
@@ -156,25 +159,25 @@ class AdminController extends Controller
             $admin->update([
                 'archived' => 1,
                 'update_time' => now(),
-                'update_id' => Auth::id()
+                'update_id' => Auth::id() ?? 0
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Admin berhasil dipindahkan ke arsip'
+                'message' => 'Admin berhasil diarsipkan'
             ]);
-
         } catch (\Throwable $e) {
 
             return response()->json([
                 'success' => false,
+                'message' => 'Gagal menghapus admin',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     // =========================
-    // HALAMAN ARSIP
+    // ARCHIVE LIST
     // =========================
     public function archived()
     {
@@ -199,18 +202,41 @@ class AdminController extends Controller
             $admin->update([
                 'archived' => 0,
                 'update_time' => now(),
-                'update_id' => Auth::id()
+                'update_id' => Auth::id() ?? 0
             ]);
 
             return redirect()
                 ->route('admin.archived')
                 ->with('success', 'Admin berhasil direstore');
-
         } catch (\Throwable $e) {
 
             return redirect()
                 ->route('admin.archived')
                 ->with('error', $e->getMessage());
+        }
+    }
+
+    public function forceDelete(string $slug)
+    {
+        try {
+
+            $admin = User::where('slug', $slug)
+                ->where('archived', 1)
+                ->firstOrFail();
+
+            $admin->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin berhasil dihapus permanen'
+            ]);
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus permanen',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

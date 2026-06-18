@@ -4,304 +4,190 @@
 
 @section('content')
 
-<div class="min-h-screen bg-gray-100 p-6">
+<div class="min-h-screen bg-gray-50 text-gray-800">
 
     {{-- BREADCRUMB --}}
-    <nav class="flex items-center text-sm text-gray-500 mb-6">
-
-        <a href="{{ route('dashboard') }}"
-           class="hover:text-blue-600 transition">
-
-            Dashboard
-
-        </a>
-
-        <span class="mx-2">/</span>
-
-        <a href="{{ route('schedule.index') }}"
-           class="hover:text-blue-600 transition">
-
-            Jadwal
-
-        </a>
-
-        <span class="mx-2">/</span>
-
-        <span class="text-gray-700 font-medium">
-            Edit Jadwal
-        </span>
-
-    </nav>
-
-    {{-- ALERT --}}
-    <div id="alertBox"></div>
-
-    {{-- HEADER --}}
-    <div class="mb-6">
-
-        <h1 class="text-2xl font-bold text-gray-800">
-            Edit Jadwal
-        </h1>
-
-        <p class="text-sm text-gray-500 mt-1">
-            Perbarui data jadwal pelajaran
-        </p>
-
+    <div class="px-6 pt-5 flex items-center gap-1.5 text-sm text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75v-4.5h-4.5V21a.75.75 0 01-.75.75H3.75A.75.75 0 013 21V9.75z" />
+        </svg>
+        <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition-colors">Dashboard</a>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        <a href="{{ route('schedule.index') }}" class="hover:text-blue-600 transition-colors">Jadwal</a>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="text-gray-600 font-medium">Edit</span>
     </div>
 
-    {{-- CARD --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 max-w-2xl overflow-hidden">
+    {{-- PAGE HEADER --}}
+    <header class="px-6 pt-4 pb-5">
+        <h1 class="text-xl font-semibold text-gray-800">Edit jadwal</h1>
+        <p class="text-sm text-gray-400 mt-0.5">
+            Perbarui data jadwal
+            <span class="font-medium text-gray-600">{{ $schedule->class->name ?? '' }}</span>
+            — {{ $schedule->day }}.
+        </p>
+    </header>
 
-        {{-- CARD HEADER --}}
-        <div class="px-6 py-4 border-b bg-gray-50">
+    {{-- CONTENT --}}
+    <main class="px-6 pb-10">
 
-            <h2 class="font-semibold text-gray-700">
-                Form Edit Jadwal
-            </h2>
+        {{-- ALERT --}}
+        <div id="alertBox" class="max-w-2xl mx-auto mb-4"></div>
+
+        <div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+
+            {{-- SECTION LABEL --}}
+            <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-5">
+                Informasi jadwal
+            </p>
+
+            {{-- FORM --}}
+            <form id="formEditSchedule" class="space-y-5">
+                @csrf
+                @method('PUT')
+
+                {{-- KELAS & HARI --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+                    {{-- Kelas --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-gray-700">
+                            Kelas <span class="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <select name="class_id" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+                            <option value="">-- Pilih kelas --</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}"
+                                    {{ old('class_id', $schedule->class_id) == $class->id ? 'selected' : '' }}>
+                                    {{ $class->name }} — {{ $class->major }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Hari --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-gray-700">
+                            Hari <span class="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <select name="day" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+                            @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $day)
+                                <option value="{{ $day }}"
+                                    {{ old('day', $schedule->day) == $day ? 'selected' : '' }}>
+                                    {{ $day }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                </div>
+
+                {{-- JAM MULAI & SELESAI --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+                    {{-- Jam Mulai --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-gray-700">
+                            Jam mulai <span class="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <input type="time" name="start_time" required
+                               value="{{ old('start_time', $schedule->start_time) }}"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    </div>
+
+                    {{-- Jam Selesai --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-gray-700">
+                            Jam selesai <span class="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <input type="time" name="end_time" required
+                               value="{{ old('end_time', $schedule->end_time) }}"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    </div>
+
+                </div>
+
+                {{-- GURU & MATA PELAJARAN --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+                    {{-- Guru --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-gray-700">
+                            Guru <span class="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <select id="teacherSelect" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+                            <option value="">-- Pilih guru --</option>
+                            @foreach($teachers as $teacher)
+                                <option value="{{ $teacher->id }}"
+                                    {{ old('teacher_id', $schedule->teacher_id) == $teacher->id ? 'selected' : '' }}>
+                                    {{ $teacher->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Mata Pelajaran --}}
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-medium text-gray-700">
+                            Mata pelajaran <span class="text-red-500 ml-0.5">*</span>
+                        </label>
+                        <select name="subject_id" id="subjectSelect" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white">
+                            <option value="">-- Pilih guru dulu --</option>
+                        </select>
+                        <span class="text-xs text-gray-400" id="subjectHint">
+                            Pilih guru terlebih dahulu untuk memuat mata pelajaran.
+                        </span>
+                    </div>
+
+                </div>
+
+                {{-- HIDDEN TEACHER --}}
+                <input type="hidden" name="teacher_id" id="teacher_id"
+                       value="{{ old('teacher_id', $schedule->teacher_id) }}">
+
+                {{-- DIVIDER --}}
+                <hr class="border-gray-100">
+
+                {{-- FOOTER --}}
+                <div class="flex items-center justify-between pt-1">
+                    <p class="text-xs text-gray-400">
+                        <span class="text-red-500">*</span> Wajib diisi
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('schedule.index') }}"
+                           class="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                            Kembali
+                        </a>
+                        <button type="submit"
+                                class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V9l-4-4H6a2 2 0 00-2 2z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4h4M9 13h6m-3-3v6" />
+                            </svg>
+                            Simpan perubahan
+                        </button>
+                    </div>
+                </div>
+
+            </form>
 
         </div>
 
-        {{-- FORM --}}
-        <form id="formEditSchedule"
-              class="p-6 space-y-5">
-
-            @csrf
-            @method('PUT')
-
-            {{-- CLASS --}}
-            <div>
-
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Kelas
-                </label>
-
-                <select name="class_id"
-                        required
-                        class="
-                            w-full
-                            border border-gray-300
-                            rounded-lg
-                            px-4 py-2.5
-                            text-sm
-                            focus:ring-2 focus:ring-blue-500
-                            focus:border-blue-500
-                        ">
-
-                    <option value="">
-                        -- Pilih Kelas --
-                    </option>
-
-                    @foreach($classes as $class)
-
-                        <option value="{{ $class->id }}"
-                            {{ old('class_id', $schedule->class_id) == $class->id ? 'selected' : '' }}>
-
-                            {{ $class->name }} - {{ $class->major }}
-
-                        </option>
-
-                    @endforeach
-
-                </select>
-
-            </div>
-
-            {{-- DAY --}}
-            <div>
-
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Hari
-                </label>
-
-                <select name="day"
-                        required
-                        class="
-                            w-full
-                            border border-gray-300
-                            rounded-lg
-                            px-4 py-2.5
-                            text-sm
-                            focus:ring-2 focus:ring-blue-500
-                            focus:border-blue-500
-                        ">
-
-                    @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $day)
-
-                        <option value="{{ $day }}"
-                            {{ old('day', $schedule->day) == $day ? 'selected' : '' }}>
-
-                            {{ $day }}
-
-                        </option>
-
-                    @endforeach
-
-                </select>
-
-            </div>
-
-            {{-- TIME --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                {{-- START TIME --}}
-                <div>
-
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Jam Mulai
-                    </label>
-
-                    <input type="time"
-                           name="start_time"
-                           value="{{ old('start_time', $schedule->start_time) }}"
-                           required
-                           class="
-                                w-full
-                                border border-gray-300
-                                rounded-lg
-                                px-4 py-2.5
-                                text-sm
-                                focus:ring-2 focus:ring-blue-500
-                                focus:border-blue-500
-                           ">
-
-                </div>
-
-                {{-- END TIME --}}
-                <div>
-
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Jam Selesai
-                    </label>
-
-                    <input type="time"
-                           name="end_time"
-                           value="{{ old('end_time', $schedule->end_time) }}"
-                           required
-                           class="
-                                w-full
-                                border border-gray-300
-                                rounded-lg
-                                px-4 py-2.5
-                                text-sm
-                                focus:ring-2 focus:ring-blue-500
-                                focus:border-blue-500
-                           ">
-
-                </div>
-
-            </div>
-
-            {{-- TEACHER --}}
-            <div>
-
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Guru
-                </label>
-
-                <select id="teacherSelect"
-                        class="
-                            w-full
-                            border border-gray-300
-                            rounded-lg
-                            px-4 py-2.5
-                            text-sm
-                            focus:ring-2 focus:ring-blue-500
-                            focus:border-blue-500
-                        "
-                        required>
-
-                    <option value="">
-                        -- Pilih Guru --
-                    </option>
-
-                    @foreach($teachers as $teacher)
-
-                        <option value="{{ $teacher->id }}"
-                            {{ old('teacher_id', $schedule->teacher_id) == $teacher->id ? 'selected' : '' }}>
-
-                            {{ $teacher->name }}
-
-                        </option>
-
-                    @endforeach
-
-                </select>
-
-            </div>
-
-            {{-- SUBJECT --}}
-            <div>
-
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Mata Pelajaran
-                </label>
-
-                <select name="subject_id"
-                        id="subjectSelect"
-                        required
-                        class="
-                            w-full
-                            border border-gray-300
-                            rounded-lg
-                            px-4 py-2.5
-                            text-sm
-                            focus:ring-2 focus:ring-blue-500
-                            focus:border-blue-500
-                        ">
-
-                    <option value="">
-                        -- Pilih Mata Pelajaran --
-                    </option>
-
-                </select>
-
-            </div>
-
-            {{-- HIDDEN TEACHER --}}
-            <input type="hidden"
-                   name="teacher_id"
-                   id="teacher_id"
-                   value="{{ old('teacher_id', $schedule->teacher_id) }}">
-
-            {{-- BUTTON --}}
-            <div class="flex items-center justify-end gap-3 pt-4">
-
-                {{-- BACK --}}
-                <a href="{{ route('schedule.index') }}"
-                   class="
-                        px-4 py-2
-                        border border-gray-300
-                        rounded-lg
-                        text-sm
-                        text-gray-700
-                        hover:bg-gray-100
-                        transition
-                   ">
-
-                    Kembali
-
-                </a>
-
-                {{-- SUBMIT --}}
-                <button type="submit"
-                        class="
-                            px-5 py-2
-                            bg-blue-600 hover:bg-blue-700
-                            text-white
-                            rounded-lg
-                            text-sm
-                            transition
-                        ">
-
-                    Update
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
+    </main>
 
 </div>
 
@@ -313,138 +199,78 @@
 @endsection
 
 @push('scripts')
-
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
 
-    /* =====================
-       AUTO FOCUS
-    ===================== */
-    const firstField = document.querySelector(
-        '#formEditSchedule select, #formEditSchedule input'
-    );
+    const teachers        = JSON.parse(document.getElementById('teachers-data').textContent);
+    const teacherSelect   = document.getElementById('teacherSelect');
+    const subjectSelect   = document.getElementById('subjectSelect');
+    const teacherInput    = document.getElementById('teacher_id');
+    const subjectHint     = document.getElementById('subjectHint');
 
-    if (firstField) {
+    const selectedTeacherId = "{{ old('teacher_id', $schedule->teacher_id) }}";
+    const selectedSubjectId = "{{ old('subject_id', $schedule->subject_id) }}";
 
-        firstField.focus();
+    // AUTO FOCUS
+    const firstField = document.querySelector('#formEditSchedule select, #formEditSchedule input');
+    if (firstField) firstField.focus();
 
+    function resetSubject(placeholder = '-- Pilih guru dulu --') {
+        subjectSelect.innerHTML = `<option value="">${placeholder}</option>`;
+        subjectHint.textContent = 'Pilih guru terlebih dahulu untuk memuat mata pelajaran.';
     }
 
-    /* =====================
-       JSON DATA
-    ===================== */
-    const teachers = JSON.parse(
-        document.getElementById('teachers-data').textContent
-    );
-
-    const teacherSelect = document.getElementById('teacherSelect');
-    const subjectSelect = document.getElementById('subjectSelect');
-    const teacherIdInput = document.getElementById('teacher_id');
-
-    const selectedTeacherId =
-        "{{ old('teacher_id', $schedule->teacher_id) }}";
-
-    const selectedSubjectId =
-        "{{ old('subject_id', $schedule->subject_id) }}";
-
-    /* =====================
-       RESET SUBJECT
-    ===================== */
-    function resetSubject() {
-
-        subjectSelect.innerHTML =
-            '<option value="">-- Pilih Mata Pelajaran --</option>';
-
-    }
-
-    /* =====================
-       LOAD SUBJECT
-    ===================== */
     function loadSubjects(teacherId) {
+        resetSubject('-- Pilih mata pelajaran --');
 
-        resetSubject();
+        const teacher = teachers.find(t => String(t.id) === String(teacherId));
 
-        const teacher = teachers.find(function (t) {
-
-            return String(t.id) === String(teacherId);
-
-        });
-
-        if (!teacher || !teacher.subjects) {
+        if (!teacher || !teacher.subjects || teacher.subjects.length === 0) {
+            subjectHint.textContent = 'Guru ini belum memiliki mata pelajaran.';
             return;
         }
 
         teacher.subjects.forEach(function (subject) {
-
-            const option = document.createElement('option');
-
-            option.value = subject.id;
-            option.textContent = subject.name;
-
-            if (String(subject.id) === String(selectedSubjectId)) {
-
-                option.selected = true;
-
-            }
-
-            subjectSelect.appendChild(option);
-
+            const opt = document.createElement('option');
+            opt.value = subject.id;
+            opt.textContent = subject.name;
+            if (String(subject.id) === String(selectedSubjectId)) opt.selected = true;
+            subjectSelect.appendChild(opt);
         });
 
+        subjectHint.textContent = `${teacher.subjects.length} mata pelajaran tersedia.`;
     }
 
-    /* =====================
-       CHANGE TEACHER
-    ===================== */
     teacherSelect.addEventListener('change', function () {
-
-        const teacherId = this.value;
-
-        teacherIdInput.value = teacherId;
-
-        loadSubjects(teacherId);
-
+        teacherInput.value = this.value;
+        loadSubjects(this.value);
     });
 
-    /* =====================
-       INITIAL LOAD
-    ===================== */
+    // INITIAL LOAD (pre-fill edit)
     teacherSelect.value = selectedTeacherId;
-
     loadSubjects(selectedTeacherId);
 
-    /* =====================
-       AJAX UPDATE
-    ===================== */
     if (typeof updateData !== 'undefined') {
-
         updateData(
             '#formEditSchedule',
             "{{ route('schedule.update', $schedule->id) }}",
             {
-
                 onSuccess: function (res) {
-
                     document.getElementById('alertBox').innerHTML = `
-                        <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-700 border border-green-200">
-                            ${res.message ?? 'Data berhasil diupdate'}
+                        <div class="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            ${res.message ?? 'Jadwal berhasil diperbarui.'}
                         </div>
                     `;
-
                 }
-
             }
         );
-
     } else {
-
         console.warn('updateData belum tersedia');
-
     }
 
 });
-
 </script>
-
 @endpush

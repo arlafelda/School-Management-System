@@ -4,165 +4,183 @@
 
 @section('content')
 
-<div class="space-y-6">
+<div class="min-h-screen bg-gray-100 p-4 md:p-8">
 
-    {{-- BREADCRUMB --}}
-    <nav class="text-sm text-gray-500">
-        <ol class="flex items-center space-x-2">
-            <li>
-                <span class="text-gray-700 font-medium">
-                    Dashboard
-                </span>
-            </li>
-            <li>/</li>
-            <li class="text-gray-700 font-medium">
-                Guru
-            </li>
-        </ol>
-    </nav>
+    <div class="max-w-6xl mx-auto">
 
-    {{-- ALERT --}}
-    <div id="alertBox"></div>
-
-    {{-- HEADER --}}
-    <div class="flex justify-between items-center">
-
-        <div>
-            <h1 class="text-2xl font-bold">
-                Daftar Guru
-            </h1>
-            <p class="text-gray-500 text-sm">
-                Kelola data guru
-            </p>
+        {{-- BREADCRUMB --}}
+        <div class="mb-4 text-sm text-gray-500 flex items-center gap-1">
+            <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition">Dashboard</a>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            <span class="text-gray-700 font-medium">Kelola Guru</span>
         </div>
 
-        <div class="flex gap-2">
+        {{-- ALERT --}}
+        <div id="alertBox" class="hidden mb-4 px-4 py-3 rounded-xl text-sm items-start gap-2"></div>
 
-            <a href="{{ route('teacher.archived') }}"
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
-                Arsip
-            </a>
+        {{-- HEADER --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
 
-            <a href="{{ route('teacher.create') }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
-                + Tambah Guru
-            </a>
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-800">Daftar Guru</h1>
+                <p class="text-sm text-gray-400 mt-0.5">Kelola data guru yang terdaftar di sistem.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+
+                {{-- ARSIP --}}
+                <a href="{{ route('teacher.archived') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                    Arsip
+                </a>
+
+                {{-- TAMBAH --}}
+                <a href="{{ route('teacher.create') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    Tambah Guru
+                </a>
+
+            </div>
 
         </div>
 
-    </div>
+        {{-- TABLE CARD --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
 
-    {{-- TABLE --}}
-    <div class="bg-white rounded-xl shadow border overflow-x-auto">
+            <div class="overflow-x-auto">
 
-        <table class="w-full text-sm min-w-[900px]">
+                <table class="w-full text-sm min-w-[800px]">
 
-            <thead class="bg-gray-100 text-gray-600">
-                <tr>
-                    <th class="p-4 text-left">Guru</th>
-                    <th class="p-4 text-center">NIP</th>
-                    <th class="p-4 text-center">Mapel</th>
-                    <th class="p-4 text-center">Jabatan</th>
-                    <th class="p-4 text-center">No HP</th>
-                    <th class="p-4 text-center">Email</th>
-                    <th class="p-4 text-center">Aksi</th>
-                </tr>
-            </thead>
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/70">
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Guru</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Mapel</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Jabatan</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">No HP</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
 
-            <tbody>
+                    <tbody class="divide-y divide-gray-50">
 
-                @forelse($teachers as $teacher)
+                        @forelse($teachers as $teacher)
 
-                <tr id="row-{{ $teacher->id }}"
-                    class="hover:bg-gray-50 cursor-pointer"
-                    data-url="{{ route('teacher.show', $teacher->slug) }}">
+                        <tr id="row-{{ $teacher->slug }}"
+                            class="hover:bg-indigo-50/30 transition group">
 
-                    {{-- NAME --}}
-                    <td class="p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                            {{ strtoupper(substr($teacher->name, 0, 1)) }}
-                        </div>
+                            {{-- GURU --}}
+                            <td class="px-6 py-4 cursor-pointer teacher-show"
+                                data-url="{{ route('teacher.show', $teacher->slug) }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                        <span class="text-indigo-600 font-semibold text-sm">
+                                            {{ strtoupper(substr($teacher->name, 0, 1)) }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800 group-hover:text-indigo-600 transition">
+                                            {{ $teacher->name }}
+                                        </p>
+                                        <p class="text-gray-400 text-xs font-mono mt-0.5">
+                                            #{{ $teacher->nip ?? '-' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
 
-                        <div class="font-semibold">
-                            {{ $teacher->name }}
-                        </div>
-                    </td>
+                            {{-- MAPEL --}}
+                            <td class="px-6 py-4 cursor-pointer teacher-show"
+                                data-url="{{ route('teacher.show', $teacher->slug) }}">
+                                @if($teacher->subjects->count())
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach($teacher->subjects as $subject)
+                                            <span class="inline-flex items-center bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-full text-xs font-medium">
+                                                {{ $subject->name }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
 
-                    {{-- NIP --}}
-                    <td class="p-4 text-center">
-                        {{ $teacher->nip }}
-                    </td>
+                            {{-- JABATAN --}}
+                            <td class="px-6 py-4 cursor-pointer teacher-show"
+                                data-url="{{ route('teacher.show', $teacher->slug) }}">
+                                @if($teacher->position == 'wali_kelas')
+                                    <span class="inline-flex items-center bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full text-xs font-medium">
+                                        Wali Kelas
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-full text-xs font-medium">
+                                        Guru
+                                    </span>
+                                @endif
+                            </td>
 
-                    {{-- SUBJECT --}}
-                    <td class="p-4 text-center">
-                        @if($teacher->subjects->count())
-                            @foreach($teacher->subjects as $subject)
-                                <span class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs mr-1 mb-1">
-                                    {{ $subject->name }}
+                            {{-- NO HP --}}
+                            <td class="px-6 py-4 cursor-pointer teacher-show text-gray-600"
+                                data-url="{{ route('teacher.show', $teacher->slug) }}">
+                                {{ $teacher->phone ?? '-' }}
+                            </td>
+
+                            {{-- STATUS --}}
+                            <td class="px-6 py-4 cursor-pointer teacher-show"
+                                data-url="{{ route('teacher.show', $teacher->slug) }}">
+                                <span class="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-100 px-2.5 py-1 rounded-full text-xs font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
+                                    Aktif
                                 </span>
-                            @endforeach
-                        @else
-                            <span class="text-gray-400">-</span>
-                        @endif
-                    </td>
+                            </td>
 
-                    {{-- POSITION --}}
-                    <td class="p-4 text-center">
-                        @if($teacher->position == 'wali_kelas')
-                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                                Wali Kelas
-                            </span>
-                        @else
-                            <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs">
-                                Guru
-                            </span>
-                        @endif
-                    </td>
+                            {{-- AKSI --}}
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
 
-                    {{-- PHONE --}}
-                    <td class="p-4 text-center">
-                        {{ $teacher->phone ?? '-' }}
-                    </td>
+                                    <a href="{{ route('teacher.edit', $teacher->slug) }}"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        Edit
+                                    </a>
 
-                    {{-- EMAIL --}}
-                    <td class="p-4 text-center">
-                        {{ $teacher->user->email ?? '-' }}
-                    </td>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition btn-delete"
+                                        data-url="{{ route('teacher.destroy', $teacher->slug) }}"
+                                        data-row="row-{{ $teacher->slug }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                                        Arsipkan
+                                    </button>
 
-                    {{-- ACTION --}}
-                    <td class="p-4 text-center space-x-2">
+                                </div>
+                            </td>
 
-                        <a href="{{ route('teacher.edit', $teacher->slug) }}"
-                           class="text-blue-600"
-                           onclick="event.stopPropagation()">
-                            Edit
-                        </a>
+                        </tr>
 
-                        {{-- FIXED ROUTE: teacher.destroy (BUKAN teacher.delete) --}}
-                        <button
-                            type="button"
-                            class="btn-delete text-red-600"
-                            data-id="{{ $teacher->id }}"
-                            data-url="{{ route('teacher.destroy', $teacher->slug) }}">
-                            Arsipkan
-                        </button>
+                        @empty
 
-                    </td>
+                        <tr>
+                            <td colspan="6" class="text-center py-16">
+                                <div class="flex flex-col items-center gap-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    <p class="text-sm font-medium text-gray-500">Belum ada guru terdaftar</p>
+                                    <a href="{{ route('teacher.create') }}" class="text-xs text-indigo-600 hover:underline">+ Tambah guru pertama</a>
+                                </div>
+                            </td>
+                        </tr>
 
-                </tr>
+                        @endforelse
 
-                @empty
-                <tr>
-                    <td colspan="7"
-                        class="text-center p-6 text-gray-500">
-                        Data guru tidak tersedia
-                    </td>
-                </tr>
-                @endforelse
+                    </tbody>
 
-            </tbody>
+                </table>
 
-        </table>
+            </div>
+
+        </div>
 
     </div>
 
@@ -175,69 +193,61 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // =========================
-    // DETAIL CLICK ROW
-    // =========================
-    document.querySelectorAll('tr[data-url]').forEach(function(row){
-
-        row.addEventListener('click', function(e){
-
-            if (
-                e.target.closest('.btn-delete') ||
-                e.target.closest('a')
-            ) return;
-
-            window.location.href = row.dataset.url;
-        });
-
+    /*
+    =====================
+    DETAIL
+    =====================
+    */
+    document.addEventListener('click', function (e) {
+        let cell = e.target.closest('.teacher-show');
+        if (cell) window.location.href = cell.dataset.url;
     });
 
-    // =========================
-    // ARCHIVE (DELETE AJAX)
-    // =========================
-    document.querySelectorAll('.btn-delete').forEach(function(btn){
 
-        btn.addEventListener('click', function(e){
+    /*
+    =====================
+    ARCHIVE
+    =====================
+    */
+    document.addEventListener('click', function (e) {
 
-            e.preventDefault();
-            e.stopPropagation();
+        let btn = e.target.closest('.btn-delete');
+        if (!btn) return;
 
-            let id  = this.dataset.id;
-            let url = this.dataset.url;
+        let url   = btn.dataset.url;
+        let rowId = btn.dataset.row;
 
-            // fallback kalau helper tidak ada
-            if (typeof deleteData !== 'undefined') {
+        if (typeof deleteData === 'undefined') {
+            console.error('deleteData belum tersedia');
+            return;
+        }
 
-                deleteData(
-                    url,
-                    'Yakin ingin memindahkan data ke arsip?',
-                    {
-                        onSuccess: function () {
+        deleteData(
+            url,
+            'Yakin ingin memindahkan data ke arsip?',
+            {
+                onSuccess: function () {
 
-                            let row = document.getElementById('row-' + id);
+                    document.getElementById(rowId)?.remove();
 
-                            if (row) row.remove();
+                    let alertBox = document.getElementById('alertBox');
+                    alertBox.classList.remove('hidden');
+                    alertBox.classList.add('flex');
+                    alertBox.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mt-0.5 text-green-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span class="text-green-700">Guru berhasil dipindahkan ke arsip.</span>
+                    `;
+                    alertBox.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:.75rem;padding:10px 14px;font-size:.875rem;align-items:center;gap:8px;margin-bottom:1rem';
 
-                            let alertBox = document.getElementById('alertBox');
-
-                            alertBox.innerHTML = `
-                                <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                                    Guru berhasil dipindahkan ke arsip
-                                </div>
-                            `;
-
-                            setTimeout(() => {
-                                alertBox.innerHTML = '';
-                            }, 3000);
-                        }
-                    }
-                );
-
-            } else {
-                alert('deleteData() tidak ditemukan. Pastikan script helper sudah dimuat.');
+                    setTimeout(() => {
+                        alertBox.classList.add('hidden');
+                        alertBox.classList.remove('flex');
+                        alertBox.innerHTML = '';
+                        alertBox.removeAttribute('style');
+                    }, 3000);
+                }
             }
-
-        });
+        );
 
     });
 

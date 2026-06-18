@@ -12,19 +12,45 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_attendances', function (Blueprint $table) {
+
             $table->id();
 
-            $table->foreignId('student_id')->constrained('tbl_students')->cascadeOnDelete();
-            $table->foreignId('schedule_id')->constrained('tbl_schedules')->cascadeOnDelete();
+            // Siswa
+            $table->foreignId('student_id')
+                ->constrained('tbl_students')
+                ->cascadeOnDelete();
 
+            // Mata pelajaran
+            $table->foreignId('subject_id')
+                ->nullable()
+                ->constrained('tbl_subjects')
+                ->nullOnDelete();
+
+            // Jadwal
+            $table->foreignId('schedule_id')
+                ->constrained('tbl_schedules')
+                ->cascadeOnDelete();
+
+            // Tanggal absensi
             $table->date('date');
 
-            $table->enum('status', ['hadir', 'izin', 'sakit', 'alpa']);
+            // Status kehadiran
+            $table->enum('status', [
+                'hadir',
+                'izin',
+                'sakit',
+                'alpa'
+            ]);
 
             $table->timestamps();
 
-            // 🔥 CEGAH DOUBLE INPUT
-            $table->unique(['student_id', 'schedule_id', 'date']);
+            // Mencegah data absensi ganda
+            $table->unique([
+                'student_id',
+                'schedule_id',
+                'date'
+            ]);
+
         });
     }
 

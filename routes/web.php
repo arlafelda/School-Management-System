@@ -1,5 +1,6 @@
 <?php
 
+use illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
@@ -20,8 +21,18 @@ Route::get('/', function () {
 
 // 🔥 redirect default dashboard
 Route::get('/dashboard', function () {
-    return redirect('/login');
-})->middleware(['auth'])->name('dashboard');
+
+    $user = auth::user();
+
+    return match ($user->role) {
+        'super_admin' => redirect()->route('dashboard.super_admin'),
+        'admin'       => redirect()->route('dashboard.admin'),
+        'teacher'     => redirect()->route('dashboard.teacher'),
+        'student'     => redirect()->route('dashboard.student'),
+        default       => redirect('/'),
+    };
+
+})->middleware('auth')->name('dashboard');
 
 // 👑 Super Admin
 Route::middleware(['auth', 'role:super_admin'])->group(function () {
@@ -49,9 +60,18 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+ 
+    // Profile (read-only) — admin, teacher, student
+    Route::middleware('role:admin,teacher,student')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    });
+ 
+    // Profile (edit, update, destroy) — super_admin
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile/edit', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile/edit', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
 });
 
 Route::middleware(['auth', 'role:super_admin'])->group(function () {
@@ -84,6 +104,8 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
         Route::get('/{slug}', [AdminController::class, 'show'])
             ->name('admin.show');
     });
+    Route::delete('/admin/{slug}/force-delete', [AdminController::class, 'forceDelete'])
+    ->name('admin.forceDelete');
 });
 
 Route::middleware(['auth', 'role:super_admin,admin'])
@@ -132,10 +154,6 @@ Route::middleware(['auth', 'role:super_admin,admin'])
         Route::get('/{slug}', [TeacherController::class, 'show'])
             ->name('teacher.show');
 
-        // =====================
-        // DELETE (PERMANENT)
-        // FIX: teacher.destroy (SEBELUMNYA SALAH teacher.delete)
-        // =====================
         Route::delete('/{slug}', [TeacherController::class, 'destroy'])
             ->name('teacher.destroy');
     });
@@ -148,6 +166,10 @@ Route::middleware(['auth', 'role:super_admin,admin'])
     )->name('teacher.homeroom.students');
 
 });
+Route::delete(
+    '/teachers/{slug}/force-delete',
+    [TeacherController::class, 'forceDelete']
+)->name('teacher.forceDelete');
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function () {
 
@@ -168,6 +190,8 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::put('/students/{student:slug}',[StudentController::class, 'update'])->name('students.update');
 
     Route::delete('/students/{student:slug}',[StudentController::class, 'destroy'])->name('students.delete');
+
+    Route::delete('/students/{slug}/force-delete', [StudentController::class, 'forceDelete'])->name('students.forceDelete');
 });
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function () {
@@ -175,14 +199,14 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::get('/classes', [ClassesController::class, 'index'])
         ->name('class.index');
 
+    Route::get('/classes/archived', [ClassesController::class, 'archived'])
+        ->name('class.archived');
+
     Route::get('/classes/create', [ClassesController::class, 'create'])
         ->name('class.create');
 
     Route::post('/classes', [ClassesController::class, 'store'])
         ->name('class.store');
-
-    Route::get('/classes/archived', [ClassesController::class, 'archived'])
-        ->name('class.archived');
 
     Route::get('/classes/{class:slug}', [ClassesController::class, 'show'])
         ->name('class.show');
@@ -193,7 +217,7 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::put('/classes/{class:slug}', [ClassesController::class, 'update'])
         ->name('class.update');
 
-    // archive
+    // archive (soft delete)
     Route::delete('/classes/{class:slug}', [ClassesController::class, 'destroy'])
         ->name('class.destroy');
 
@@ -201,9 +225,10 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::put('/classes/{slug}/restore', [ClassesController::class, 'restore'])
         ->name('class.restore');
 
-    // delete permanen
-    Route::delete('/classes/{slug}/delete', [ClassesController::class, 'delete'])
-        ->name('class.delete');
+    // hapus permanen
+    Route::delete('/classes/{slug}/force-delete', [ClassesController::class, 'delete'])
+        ->name('class.forceDelete');
+
 });
 
 Route::middleware(['auth', 'role:super_admin,admin,teacher,student'])
@@ -306,6 +331,7 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::get('/extracurricular', [ExtracurricularController::class, 'index'])
         ->name('extracurricular.index');
 
+    // static routes WAJIB di atas route parameter
     Route::get('/extracurricular/archived', [ExtracurricularController::class, 'archived'])
         ->name('extracurricular.archived');
 
@@ -315,6 +341,14 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::post('/extracurricular/store', [ExtracurricularController::class, 'store'])
         ->name('extracurricular.store');
 
+    // restore & force-delete WAJIB di atas route parameter slug biasa
+    Route::put('/extracurricular/{slug}/restore', [ExtracurricularController::class, 'restore'])
+        ->name('extracurricular.restore');
+
+    Route::delete('/extracurricular/{slug}/force-delete', [ExtracurricularController::class, 'delete'])
+        ->name('extracurricular.forceDelete');
+
+    // route parameter
     Route::get('/extracurricular/{extracurricular:slug}', [ExtracurricularController::class, 'show'])
         ->name('extracurricular.show');
 
@@ -324,17 +358,10 @@ Route::middleware(['auth', 'role:super_admin,admin,teacher'])->group(function ()
     Route::put('/extracurricular/{extracurricular:slug}', [ExtracurricularController::class, 'update'])
         ->name('extracurricular.update');
 
-    // archive
+    // archive (soft delete)
     Route::delete('/extracurricular/{extracurricular:slug}', [ExtracurricularController::class, 'destroy'])
         ->name('extracurricular.destroy');
 
-    // restore
-    Route::put('/extracurricular/{slug}/restore', [ExtracurricularController::class, 'restore'])
-        ->name('extracurricular.restore');
-
-    // delete permanen
-    Route::delete('/extracurricular/{slug}/delete', [ExtracurricularController::class, 'delete'])
-        ->name('extracurricular.delete');
 });
 
 Route::middleware(['auth', 'role:student'])->group(function () {

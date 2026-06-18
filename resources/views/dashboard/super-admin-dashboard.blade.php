@@ -15,44 +15,32 @@
 
     <div class="bg-white p-4 rounded-xl shadow text-right">
         <p class="text-xs text-left">Siswa</p>
-        <h3 class="font-bold">
-            {{ number_format($totalStudents) }}
-        </h3>
+        <h3 class="font-bold">{{ number_format($totalStudents) }}</h3>
     </div>
 
     <div class="bg-white p-4 rounded-xl shadow text-right">
         <p class="text-xs text-left">Guru</p>
-        <h3 class="font-bold">
-            {{ number_format($totalTeachers) }}
-        </h3>
+        <h3 class="font-bold">{{ number_format($totalTeachers) }}</h3>
     </div>
 
     <div class="bg-white p-4 rounded-xl shadow text-right">
         <p class="text-xs text-left">Admin</p>
-        <h3 class="font-bold">
-            {{ number_format($totalAdmins) }}
-        </h3>
+        <h3 class="font-bold">{{ number_format($totalAdmins) }}</h3>
     </div>
 
     <div class="bg-white p-4 rounded-xl shadow text-right">
         <p class="text-xs text-left">Kelas</p>
-        <h3 class="font-bold">
-            {{ number_format($totalClasses) }}
-        </h3>
+        <h3 class="font-bold">{{ number_format($totalClasses) }}</h3>
     </div>
 
     <div class="bg-white p-4 rounded-xl shadow text-right">
         <p class="text-xs text-left">Jurusan</p>
-        <h3 class="font-bold">
-            {{ number_format($totalMajors) }}
-        </h3>
+        <h3 class="font-bold">{{ number_format($totalMajors) }}</h3>
     </div>
 
     <div class="bg-white p-4 rounded-xl shadow text-right">
         <p class="text-xs text-left">Mapel</p>
-        <h3 class="font-bold">
-            {{ number_format($totalSubjects) }}
-        </h3>
+        <h3 class="font-bold">{{ number_format($totalSubjects) }}</h3>
     </div>
 
 </div>
@@ -65,38 +53,31 @@
         <h3 class="font-semibold mb-4">Distribusi Pengguna</h3>
 
         @php
-            $labels = ['Siswa', 'Guru', 'Admin'];
-            $colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500'];
-            $max = max($chartData) ?: 1;
+        $labels = ['Siswa', 'Guru', 'Admin'];
+        $colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500'];
+        $max = max($chartData) ?: 1;
         @endphp
 
         <div class="flex flex-col gap-4">
 
             @foreach($chartData as $index => $value)
+            @php
+            $percent = round(($value / $max) * 100);
+            @endphp
 
-                @php
-                    $percent = ($value / $max) * 100;
-
-                    if ($percent >= 90) $width = 'w-full';
-                    elseif ($percent >= 75) $width = 'w-3/4';
-                    elseif ($percent >= 50) $width = 'w-1/2';
-                    elseif ($percent >= 25) $width = 'w-1/4';
-                    else $width = 'w-1/6';
-                @endphp
-
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span>{{ $labels[$index] }}</span>
-                        <span class="text-right">
-                            {{ number_format($value) }}
-                        </span>
-                    </div>
-
-                    <div class="w-full bg-gray-200 rounded h-3">
-                        <div class="{{ $colors[$index] }} h-3 rounded {{ $width }}"></div>
-                    </div>
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span>{{ $labels[$index] }}</span>
+                    <span>{{ number_format($value) }}</span>
                 </div>
 
+                <div class="w-full bg-gray-200 rounded h-3">
+                    <div
+                        class="{{ $colors[$index] }} h-3 rounded transition-all duration-500"
+                        x-data
+                        x-init="$el.style.width = '{{ $percent }}%'"></div>
+                </div>
+            </div>
             @endforeach
 
         </div>
@@ -108,14 +89,21 @@
 
         <ul class="space-y-2 text-sm text-gray-600">
             @forelse($activities as $act)
-                <li>
-                    {{ $act->day }} |
-                    {{ $act->start_time }} -
-                    {{ $act->end_time }} |
+            <li class="flex flex-col gap-0.5 border-b border-gray-100 pb-2">
+                <span class="font-medium text-gray-800">
                     {{ $act->class->name ?? '-' }}
-                </li>
+                </span>
+                <span>
+                    {{ $act->day }},
+                    {{ \Carbon\Carbon::parse($act->start_time)->format('H:i') }} -
+                    {{ \Carbon\Carbon::parse($act->end_time)->format('H:i') }}
+                </span>
+                <span class="text-gray-400 text-xs">
+                    Guru: {{ $act->teacher->name ?? '-' }}
+                </span>
+            </li>
             @empty
-                <li>Tidak ada aktivitas</li>
+            <li class="text-gray-400">Tidak ada aktivitas</li>
             @endforelse
         </ul>
 

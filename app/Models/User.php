@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Teacher;
-use App\Models\Student;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -41,6 +40,24 @@ class User extends Authenticatable
         ];
     }
 
+    // 🔥 AUTO SLUG ANTI NULL (FIX UTAMA)
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->slug)) {
+                $user->slug = Str::slug($user->name) . '-' . time();
+            }
+        });
+
+        static::updating(function ($user) {
+            if (empty($user->slug)) {
+                $user->slug = Str::slug($user->name) . '-' . $user->id;
+            }
+        });
+    }
+
     // RELASI
     public function teacher()
     {
@@ -52,23 +69,9 @@ class User extends Authenticatable
         return $this->hasOne(Student::class);
     }
 
-    public function isSuperAdmin()
-    {
-        return $this->role === 'super_admin';
-    }
-
-    public function isAdmin()
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isTeacher()
-    {
-        return $this->role === 'teacher';
-    }
-
-    public function isStudent()
-    {
-        return $this->role === 'student';
-    }
+    // ROLE CHECK
+    public function isSuperAdmin() { return $this->role === 'super_admin'; }
+    public function isAdmin() { return $this->role === 'admin'; }
+    public function isTeacher() { return $this->role === 'teacher'; }
+    public function isStudent() { return $this->role === 'student'; }
 }

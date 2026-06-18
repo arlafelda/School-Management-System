@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Teacher;
 use App\Models\ClassModel;
 use App\Models\Subject;
 
 class Schedule extends Model
 {
+    use HasFactory;
     protected $table = 'tbl_schedules';
 
     protected $fillable = [

@@ -300,7 +300,11 @@ function active($routes)
                 class="ml-4 mt-1 space-y-1
                 {{ request()->routeIs('profile.*') ? '' : 'hidden' }}">
 
-                <a href="{{ route('profile.edit') }}"
+                {{--
+                    super_admin -> halaman edit profile
+                    admin, teacher, student -> halaman show profile (read-only)
+                --}}
+                <a href="{{ $user->role === 'super_admin' ? route('profile.edit') : route('profile.show') }}"
                     class="block p-2 rounded hover:bg-gray-100">
 
                     Profile

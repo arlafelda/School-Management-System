@@ -4,312 +4,343 @@
 
 @section('content')
 
-<div class="space-y-6">
+<div class="min-h-screen bg-gray-100 p-4 md:p-8">
 
-    <!-- BREADCRUMB -->
-    <nav class="text-sm text-gray-500">
-        <ol class="flex items-center space-x-2">
-            <li class="text-gray-700 font-medium">Dashboard</li>
-            <li>/</li>
-            <li class="text-gray-700 font-medium">Siswa</li>
-            <li>/</li>
-            <li class="text-gray-500">Tambah</li>
-        </ol>
-    </nav>
+    <div class="w-full max-w-4xl mx-auto">
 
-    <!-- ALERT AJAX -->
-    <div id="alertBox"></div>
-
-    <!-- ERROR VALIDATION -->
-    @if ($errors->any())
-        <div class="mb-4 bg-red-100 text-red-700 p-3 rounded">
-            @foreach ($errors->all() as $error)
-                <p>• {{ $error }}</p>
-            @endforeach
+        {{-- BREADCRUMB --}}
+        <div class="mb-4 text-sm text-gray-500 flex items-center gap-1">
+            <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition">Dashboard</a>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6" />
+            </svg>
+            <a href="{{ route('students.index') }}" class="hover:text-indigo-600 transition">Kelola Siswa</a>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6" />
+            </svg>
+            <span class="text-gray-700 font-medium">Tambah Siswa</span>
         </div>
-    @endif
 
-    <!-- TITLE -->
-    <div>
-        <h1 class="text-2xl font-bold">Form Tambah Siswa</h1>
-        <p class="text-gray-500 text-sm">Isi data siswa dengan lengkap</p>
-    </div>
+        {{-- ALERT --}}
+        <div id="alertBox" class="hidden mb-5 px-4 py-3 rounded-xl text-sm items-start gap-2"></div>
 
-    <!-- FORM -->
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow border">
+        {{-- CARD --}}
+        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+            <div class="bg-white p-8">
 
-        <form id="formSiswa" class="space-y-6">
-
-            @csrf
-
-            <!-- LOGIN -->
-            <div class="border-b pb-4">
-                <h2 class="font-semibold mb-3">Akun Login</h2>
-
-                <div class="grid grid-cols-2 gap-4">
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Email Login
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            id="firstInput"
-                            placeholder="Masukkan email login"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Password
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Masukkan password"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                    </div>
-
-                    <div class="col-span-2">
-                        <label class="text-sm font-medium">
-                            Konfirmasi Password
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="password"
-                            name="password_confirmation"
-                            placeholder="Ulangi password"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                    </div>
-
+                {{-- TITLE --}}
+                <div class="mb-8">
+                    <h1 class="text-xl font-semibold text-gray-800">Tambah Siswa Baru</h1>
+                    <p class="text-sm text-gray-400 mt-1">Lengkapi seluruh data di bawah untuk mendaftarkan siswa baru.</p>
                 </div>
+
+                <form id="formSiswa" class="space-y-8">
+                    @csrf
+
+                    {{-- ================================ --}}
+                    {{-- SECTION: AKUN LOGIN --}}
+                    {{-- ================================ --}}
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                            </div>
+                            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Akun Login</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Email Login <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    id="firstInput"
+                                    placeholder="Masukkan email login"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Password <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    placeholder="Masukkan password"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Konfirmasi Password <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password_confirmation"
+                                    placeholder="Ulangi password"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-100">
+
+                    {{-- ================================ --}}
+                    {{-- SECTION: DATA SISWA --}}
+                    {{-- ================================ --}}
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            </div>
+                            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Data Siswa</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Nama Siswa <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Masukkan nama siswa"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    NISN <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nisn"
+                                    placeholder="Masukkan NISN"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    NIS <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nis"
+                                    placeholder="Masukkan NIS"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Kelas <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    name="class_id"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                                    <option value="">-- Pilih Kelas --</option>
+                                    @foreach($classes as $class)
+                                    <option value="{{ $class->id }}">{{ $class->name }} - {{ $class->major }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Jurusan
+                                </label>
+                                <input
+                                    type="text"
+                                    name="major"
+                                    placeholder="Masukkan jurusan"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Jenis Kelamin <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    name="gender"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                                    <option value="">-- Pilih Jenis Kelamin --</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Status <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    name="status"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                    required>
+                                    <option value="">-- Pilih Status --</option>
+                                    <option value="aktif">Aktif</option>
+                                    <option value="lulus">Lulus</option>
+                                    <option value="pindah">Pindah</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    No. HP
+                                </label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    placeholder="Contoh: 081234567890"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Tempat Lahir
+                                </label>
+                                <input
+                                    type="text"
+                                    name="birth_place"
+                                    placeholder="Masukkan tempat lahir"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Tanggal Lahir
+                                </label>
+                                <input
+                                    type="date"
+                                    name="birth_date"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Alamat
+                                </label>
+                                <textarea
+                                    name="address"
+                                    placeholder="Masukkan alamat lengkap"
+                                    rows="3"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-100">
+
+                    {{-- ================================ --}}
+                    {{-- SECTION: DATA ORANG TUA --}}
+                    {{-- ================================ --}}
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                            </div>
+                            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Data Orang Tua</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Nama Ayah
+                                </label>
+                                <input
+                                    type="text"
+                                    name="father_name"
+                                    placeholder="Masukkan nama ayah"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Nama Ibu
+                                </label>
+                                <input
+                                    type="text"
+                                    name="mother_name"
+                                    placeholder="Masukkan nama ibu"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    No. HP Orang Tua
+                                </label>
+                                <input
+                                    type="text"
+                                    name="parent_phone"
+                                    placeholder="Masukkan nomor HP orang tua"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Alamat Orang Tua
+                                </label>
+                                <textarea
+                                    name="parent_address"
+                                    placeholder="Masukkan alamat orang tua"
+                                    rows="3"
+                                    class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- DIVIDER --}}
+                    <hr class="border-gray-100">
+
+                    {{-- BUTTONS --}}
+                    <div class="flex justify-end items-center gap-3 pt-1">
+
+                        <a href="{{ route('students.index') }}"
+                            class="px-5 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                            Batal
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 13l4 4L19 7" />
+                            </svg>
+                            Simpan Siswa
+                        </button>
+
+                    </div>
+
+                </form>
+
             </div>
-
-            <!-- DATA SISWA -->
-            <div class="border-b pb-4">
-                <h2 class="font-semibold mb-3">Data Siswa</h2>
-
-                <div class="grid grid-cols-2 gap-4">
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Nama Siswa
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            placeholder="Masukkan nama siswa"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            NISN
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="nisn"
-                            placeholder="Masukkan NISN"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            NIS
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="nis"
-                            placeholder="Masukkan NIS"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Kelas
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="class_id"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                            <option value="">Pilih Kelas</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}">
-                                    {{ $class->name }} - {{ $class->major }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Jurusan
-                        </label>
-                        <input
-                            type="text"
-                            name="major"
-                            placeholder="Masukkan jurusan"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Jenis Kelamin
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="gender"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                            <option value="">Pilih jenis kelamin</option>
-                            <option value="L">Laki-laki</option>
-                            <option value="P">Perempuan</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Status
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="status"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"
-                            required>
-                            <option value="">Pilih status</option>
-                            <option value="aktif">Aktif</option>
-                            <option value="lulus">Lulus</option>
-                            <option value="pindah">Pindah</option>
-                        </select>
-                    </div>
-
-                </div>
-
-                <div class="mt-4">
-                    <label class="text-sm font-medium">
-                        Tempat Lahir
-                    </label>
-                    <input
-                        type="text"
-                        name="birth_place"
-                        placeholder="Masukkan tempat lahir"
-                        class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
-                </div>
-
-                <div class="mt-4">
-                    <label class="text-sm font-medium">
-                        Tanggal Lahir
-                    </label>
-                    <input
-                        type="date"
-                        name="birth_date"
-                        class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
-                </div>
-
-                <div class="mt-4">
-                    <label class="text-sm font-medium">
-                        Alamat
-                    </label>
-                    <textarea
-                        name="address"
-                        placeholder="Masukkan alamat lengkap"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
-                </div>
-
-                <div class="mt-4">
-                    <label class="text-sm font-medium">
-                        No HP
-                    </label>
-                    <input
-                        type="text"
-                        name="phone"
-                        placeholder="Masukkan nomor HP"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-
-            </div>
-
-            <!-- ORANG TUA -->
-            <div>
-                <h2 class="font-semibold mb-3">Data Orang Tua</h2>
-
-                <div class="grid grid-cols-2 gap-4">
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Nama Ayah
-                        </label>
-                        <input
-                            type="text"
-                            name="father_name"
-                            placeholder="Masukkan nama ayah"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Nama Ibu
-                        </label>
-                        <input
-                            type="text"
-                            name="mother_name"
-                            placeholder="Masukkan nama ibu"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            No HP Orang Tua
-                        </label>
-                        <input
-                            type="text"
-                            name="parent_phone"
-                            placeholder="Masukkan nomor HP orang tua"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1">
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium">
-                            Alamat Orang Tua
-                        </label>
-                        <textarea
-                            name="parent_address"
-                            placeholder="Masukkan alamat orang tua"
-                            class="border rounded-lg px-3 py-2 text-sm w-full mt-1"></textarea>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- BUTTON -->
-            <div class="flex justify-end gap-3 pt-4">
-
-                <a href="{{ route('students.index') }}"
-                   class="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100">
-                    Kembali
-                </a>
-
-                <button type="submit"
-                        class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700">
-                    Simpan
-                </button>
-
-            </div>
-
-        </form>
+        </div>
 
     </div>
 
@@ -317,30 +348,21 @@
 
 @endsection
 
-
-@push('scripts')
+@push('scripts') 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const input = document.getElementById('firstInput');
-
-    if (input) input.focus();
-
-    if (typeof createData !== 'undefined') {
-
-        createData('#formSiswa', "{{ route('students.store') }}", {
-            onSuccess: function () {
-
-                document.getElementById('formSiswa').reset();
-
-                if (input) input.focus();
-            }
-        });
-
-    } else {
-        console.error('createData belum tersedia');
-    }
-
-});
-</script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const input = document.getElementById('firstInput');
+        if (input) input.focus();
+        if (typeof createData !== 'undefined') {
+            createData('#formSiswa', "{{ route('students.store') }}", {
+                onSuccess: function() {
+                    document.getElementById('formSiswa').reset();
+                    if (input) input.focus();
+                }
+            });
+        } else {
+            console.error('createData belum tersedia');
+        }
+    });
+</script> 
 @endpush

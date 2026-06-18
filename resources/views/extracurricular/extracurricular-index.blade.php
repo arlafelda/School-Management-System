@@ -1,196 +1,210 @@
 @extends('layouts.app')
 
+@section('title', 'Ekstrakurikuler')
+
 @section('content')
 
-<div class="min-h-screen bg-gray-100 text-gray-800">
+<div class="min-h-screen bg-gray-100 p-4 md:p-8">
 
-    <div class="px-6 pt-4 text-sm text-gray-500">
-        <span class="text-gray-700 font-medium">
-            Dashboard
-        </span>
-        <span class="mx-2">/</span>
-        <span class="text-gray-700 font-medium">
-            Ekstrakurikuler
-        </span>
-    </div>
+    <div class="max-w-6xl mx-auto">
 
-    <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
-
-        <div>
-            <h1 class="text-xl font-bold text-blue-700">
-                Ekstrakurikuler
-            </h1>
-            <p class="text-sm text-gray-500">
-                Kelola data ekskul
-            </p>
+        <!-- BREADCRUMB -->
+        <div class="mb-4 text-sm text-gray-500 flex items-center gap-1">
+            <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition">Dashboard</a>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+            </svg>
+            <span class="text-gray-700 font-medium">Ekstrakurikuler</span>
         </div>
 
-        <div class="flex gap-2">
+        <!-- ALERT -->
+        <div id="alertBox" class="hidden mb-4 px-4 py-3 rounded-xl text-sm items-start gap-2"></div>
 
-            <a href="{{ route('extracurricular.archived') }}"
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
-                Archived
-            </a>
+        <!-- HEADER -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
 
-            <a href="{{ route('extracurricular.create') }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
-                + Tambah
-            </a>
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-800">Ekstrakurikuler</h1>
+                <p class="text-sm text-gray-400 mt-0.5">Kelola data kegiatan ekstrakurikuler sekolah.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+
+                <a href="{{ route('extracurricular.archived') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
+                    </svg>
+                    Arsip
+                </a>
+
+                <a href="{{ route('extracurricular.create') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Tambah Ekskul
+                </a>
+
+            </div>
 
         </div>
 
-    </header>
+        <!-- TABLE CARD -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
 
-    <main class="p-6">
+            <div class="overflow-x-auto">
 
-        <div id="alertBox" class="mb-4"></div>
+                <table class="w-full text-sm min-w-[700px]">
 
-        <div class="bg-white rounded-lg shadow overflow-x-auto">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/70">
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Nama Ekstrakurikuler</th>
+                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Pembina</th>
+                            <th class="px-6 py-3.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Jumlah Siswa</th>
+                            <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
 
-            <table class="w-full text-sm">
+                    <tbody class="divide-y divide-gray-50">
 
-                <thead class="bg-gray-100 text-gray-600">
-                    <tr>
-                        <th class="p-3 text-left">Nama Ekskul</th>
-                        <th class="p-3 text-center">Pembina</th>
-                        <th class="p-3 text-right">Jumlah Siswa</th>
-                        <th class="p-3 text-center">Aksi</th>
-                    </tr>
-                </thead>
+                        @forelse($data as $d)
 
-                <tbody>
+                        <tr id="row-{{ $d->id }}"
+                            class="hover:bg-indigo-50/30 transition group">
 
-                    @forelse($data as $d)
-
-                        <tr
-                            id="row-{{ $d->id }}"
-                            class="border-t hover:bg-gray-50 cursor-pointer"
-                            data-url="{{ $d->slug ? route('extracurricular.show', $d->slug) : '#' }}"
-                        >
-
-                            <td class="p-3 font-medium">
-                                @if($d->slug)
-                                    {{ $d->name }}
-                                @else
-                                    <span class="text-red-500">
-                                        {{ $d->name }} (slug kosong)
-                                    </span>
-                                @endif
+                            <!-- NAMA EKSKUL -->
+                            <td class="px-6 py-4 cursor-pointer ekskul-show"
+                                data-url="{{ $d->slug ? route('extracurricular.show', $d->slug) : '#' }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 text-xl">
+                                        🏅
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800 group-hover:text-indigo-600 transition">
+                                            {{ $d->name }}
+                                        </p>
+                                        @if(!$d->slug)
+                                            <p class="text-amber-500 text-xs mt-0.5">Slug kosong</p>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
 
-                            <td class="p-3 text-center">
-                                {{ $d->teacher->name ?? '-' }}
+                            <!-- PEMBINA -->
+                            <td class="px-6 py-4 cursor-pointer ekskul-show text-gray-600"
+                                data-url="{{ $d->slug ? route('extracurricular.show', $d->slug) : '#' }}">
+                                {{ $d->teacher->name ?? '<span class="text-gray-400">—</span>' }}
                             </td>
 
-                            <td class="p-3 text-right">
-                                {{ $d->students->count() }}
+                            <!-- JUMLAH SISWA -->
+                            <td class="px-6 py-4 cursor-pointer ekskul-show text-center"
+                                data-url="{{ $d->slug ? route('extracurricular.show', $d->slug) : '#' }}">
+                                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 px-3 py-1 rounded-full text-xs font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                                    {{ $d->students->count() }} Siswa
+                                </span>
                             </td>
 
-                            <td class="p-3 text-center space-x-2">
+                            <!-- AKSI -->
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
 
-                                @if($d->slug)
+                                    @if($d->slug)
+                                        <!-- Edit Button - Persis seperti Admin -->
+                                        <a href="{{ route('extracurricular.edit', $d->slug) }}"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                            Edit
+                                        </a>
 
-                                    <a href="{{ route('extracurricular.edit', $d->slug) }}"
-                                       onclick="event.stopPropagation()"
-                                       class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs">
-                                        Edit
-                                    </a>
-
-                                    <form action="{{ route('extracurricular.destroy', $d->slug) }}"
-                                          method="POST"
-                                          class="inline formDelete"
-                                          data-id="{{ $d->id }}"
-                                          onclick="event.stopPropagation()">
-
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="submit"
-                                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs">
-                                            Archive
+                                        <!-- Arsipkan Button - Persis seperti Admin -->
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition btn-archive"
+                                            data-id="{{ $d->id }}"
+                                            data-url="{{ route('extracurricular.destroy', $d->slug) }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
+                                            </svg>
+                                            Arsipkan
                                         </button>
+                                    @endif
 
-                                    </form>
-
-                                @endif
-
+                                </div>
                             </td>
 
                         </tr>
 
-                    @empty
+                        @empty
+                        <!-- Empty state tetap sama -->
                         <tr>
-                            <td colspan="4" class="text-center py-6 text-gray-400">
-                                Tidak ada data ekstrakurikuler
+                            <td colspan="4" class="text-center py-16">
+                                <div class="flex flex-col items-center gap-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    </svg>
+                                    <p class="text-sm font-medium text-gray-500">Belum ada ekstrakurikuler terdaftar</p>
+                                    <a href="{{ route('extracurricular.create') }}" 
+                                       class="text-xs text-indigo-600 hover:underline">+ Tambah ekstrakurikuler pertama</a>
+                                </div>
                             </td>
                         </tr>
-                    @endforelse
+                        @endforelse
 
-                </tbody>
+                    </tbody>
 
-            </table>
+                </table>
+
+            </div>
 
         </div>
 
-    </main>
+    </div>
 
 </div>
 
 @endsection
 
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    if (typeof window.$ === 'undefined') {
-        console.error('jQuery belum load');
-        return;
-    }
-
-    $(document).on('click', 'tr[data-url]', function (e) {
-
-        if (
-            e.target.closest('a') ||
-            e.target.closest('button') ||
-            e.target.closest('form')
-        ) return;
-
-        let url = $(this).data('url');
-
-        if (url && url !== '#') {
-            window.location.href = url;
+    // Klik Row → Detail
+    document.addEventListener('click', function (e) {
+        let row = e.target.closest('.ekskul-show');
+        if (row) {
+            const url = row.dataset.url;
+            if (url && url !== '#') {
+                window.location.href = url;
+            }
         }
-
     });
 
-    $(document).on('submit', '.formDelete', function (e) {
-        e.preventDefault();
+    // Tombol Arsipkan
+    document.addEventListener('click', function (e) {
+        let btn = e.target.closest('.btn-archive');
+        if (!btn) return;
 
-        if (!confirm('Yakin ingin memindahkan data ke arsip?')) return;
+        const url = btn.dataset.url;
+        const id  = btn.dataset.id;
 
-        let url = this.action;
-        let id = $(this).data('id');
-        let row = $('#row-' + id);
-
-        if (typeof window.deleteData === 'function') {
-
-            window.deleteData(url, function () {
-
-                row.remove();
-
-                $('#alertBox').html(`
-                    <div class="p-3 bg-green-100 text-green-700 rounded-lg">
-                        Data berhasil dipindahkan ke arsip
-                    </div>
-                `);
-
-            });
-
-        } else {
-            console.error('deleteData belum tersedia');
+        if (typeof deleteData === 'function') {
+            deleteData(
+                url,
+                'Yakin ingin memindahkan data ke arsip?',
+                {
+                    onSuccess: function () {
+                        document.getElementById('row-' + id)?.remove();
+                    }
+                }
+            );
         }
-
     });
 
 });

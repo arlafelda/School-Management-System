@@ -22,21 +22,45 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's profile page (read-only), menampilkan
+     * data pribadi sesuai tabel detail masing-masing role:
+     * - admin   : tidak ada tabel detail (tbl_admins tidak ada), pakai tbl_users saja
+     * - teacher : data dari tbl_teachers (relasi user->teacher)
+     * - student : data dari tbl_students (relasi user->student)
+     */
+    public function show(Request $request): View
+    {
+        $user = $request->user();
+
+        // $profile berisi data dari tbl_teachers / tbl_students,
+        // null untuk admin (karena tidak ada tabel detailnya).
+        $profile = match ($user->role) {
+            'teacher' => $user->teacher,
+            'student' => $user->student,
+            default   => null,
+        };
+
+        return view('profile.show', [
+            'user'    => $user,
+            'profile' => $profile,
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+        $user->name = $request->name;
+        $user->email = $request->email;
 
-        $request->user()->save();
+        $user->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.edit')
+            ->with('status', 'profile-updated');
     }
-
     /**
      * Delete the user's account.
      */

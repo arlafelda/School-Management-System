@@ -200,4 +200,26 @@ class TeacherController extends Controller
             ->route('teacher.archived')
             ->with('success', 'Guru berhasil direstore');
     }
+
+    public function forceDelete(string $slug)
+    {
+        $teacher = Teacher::with('user')
+            ->where('slug', $slug)
+            ->where('archived', 1)
+            ->firstOrFail();
+
+        // Hapus relasi many-to-many
+        $teacher->subjects()->detach();
+
+        // Hapus user terkait
+        $teacher->user?->delete();
+
+        // Hapus guru
+        $teacher->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Guru berhasil dihapus permanen'
+        ]);
+    }
 }

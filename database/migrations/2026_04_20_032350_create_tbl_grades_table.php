@@ -12,21 +12,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_grades', function (Blueprint $table) {
+
             $table->id();
 
-            // 🔥 RELASI KE STUDENTS
+            // Siswa
             $table->foreignId('student_id')
-                  ->constrained('tbl_students')
-                  ->cascadeOnDelete();
+                ->constrained('tbl_students')
+                ->cascadeOnDelete();
 
-            // DATA NILAI
-            $table->string('subject');
+            // Jadwal
+            $table->foreignId('schedule_id')
+                ->nullable()
+                ->constrained('tbl_schedules')
+                ->nullOnDelete();
 
+            // Nilai tugas
             $table->unsignedInteger('assignment_score')->default(0);
+
+            // Nilai UTS
             $table->unsignedInteger('mid_exam_score')->default(0);
+
+            // Nilai UAS
             $table->unsignedInteger('final_exam_score')->default(0);
 
+            // Status arsip
+            $table->boolean('archived')->default(false);
+
+            // Mata pelajaran
+            $table->foreignId('subject_id')
+                ->constrained('tbl_subjects')
+                ->cascadeOnDelete();
+
             $table->timestamps();
+
         });
     }
 

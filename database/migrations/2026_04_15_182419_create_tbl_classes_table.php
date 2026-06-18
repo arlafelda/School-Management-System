@@ -11,27 +11,41 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_extracurriculars', function (Blueprint $table) {
+        Schema::create('tbl_classes', function (Blueprint $table) {
 
             $table->id();
 
-            // Nama ekstrakurikuler
-            $table->string('name');
+            // Nama kelas
+            // Contoh: X RPL 1, XI TKJ 2
+            $table->string('name')->unique();
 
             // Slug URL
-            $table->string('slug')->unique();
+            $table->string('slug')->nullable()->unique();
 
             // Status arsip
             $table->boolean('archived')->default(false);
 
-            // Pembina ekstrakurikuler
+            // Tingkat kelas
+            // Contoh: X, XI, XII
+            $table->string('level');
+
+            // Jurusan
+            // Contoh: RPL, TKJ, AKL
+            $table->string('major')->nullable();
+
+            // Tahun ajaran
+            $table->string('academic_year')->nullable();
+
+            // Semester
+            $table->string('semester')->nullable();
+
+            // Wali kelas
             $table->foreignId('teacher_id')
                 ->nullable()
                 ->constrained('tbl_teachers')
                 ->nullOnDelete();
 
             $table->timestamps();
-
         });
     }
 
@@ -40,6 +54,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_extracurriculars');
+        Schema::dropIfExists('tbl_classes');
     }
 };

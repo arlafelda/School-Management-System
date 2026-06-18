@@ -143,56 +143,61 @@ class ExtracurricularController extends Controller
     }
 
     public function destroy(Request $request, Extracurricular $extracurricular)
-    {
-        $extracurricular->update([
-            'archived' => 1
-        ]);
+{
+    $extracurricular->update(['archived' => 1]);
 
-        return $request->ajax()
-            ? response()->json([
-                'status' => true,
-                'message' => 'Data berhasil dipindahkan ke arsip'
-            ])
-            : redirect()->route('extracurricular.index')
-                ->with('success', 'Data berhasil dipindahkan ke arsip');
-    }
+    return $request->expectsJson()
+        ? response()->json([
+            'success' => true, // <-- ganti 'status' ke 'success'
+            'message' => 'Data berhasil dipindahkan ke arsip'
+        ])
+        : redirect()->route('extracurricular.index')
+            ->with('success', 'Data berhasil dipindahkan ke arsip');
+}
 
-    public function restore(string $slug)
-    {
+public function restore(string $slug)
+{
+    try {
         $extracurricular = Extracurricular::where('slug', $slug)
             ->where('archived', 1)
             ->firstOrFail();
 
-        $extracurricular->update([
-            'archived' => 0
+        $extracurricular->update(['archived' => 0]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data berhasil direstore'
         ]);
 
-        return redirect()
-            ->route('extracurricular.archived')
-            ->with('success', 'Data berhasil direstore');
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
-    public function delete(string $slug)
-    {
-        try {
+public function delete(string $slug)
+{
+    try {
+        $extracurricular = Extracurricular::where('slug', $slug)
+            ->where('archived', 1)
+            ->firstOrFail();
 
-            $extracurricular = Extracurricular::where('slug', $slug)
-                ->where('archived', 1)
-                ->firstOrFail();
+        $extracurricular->delete();
 
-            $extracurricular->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Data berhasil dihapus permanen'
+        ]);
 
-            return redirect()
-                ->route('extracurricular.archived')
-                ->with('success', 'Data berhasil dihapus permanen');
-
-        } catch (\Throwable $e) {
-
-            return redirect()
-                ->route('extracurricular.archived')
-                ->with('error', $e->getMessage());
-        }
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function studentExtracurricular()
     {
