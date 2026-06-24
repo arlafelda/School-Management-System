@@ -2,61 +2,37 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Seed akun login tetap (kredensial dikenal) untuk tiap role,
+     * supaya mudah dites tanpa harus mencari data acak.
+     *
+     * Catatan: User untuk Teacher/Student dibuat otomatis lewat
+     * TeacherFactory/StudentFactory (relasi user_id), jadi di sini
+     * hanya akun super_admin & admin + beberapa user tambahan.
+     */
     public function run(): void
     {
-        // =========================
-        // SUPER ADMIN (manual)
-        // =========================
-        User::create([
+        User::factory()->create([
             'name' => 'Super Admin',
-            'slug' => 'super-admin',
-            'email' => 'superadmin@gmail.com',
+            'slug' => Str::slug('Super Admin'),
+            'email' => 'superadmin@gamelab.id',
             'password' => Hash::make('123456'),
             'role' => 'super_admin',
-            'archived' => 0,
-            'creation_time' => now(),
-            'create_id' => 1,
-            'update_time' => now(),
-            'update_id' => 1,
         ]);
 
-        // =========================
-        // ADMIN (10 data)
-        // =========================
-        User::factory()
-            ->count(10)
-            ->state(fn () => [
-                'role' => 'admin',
-                'password' => Hash::make('123456'),
-            ])
-            ->create();
-
-        // =========================
-        // TEACHER (20 data)
-        // =========================
-        User::factory()
-            ->count(20)
-            ->state(fn () => [
-                'role' => 'teacher',
-                'password' => Hash::make('123456'),
-            ])
-            ->create();
-
-        // =========================
-        // STUDENT (50 data)
-        // =========================
-        User::factory()
-            ->count(50)
-            ->state(fn () => [
-                'role' => 'student',
-                'password' => Hash::make('123456'),
-            ])
-            ->create();
+        User::factory()->create([
+            'name' => 'Admin Sekolah',
+            'slug' => Str::slug('Admin Sekolah'),
+            'email' => 'admin@gamelab.id',
+            'password' => Hash::make('123456'),
+            'role' => 'admin',
+        ]);
     }
 }

@@ -2,32 +2,51 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\ClassModel;
-use Illuminate\Support\Str;
+use App\Models\Teacher;
+use Illuminate\Database\Seeder;
 
 class ClassModelSeeder extends Seeder
 {
     public function run(): void
     {
-        $classes = [
-            ['name' => 'X IPA 1', 'level' => 'X'],
-            ['name' => 'X IPA 2', 'level' => 'X'],
-            ['name' => 'XI IPA 1', 'level' => 'XI'],
-            ['name' => 'XI IPA 2', 'level' => 'XI'],
-            ['name' => 'XII IPA 1', 'level' => 'XII'],
-        ];
+        // Hanya ambil guru yang posisinya "Wali Kelas", jangan bikin guru baru.
+        $teacherIds = Teacher::where('position', 'Wali Kelas')
+            ->where('archived', 0)
+            ->pluck('id');
 
-        foreach ($classes as $class) {
+        if ($teacherIds->isEmpty()) {
+            $this->call(TeacherSeeder::class);
 
-            ClassModel::updateOrCreate(
-                ['name' => $class['name']], // 🔥 CEK DUPLIKAT DI SINI
-                [
-                    'level' => $class['level'],
-                    'teacher_id' => null,
-                    'slug' => Str::slug($class['name']) . '-' . rand(1000, 9999),
-                ]
+            $teacherIds = Teacher::where('position', 'Wali Kelas')
+                ->where('archived', 0)
+                ->pluck('id');
+        }
+
+        // Pastikan tetap ada guru wali kelas, kalau masih kosong beri peringatan.
+        if ($teacherIds->isEmpty()) {
+            $this->command->warn('Tidak ada guru dengan posisi "Wali Kelas". ClassModelSeeder dilewati.');
+            return;
+        }
+
+        // Acak urutan guru, supaya assignment ke kelas tidak berulang.
+        $shuffledTeacherIds = $teacherIds->shuffle()->values();
+
+        // Jumlah kelas dibatasi sebanyak guru wali kelas yang tersedia,
+        // supaya satu wali kelas hanya pegang satu kelas (tidak ada duplikat).
+        $totalClasses = min(8, $shuffledTeacherIds->count());
+
+        if ($shuffledTeacherIds->count() < 8) {
+            $this->command->warn(
+                "Hanya ada {$shuffledTeacherIds->count()} guru dengan posisi \"Wali Kelas\", " .
+                "jumlah kelas yang dibuat disesuaikan menjadi {$totalClasses} (bukan 8)."
             );
+        }
+
+        for ($i = 0; $i < $totalClasses; $i++) {
+            ClassModel::factory()->create([
+                'teacher_id' => $shuffledTeacherIds[$i],
+            ]);
         }
     }
 }

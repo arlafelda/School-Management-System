@@ -26,6 +26,12 @@
 
     <div class="w-full max-w-md">
 
+        <a href="{{ url('/') }}"
+           class="inline-flex items-center gap-1.5 text-sm font-medium text-[#62788A] hover:text-[#10243A] transition-colors mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            Kembali ke Beranda
+        </a>
+
         <div class="text-center mb-10">
             <img src="{{ asset('images/logo-gamelab.png') }}" alt="GameLab Indonesia" class="h-14 w-14 mx-auto object-contain mb-4">
 

@@ -28,7 +28,18 @@
                 <p class="text-sm text-gray-400 mt-0.5">Kelola data kegiatan ekstrakurikuler sekolah.</p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+
+                <!-- SEARCH -->
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Cari nama ekskul atau pembina…"
+                        class="pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 w-60 transition"
+                    >
+                </div>
 
                 <a href="{{ route('extracurricular.archived') }}"
                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition">
@@ -48,6 +59,12 @@
 
             </div>
 
+        </div>
+
+        <!-- INFO HASIL PENCARIAN -->
+        <div id="searchInfo" class="hidden mb-3 text-sm text-gray-500">
+            Menampilkan <span id="searchCount" class="font-medium text-gray-700"></span> hasil
+            untuk "<span id="searchKeyword" class="text-indigo-600"></span>"
         </div>
 
         <!-- TABLE CARD -->
@@ -94,7 +111,7 @@
                             <!-- PEMBINA -->
                             <td class="px-6 py-4 cursor-pointer ekskul-show text-gray-600"
                                 data-url="{{ $d->slug ? route('extracurricular.show', $d->slug) : '#' }}">
-                                {{ $d->teacher->name ?? '<span class="text-gray-400">—</span>' }}
+                                {{ $d->teacher->name ?? '—' }}
                             </td>
 
                             <!-- JUMLAH SISWA -->
@@ -111,7 +128,6 @@
                                 <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
 
                                     @if($d->slug)
-                                        <!-- Edit Button - Persis seperti Admin -->
                                         <a href="{{ route('extracurricular.edit', $d->slug) }}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -121,7 +137,6 @@
                                             Edit
                                         </a>
 
-                                        <!-- Arsipkan Button - Persis seperti Admin -->
                                         <button
                                             type="button"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition btn-archive"
@@ -140,8 +155,8 @@
                         </tr>
 
                         @empty
-                        <!-- Empty state tetap sama -->
-                        <tr>
+
+                        <tr id="emptyRow">
                             <td colspan="4" class="text-center py-16">
                                 <div class="flex flex-col items-center gap-3 text-gray-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -150,12 +165,24 @@
                                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                                     </svg>
                                     <p class="text-sm font-medium text-gray-500">Belum ada ekstrakurikuler terdaftar</p>
-                                    <a href="{{ route('extracurricular.create') }}" 
+                                    <a href="{{ route('extracurricular.create') }}"
                                        class="text-xs text-indigo-600 hover:underline">+ Tambah ekstrakurikuler pertama</a>
                                 </div>
                             </td>
                         </tr>
+
                         @endforelse
+
+                        <!-- BARIS KOSONG HASIL PENCARIAN (ditampilkan via JS) -->
+                        <tr id="noResultRow" style="display:none;">
+                            <td colspan="4" class="text-center py-16">
+                                <div class="flex flex-col items-center gap-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <p class="text-sm font-medium text-gray-500">Tidak ada ekskul yang cocok dengan pencarian</p>
+                                    <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));" class="text-xs text-indigo-600 hover:underline">Hapus pencarian</button>
+                                </div>
+                            </td>
+                        </tr>
 
                     </tbody>
 
@@ -172,10 +199,15 @@
 @endsection
 
 @push('scripts')
+@verbatim
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Klik Row → Detail
+    /*
+    =====================
+    DETAIL
+    =====================
+    */
     document.addEventListener('click', function (e) {
         let row = e.target.closest('.ekskul-show');
         if (row) {
@@ -186,7 +218,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Tombol Arsipkan
+    /*
+    =====================
+    ARCHIVE
+    =====================
+    */
     document.addEventListener('click', function (e) {
         let btn = e.target.closest('.btn-archive');
         if (!btn) return;
@@ -200,13 +236,65 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Yakin ingin memindahkan data ke arsip?',
                 {
                     onSuccess: function () {
-                        document.getElementById('row-' + id)?.remove();
+                        let removedRow = document.getElementById('row-' + id);
+                        if (removedRow) removedRow.remove();
+
+                        let remaining = document.querySelectorAll('tbody tr[id^="row-"]');
+                        if (remaining.length === 0) {
+                            let input = document.getElementById('searchInput');
+                            if (input) input.value = '';
+                            document.getElementById('searchInfo').classList.add('hidden');
+                            document.getElementById('noResultRow').style.display = 'none';
+                            let emptyRow = document.getElementById('emptyRow');
+                            if (emptyRow) emptyRow.style.display = '';
+                        }
                     }
                 }
             );
         }
     });
 
+    /*
+    =====================
+    SEARCH
+    =====================
+    */
+    (function () {
+        var input     = document.getElementById('searchInput');
+        var info      = document.getElementById('searchInfo');
+        var countEl   = document.getElementById('searchCount');
+        var keywordEl = document.getElementById('searchKeyword');
+        var tbody     = document.querySelector('tbody');
+        var allRows   = Array.from(tbody.querySelectorAll('tr[id^="row-"]'));
+        var noResult  = document.getElementById('noResultRow');
+
+        if (!input) return;
+
+        input.addEventListener('input', function () {
+            var q = this.value.trim().toLowerCase();
+            var visible = 0;
+
+            allRows.forEach(function (row) {
+                var match = q === '' || row.innerText.toLowerCase().includes(q);
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            if (noResult) {
+                noResult.style.display = (q !== '' && visible === 0) ? '' : 'none';
+            }
+
+            if (q === '') {
+                info.classList.add('hidden');
+            } else {
+                info.classList.remove('hidden');
+                countEl.textContent   = visible;
+                keywordEl.textContent = q;
+            }
+        });
+    })();
+
 });
 </script>
+@endverbatim
 @endpush

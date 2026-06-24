@@ -105,9 +105,16 @@
                         </td>
                         <td class="px-6 py-5 text-center font-medium">{{ $class->level }}</td>
                         <td class="px-6 py-5 text-center">{{ $class->major ?? '-' }}</td>
+
+                        {{-- PERBAIKAN: Hapus raw HTML --}}
                         <td class="px-6 py-5 text-gray-600">
-                            {{ $class->teacher->name ?? '<span class="text-gray-400 italic">Belum ada wali kelas</span>' }}
+                            @if($class->teacher)
+                                {{ $class->teacher->name }}
+                            @else
+                                <span class="text-gray-400 italic">Belum ada wali kelas</span>
+                            @endif
                         </td>
+
                         <td class="px-6 py-5 text-center font-semibold text-gray-700">
                             {{ $class->students->count() }}
                         </td>

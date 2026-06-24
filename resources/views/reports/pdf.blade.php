@@ -114,7 +114,7 @@
 
         {{-- HEADER --}}
         <div class="border-b-4 border-blue-700 px-4 sm:px-8 py-5 sm:py-6 text-center bg-gradient-to-r from-blue-700 to-indigo-700 text-white">
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-wide">POLIWANGI</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-wide">Gamelab</h1>
             <p class="text-xs sm:text-sm mt-2">Jl. Raya Jember No.KM13, Banyuwangi, Jawa Timur</p>
             <p class="text-xs sm:text-sm">Telp: 08*********</p>
         </div>

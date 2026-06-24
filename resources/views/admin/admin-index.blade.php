@@ -26,7 +26,18 @@
                 <p class="text-sm text-gray-400 mt-0.5">Kelola akun admin yang terdaftar di sistem.</p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+
+                {{-- SEARCH --}}
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Cari nama atau email…"
+                        class="pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56 transition"
+                    >
+                </div>
 
                 {{-- ARSIP --}}
                 <a href="{{ route('admin.archived') }}"
@@ -44,6 +55,12 @@
 
             </div>
 
+        </div>
+
+        {{-- INFO HASIL PENCARIAN --}}
+        <div id="searchInfo" class="hidden mb-3 text-sm text-gray-500">
+            Menampilkan <span id="searchCount" class="font-medium text-gray-700"></span> hasil
+            untuk "<span id="searchKeyword" class="text-indigo-600"></span>"
         </div>
 
         {{-- TABLE CARD --}}
@@ -137,7 +154,7 @@
 
                         @empty
 
-                        <tr>
+                        <tr id="emptyRow">
                             <td colspan="5" class="text-center py-16">
                                 <div class="flex flex-col items-center gap-3 text-gray-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -148,6 +165,17 @@
                         </tr>
 
                         @endforelse
+
+                        {{-- BARIS KOSONG HASIL PENCARIAN (ditampilkan via JS) --}}
+                        <tr id="noResultRow" style="display:none;">
+                            <td colspan="5" class="text-center py-16">
+                                <div class="flex flex-col items-center gap-3 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <p class="text-sm font-medium text-gray-500">Tidak ada admin yang cocok dengan pencarian</p>
+                                    <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));" class="text-xs text-indigo-600 hover:underline">Hapus pencarian</button>
+                                </div>
+                            </td>
+                        </tr>
 
                     </tbody>
 
@@ -165,6 +193,7 @@
 
 
 @push('scripts')
+@verbatim
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -202,13 +231,66 @@ document.addEventListener('DOMContentLoaded', function () {
             'Yakin ingin memindahkan data ke arsip?',
             {
                 onSuccess: function () {
-                    document.getElementById(rowId)?.remove();
+                    let removedRow = document.getElementById(rowId);
+                    if (removedRow) removedRow.remove();
+
+                    let remaining = document.querySelectorAll('tbody tr[id^="row-"]');
+                    if (remaining.length === 0) {
+                        let input = document.getElementById('searchInput');
+                        if (input) input.value = '';
+                        document.getElementById('searchInfo').classList.add('hidden');
+                        document.getElementById('noResultRow').style.display = 'none';
+                        let emptyRow = document.getElementById('emptyRow');
+                        if (emptyRow) emptyRow.style.display = '';
+                    }
                 }
             }
         );
 
     });
 
+
+    /*
+    =====================
+    SEARCH
+    =====================
+    */
+    (function () {
+        const input     = document.getElementById('searchInput');
+        const info      = document.getElementById('searchInfo');
+        const countEl   = document.getElementById('searchCount');
+        const keywordEl = document.getElementById('searchKeyword');
+        const tbody     = document.querySelector('tbody');
+        const allRows   = Array.from(tbody.querySelectorAll('tr[id^="row-"]'));
+        const noResult  = document.getElementById('noResultRow');
+
+        if (!input) return;
+
+        input.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            let visible = 0;
+
+            allRows.forEach(function (row) {
+                const match = q === '' || row.innerText.toLowerCase().includes(q);
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            if (noResult) {
+                noResult.style.display = (q !== '' && visible === 0) ? '' : 'none';
+            }
+
+            if (q === '') {
+                info.classList.add('hidden');
+            } else {
+                info.classList.remove('hidden');
+                countEl.textContent   = visible;
+                keywordEl.textContent = q;
+            }
+        });
+    })();
+
 });
 </script>
+@endverbatim
 @endpush

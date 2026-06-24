@@ -35,7 +35,7 @@ class Extracurricular extends Model
         return $this->belongsToMany(
             Student::class,
             'tbl_extracurricular_students',
-            'extracurricular_id', // ✅ FIX INI
+            'extracurricular_id', 
             'student_id'
         );
     }
