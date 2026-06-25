@@ -15,8 +15,7 @@ class ClassesController extends Controller
     {
         $user = Auth::user();
 
-        $query = ClassModel::with(['students', 'teacher'])
-            ->where('archived', 0);
+        $query = ClassModel::with(['students', 'teacher']);
 
         // FILTER SEARCH
         if ($request->search) {
@@ -35,9 +34,7 @@ class ClassesController extends Controller
 
         if (in_array($user->role, ['super_admin', 'admin'])) {
 
-            $classes = $query
-                ->latest()
-                ->get();
+            $classes = $query->latest()->get();
 
         } elseif ($user->role === 'teacher') {
 
@@ -57,8 +54,8 @@ class ClassesController extends Controller
 
     public function archived()
     {
-        $classes = ClassModel::with(['students', 'teacher'])
-            ->where('archived', 1)
+        $classes = ClassModel::onlyTrashed()
+            ->with(['students', 'teacher'])
             ->latest()
             ->get();
 
@@ -67,9 +64,7 @@ class ClassesController extends Controller
 
     public function create()
     {
-        $teachers = Teacher::where('position', 'wali_kelas')
-            ->where('archived', 0)
-            ->get();
+        $teachers = Teacher::where('position', 'wali_kelas')->get();
 
         return view('class.class-add', compact('teachers'));
     }
@@ -77,12 +72,12 @@ class ClassesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required',
-            'level' => 'required',
-            'major' => 'nullable',
+            'name'          => 'required',
+            'level'         => 'required',
+            'major'         => 'nullable',
             'academic_year' => 'required',
-            'semester' => 'required',
-            'teacher_id' => 'nullable|exists:tbl_teachers,id'
+            'semester'      => 'required',
+            'teacher_id'    => 'nullable|exists:tbl_teachers,id'
         ]);
 
         $baseSlug = Str::slug($request->name);
@@ -94,15 +89,14 @@ class ClassesController extends Controller
         }
 
         $validated['slug'] = $slug;
-        $validated['archived'] = 0;
 
         $class = ClassModel::create($validated);
 
         return $request->ajax()
             ? response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Kelas berhasil ditambahkan',
-                'data' => $class
+                'data'    => $class
             ])
             : redirect()
                 ->route('class.index')
@@ -111,8 +105,6 @@ class ClassesController extends Controller
 
     public function show(ClassModel $class)
     {
-        abort_if($class->archived == 1, 404);
-
         $class->load(['teacher', 'students']);
 
         return view('class.class-show', compact('class'));
@@ -120,26 +112,20 @@ class ClassesController extends Controller
 
     public function edit(ClassModel $class)
     {
-        abort_if($class->archived == 1, 404);
-
-        $teachers = Teacher::where('position', 'wali_kelas')
-            ->where('archived', 0)
-            ->get();
+        $teachers = Teacher::where('position', 'wali_kelas')->get();
 
         return view('class.class-edit', compact('class', 'teachers'));
     }
 
     public function update(Request $request, ClassModel $class)
     {
-        abort_if($class->archived == 1, 404);
-
         $validated = $request->validate([
-            'name' => 'required',
-            'level' => 'required',
-            'major' => 'nullable',
+            'name'          => 'required',
+            'level'         => 'required',
+            'major'         => 'nullable',
             'academic_year' => 'required',
-            'semester' => 'required',
-            'teacher_id' => 'nullable|exists:tbl_teachers,id'
+            'semester'      => 'required',
+            'teacher_id'    => 'nullable|exists:tbl_teachers,id'
         ]);
 
         $baseSlug = Str::slug($request->name);
@@ -163,9 +149,10 @@ class ClassesController extends Controller
             ->with('success', 'Kelas berhasil diupdate');
     }
 
+    // SOFT DELETE (arsip)
     public function destroy(ClassModel $class): JsonResponse
     {
-        $class->update(['archived' => 1]);
+        $class->delete();
 
         return response()->json([
             'success' => true,
@@ -173,13 +160,14 @@ class ClassesController extends Controller
         ]);
     }
 
+    // RESTORE
     public function restore(string $slug): JsonResponse
     {
-        $class = ClassModel::where('slug', $slug)
-            ->where('archived', 1)
+        $class = ClassModel::onlyTrashed()
+            ->where('slug', $slug)
             ->firstOrFail();
 
-        $class->update(['archived' => 0]);
+        $class->restore();
 
         return response()->json([
             'success' => true,
@@ -187,23 +175,21 @@ class ClassesController extends Controller
         ]);
     }
 
+    // FORCE DELETE (PERMANENT)
     public function delete(string $slug): JsonResponse
     {
         try {
-
-            $class = ClassModel::where('slug', $slug)
-                ->where('archived', 1)
+            $class = ClassModel::onlyTrashed()
+                ->where('slug', $slug)
                 ->firstOrFail();
 
-            $class->delete();
+            $class->forceDelete();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Kelas berhasil dihapus permanen'
             ]);
-
         } catch (\Throwable $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()

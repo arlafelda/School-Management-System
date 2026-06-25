@@ -69,9 +69,7 @@
 
         <!-- TABLE CARD -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-
             <div class="overflow-x-auto">
-
                 <table class="w-full text-sm min-w-[700px]">
 
                     <thead>
@@ -86,9 +84,7 @@
                     <tbody class="divide-y divide-gray-50">
 
                         @forelse($data as $d)
-
-                        <tr id="row-{{ $d->id }}"
-                            class="hover:bg-indigo-50/30 transition group">
+                        <tr id="row-{{ $d->id }}" class="hover:bg-indigo-50/30 transition group">
 
                             <!-- NAMA EKSKUL -->
                             <td class="px-6 py-4 cursor-pointer ekskul-show"
@@ -125,8 +121,13 @@
 
                             <!-- AKSI -->
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
-
+                                {{-- ⛔ onclick="event.stopPropagation()" DIHAPUS.
+                                     Sebelumnya ini menghentikan event sebelum sampai ke
+                                     document-level listener (.btn-archive), sehingga
+                                     tombol Arsipkan tidak pernah ter-trigger.
+                                     Pencegahan redirect klik-baris kini ditangani di JS
+                                     dengan mengecualikan area aksi dari listener .ekskul-show. --}}
+                                <div class="flex items-center justify-end gap-2 action-cell">
                                     @if($d->slug)
                                         <a href="{{ route('extracurricular.edit', $d->slug) }}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
@@ -148,14 +149,12 @@
                                             Arsipkan
                                         </button>
                                     @endif
-
                                 </div>
                             </td>
 
                         </tr>
 
                         @empty
-
                         <tr id="emptyRow">
                             <td colspan="4" class="text-center py-16">
                                 <div class="flex flex-col items-center gap-3 text-gray-400">
@@ -170,45 +169,46 @@
                                 </div>
                             </td>
                         </tr>
-
                         @endforelse
 
-                        <!-- BARIS KOSONG HASIL PENCARIAN (ditampilkan via JS) -->
+                        <!-- BARIS KOSONG HASIL PENCARIAN -->
                         <tr id="noResultRow" style="display:none;">
                             <td colspan="4" class="text-center py-16">
                                 <div class="flex flex-col items-center gap-3 text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                                    </svg>
                                     <p class="text-sm font-medium text-gray-500">Tidak ada ekskul yang cocok dengan pencarian</p>
-                                    <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));" class="text-xs text-indigo-600 hover:underline">Hapus pencarian</button>
+                                    <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));"
+                                            class="text-xs text-indigo-600 hover:underline">Hapus pencarian</button>
                                 </div>
                             </td>
                         </tr>
 
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
 
     </div>
-
 </div>
 
 @endsection
 
 @push('scripts')
-@verbatim
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     /*
     =====================
-    DETAIL
+    DETAIL — klik baris ke halaman show
+    Dikecualikan: klik yang berasal dari area aksi (.action-cell),
+    supaya tombol Edit / Arsipkan tidak ikut memicu redirect.
     =====================
     */
     document.addEventListener('click', function (e) {
+        if (e.target.closest('.action-cell')) return;
+
         let row = e.target.closest('.ekskul-show');
         if (row) {
             const url = row.dataset.url;
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     =====================
-    ARCHIVE
+    ARCHIVE — soft delete via deleteData() dari layout
     =====================
     */
     document.addEventListener('click', function (e) {
@@ -230,28 +230,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const url = btn.dataset.url;
         const id  = btn.dataset.id;
 
-        if (typeof deleteData === 'function') {
-            deleteData(
-                url,
-                'Yakin ingin memindahkan data ke arsip?',
-                {
-                    onSuccess: function () {
-                        let removedRow = document.getElementById('row-' + id);
-                        if (removedRow) removedRow.remove();
+        deleteData(
+            url,
+            'Yakin ingin memindahkan data ke arsip?',
+            {
+                onSuccess: function () {
+                    // Hapus baris dari tabel
+                    let removedRow = document.getElementById('row-' + id);
+                    if (removedRow) removedRow.remove();
 
-                        let remaining = document.querySelectorAll('tbody tr[id^="row-"]');
-                        if (remaining.length === 0) {
-                            let input = document.getElementById('searchInput');
-                            if (input) input.value = '';
-                            document.getElementById('searchInfo').classList.add('hidden');
-                            document.getElementById('noResultRow').style.display = 'none';
-                            let emptyRow = document.getElementById('emptyRow');
-                            if (emptyRow) emptyRow.style.display = '';
-                        }
+                    // Tampilkan empty state jika tidak ada data tersisa
+                    let remaining = document.querySelectorAll('tbody tr[id^="row-"]');
+                    if (remaining.length === 0) {
+                        let input = document.getElementById('searchInput');
+                        if (input) input.value = '';
+                        document.getElementById('searchInfo').classList.add('hidden');
+                        document.getElementById('noResultRow').style.display = 'none';
+                        let emptyRow = document.getElementById('emptyRow');
+                        if (emptyRow) emptyRow.style.display = '';
                     }
                 }
-            );
-        }
+            }
+        );
     });
 
     /*
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!input) return;
 
         input.addEventListener('input', function () {
-            var q = this.value.trim().toLowerCase();
+            var q       = this.value.trim().toLowerCase();
             var visible = 0;
 
             allRows.forEach(function (row) {
@@ -296,5 +296,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-@endverbatim
 @endpush

@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\ClassModel;
 
 class Student extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
     protected $table = 'tbl_students';
 
     protected $fillable = [
@@ -19,7 +21,6 @@ class Student extends Model
         'nisn',
         'nis',
         'name',
-        'archived',
         'gender',
         'birth_place',
         'birth_date',
@@ -35,6 +36,8 @@ class Student extends Model
         'parent_address',
     ];
 
+    protected $dates = ['deleted_at'];
+
     public function getRouteKeyName()
     {
         return 'slug';
@@ -45,10 +48,8 @@ class Student extends Model
         parent::boot();
 
         static::creating(function ($student) {
-
             $student->slug =
-                Str::slug($student->name). '-' .rand(1000, 9999);
-
+                Str::slug($student->name) . '-' . rand(1000, 9999);
         });
     }
 

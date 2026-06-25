@@ -31,15 +31,14 @@ class ExtracurricularFactory extends Factory
         ]);
 
         return [
-            'name' => $name,
-            'slug' => Str::slug($name),
-            'archived' => 0,
+            'name'       => $name,
+            'slug'       => Str::slug($name),
             'teacher_id' => Teacher::factory(),
         ];
     }
 
     /**
-     * Indicate the extracurricular has no supervising teacher yet.
+     * Ekstrakurikuler tanpa pembina.
      */
     public function withoutTeacher(): static
     {
@@ -49,12 +48,12 @@ class ExtracurricularFactory extends Factory
     }
 
     /**
-     * Indicate the extracurricular is archived.
+     * Simulate a soft-deleted (trashed) extracurricular.
      */
-    public function archived(): static
+    public function trashed(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'archived' => 1,
-        ]);
+        return $this->afterCreating(function ($extracurricular) {
+            $extracurricular->delete();
+        });
     }
 }

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_students', function (Blueprint $table) {
@@ -63,23 +60,15 @@ return new class extends Migration
 
             // Data orang tua
             $table->string('father_name')->nullable();
-
             $table->string('mother_name')->nullable();
-
             $table->string('parent_phone')->nullable();
-
             $table->text('parent_address')->nullable();
 
-            // Status arsip
-            $table->boolean('archived')->default(false);
-
             $table->timestamps();
+            $table->softDeletes(); // ✅ ganti archived - ada fitur arsip & restore
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_students');

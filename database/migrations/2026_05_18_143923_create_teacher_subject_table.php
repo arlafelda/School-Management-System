@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('teacher_subject', function (Blueprint $table) {
@@ -32,13 +29,11 @@ return new class extends Migration
                 'teacher_id',
                 'subject_id'
             ]);
-
+            // ❌ tidak pakai softDeletes - tabel pivot
+            // cukup hapus relasi jika guru tidak mengajar mapel tersebut
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('teacher_subject');

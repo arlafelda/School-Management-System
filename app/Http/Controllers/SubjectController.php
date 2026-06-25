@@ -10,18 +10,14 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $subjects = Subject::where('archived', 0)
-            ->latest()
-            ->get();
+        $subjects = Subject::latest()->get();
 
         return view('subject.subject-index', compact('subjects'));
     }
 
     public function archived()
     {
-        $subjects = Subject::where('archived', 1)
-            ->latest()
-            ->get();
+        $subjects = Subject::onlyTrashed()->latest()->get();
 
         return view('subject.subject-archived', compact('subjects'));
     }
@@ -34,8 +30,8 @@ class SubjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'code' => 'required|unique:tbl_subjects,code',
+            'name'        => 'required',
+            'code'        => 'required|unique:tbl_subjects,code',
             'description' => 'nullable'
         ]);
 
@@ -46,19 +42,18 @@ class SubjectController extends Controller
         }
 
         $subject = Subject::create([
-            'name' => $request->name,
-            'code' => $request->code,
-            'kkm' => 75,
-            'slug' => $slug,
+            'name'        => $request->name,
+            'code'        => $request->code,
+            'kkm'         => 75,
+            'slug'        => $slug,
             'description' => $request->description,
-            'archived' => 0
         ]);
 
         return $request->ajax()
             ? response()->json([
                 'success' => true,
                 'message' => 'Subject berhasil ditambahkan',
-                'data' => $subject
+                'data'    => $subject
             ])
             : redirect()->route('subjects.index')
                 ->with('success', 'Subject berhasil ditambahkan');
@@ -76,8 +71,8 @@ class SubjectController extends Controller
         $subject = Subject::where('slug', $slug)->firstOrFail();
 
         $request->validate([
-            'name' => 'required',
-            'code' => 'required|unique:tbl_subjects,code,' . $subject->id,
+            'name'        => 'required',
+            'code'        => 'required|unique:tbl_subjects,code,' . $subject->id,
             'description' => 'nullable'
         ]);
 
@@ -92,9 +87,9 @@ class SubjectController extends Controller
         }
 
         $subject->update([
-            'name' => $request->name,
-            'code' => $request->code,
-            'slug' => $newSlug,
+            'name'        => $request->name,
+            'code'        => $request->code,
+            'slug'        => $newSlug,
             'description' => $request->description
         ]);
 
@@ -102,12 +97,13 @@ class SubjectController extends Controller
             ? response()->json([
                 'success' => true,
                 'message' => 'Subject berhasil diupdate',
-                'data' => $subject
+                'data'    => $subject
             ])
             : redirect()->route('subjects.index')
                 ->with('success', 'Subject berhasil diupdate');
     }
 
+    // SOFT DELETE (arsip)
     public function destroy(Request $request, string $slug)
     {
         $subject = Subject::where('slug', $slug)->firstOrFail();
@@ -121,9 +117,7 @@ class SubjectController extends Controller
                 : back()->with('error', 'Subject masih digunakan guru');
         }
 
-        $subject->update([
-            'archived' => 1
-        ]);
+        $subject->delete();
 
         return $request->ajax()
             ? response()->json([
@@ -134,13 +128,14 @@ class SubjectController extends Controller
                 ->with('success', 'Subject berhasil diarsipkan');
     }
 
+    // RESTORE
     public function restore(Request $request, string $slug)
     {
-        $subject = Subject::where('slug', $slug)->firstOrFail();
+        $subject = Subject::onlyTrashed()
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-        $subject->update([
-            'archived' => 0
-        ]);
+        $subject->restore();
 
         return $request->ajax()
             ? response()->json([
@@ -151,9 +146,12 @@ class SubjectController extends Controller
                 ->with('success', 'Subject berhasil direstore');
     }
 
+    // FORCE DELETE (PERMANENT)
     public function delete(Request $request, string $slug)
     {
-        $subject = Subject::where('slug', $slug)->firstOrFail();
+        $subject = Subject::onlyTrashed()
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         if ($subject->teachers()->exists()) {
             return $request->ajax()
@@ -164,7 +162,7 @@ class SubjectController extends Controller
                 : back()->with('error', 'Tidak bisa dihapus, masih digunakan oleh guru');
         }
 
-        $subject->delete();
+        $subject->forceDelete();
 
         return $request->ajax()
             ? response()->json([

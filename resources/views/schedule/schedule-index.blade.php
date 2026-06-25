@@ -143,7 +143,12 @@
 
                             @if(in_array($user->role, ['super_admin', 'admin']))
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
+                                {{-- ⛔ onclick="event.stopPropagation()" DIHAPUS — sebelumnya
+                                     ini menghentikan event sebelum sampai ke document-level
+                                     listener .btn-archive, sehingga tombol Arsipkan tidak
+                                     pernah ter-trigger. Area ini diberi class "action-cell"
+                                     agar bisa dikecualikan dari listener .schedule-show. --}}
+                                <div class="flex items-center justify-end gap-2 action-cell">
 
                                     <a href="{{ route('schedule.edit', $schedule->id) }}"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
@@ -158,7 +163,7 @@
                                         type="button"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition btn-archive"
                                         data-id="{{ $schedule->id }}"
-                                        data-url="{{ route('schedule.delete', $schedule->id) }}">
+                                        data-url="{{ route('schedule.destroy', $schedule->id) }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
                                         </svg>
@@ -201,7 +206,11 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     // Klik Row → Detail
+    // Dikecualikan: klik yang berasal dari area aksi (.action-cell),
+    // supaya tombol Edit / Arsipkan tidak ikut memicu redirect.
     document.addEventListener('click', function (e) {
+        if (e.target.closest('.action-cell')) return;
+
         let row = e.target.closest('.schedule-show');
         if (row) {
             const url = row.closest('tr').dataset.url;

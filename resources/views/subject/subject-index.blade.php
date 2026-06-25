@@ -23,19 +23,21 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-800">Data Subject</h1>
-                <p class="text-sm text-gray-400 mt-0.5">Kelola data mata pelajaran</p>
+                <p class="text-sm text-gray-400 mt-0.5">Kelola data mata pelajaran sekolah.</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
 
                 <!-- SEARCH -->
                 <div class="relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                    </svg>
                     <input
                         type="text"
                         id="searchInput"
                         placeholder="Cari nama atau kode mapel…"
-                        class="pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56 transition"
+                        class="pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 w-60 transition"
                     >
                 </div>
 
@@ -44,7 +46,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
                     </svg>
-                    Archived
+                    Arsip
                 </a>
 
                 <a href="{{ route('subjects.create') }}"
@@ -68,72 +70,88 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm min-w-[700px]">
+
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/70">
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">No</th>
                             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Nama Mata Pelajaran</th>
                             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Kode</th>
-                            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">KKM</th>
+                            <th class="px-6 py-3.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">KKM</th>
                             <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
 
                     <tbody class="divide-y divide-gray-50">
 
-                        @forelse($subjects as $key => $subject)
-                        <tr id="row-{{ $subject->slug }}"
-                            class="hover:bg-indigo-50/30 transition group">
+                        @forelse($subjects as $subject)
+                        <tr id="row-{{ $subject->id }}" class="hover:bg-indigo-50/30 transition group">
 
-                            <td class="px-6 py-4 text-gray-500">
-                                {{ $key + 1 }}
-                            </td>
-
-                            <td class="px-6 py-4">
-                                <div class="font-medium text-gray-800">
-                                    {{ $subject->name }}
+                            <!-- NAMA MAPEL -->
+                            <td class="px-6 py-4 cursor-pointer subject-show"
+                                data-url="{{ $subject->slug ? route('subjects.edit', $subject->slug) : '#' }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0 text-xl">
+                                        📚
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800 group-hover:text-indigo-600 transition">
+                                            {{ $subject->name }}
+                                        </p>
+                                        @if(!$subject->slug)
+                                            <p class="text-amber-500 text-xs mt-0.5">Slug kosong</p>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
 
-                            <td class="px-6 py-4 text-gray-600">
+                            <!-- KODE -->
+                            <td class="px-6 py-4 cursor-pointer subject-show text-gray-600"
+                                data-url="{{ $subject->slug ? route('subjects.edit', $subject->slug) : '#' }}">
                                 {{ $subject->code ?? '—' }}
                             </td>
 
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            <!-- KKM -->
+                            <td class="px-6 py-4 cursor-pointer subject-show text-center"
+                                data-url="{{ $subject->slug ? route('subjects.edit', $subject->slug) : '#' }}">
+                                <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-xs font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
                                     {{ $subject->kkm }}
                                 </span>
                             </td>
 
+                            <!-- AKSI -->
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2" onclick="event.stopPropagation()">
+                                {{-- Pencegahan redirect klik-baris ditangani di JS
+                                     dengan mengecualikan area aksi (.action-cell) --}}
+                                <div class="flex items-center justify-end gap-2 action-cell">
+                                    @if($subject->slug)
+                                        <a href="{{ route('subjects.edit', $subject->slug) }}"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                            Edit
+                                        </a>
 
-                                    <a href="{{ route('subjects.edit', $subject->slug) }}"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                        </svg>
-                                        Edit
-                                    </a>
-
-                                    <button type="button"
+                                        <button
+                                            type="button"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition btn-archive"
-                                            data-slug="{{ $subject->slug }}"
+                                            data-id="{{ $subject->id }}"
                                             data-url="{{ route('subjects.destroy', $subject->slug) }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
-                                        </svg>
-                                        Arsipkan
-                                    </button>
-
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
+                                            </svg>
+                                            Arsipkan
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
 
                         </tr>
-                        @empty
 
+                        @empty
                         <tr id="emptyRow">
-                            <td colspan="5" class="text-center py-16">
+                            <td colspan="4" class="text-center py-16">
                                 <div class="flex flex-col items-center gap-3 text-gray-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -146,16 +164,18 @@
                                 </div>
                             </td>
                         </tr>
-
                         @endforelse
 
-                        <!-- BARIS KOSONG HASIL PENCARIAN (ditampilkan via JS) -->
+                        <!-- BARIS KOSONG HASIL PENCARIAN -->
                         <tr id="noResultRow" style="display:none;">
-                            <td colspan="5" class="text-center py-16">
+                            <td colspan="4" class="text-center py-16">
                                 <div class="flex flex-col items-center gap-3 text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                                    </svg>
                                     <p class="text-sm font-medium text-gray-500">Tidak ada mata pelajaran yang cocok dengan pencarian</p>
-                                    <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));" class="text-xs text-indigo-600 hover:underline">Hapus pencarian</button>
+                                    <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));"
+                                            class="text-xs text-indigo-600 hover:underline">Hapus pencarian</button>
                                 </div>
                             </td>
                         </tr>
@@ -171,31 +191,51 @@
 @endsection
 
 @push('scripts')
-@verbatim
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     /*
     =====================
-    ARCHIVE
+    DETAIL — klik baris navigasi ke halaman edit
+    Dikecualikan: klik yang berasal dari area aksi (.action-cell),
+    supaya tombol Edit / Arsipkan tidak ikut memicu redirect.
     =====================
     */
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.action-cell')) return;
+
+        let cell = e.target.closest('.subject-show');
+        if (cell) {
+            const url = cell.dataset.url;
+            if (url && url !== '#') {
+                window.location.href = url;
+            }
+        }
+    });
+
+    /*
+    =====================
+    ARCHIVE — soft delete via deleteData() dari layout
+    =====================
+    */
+    document.addEventListener('click', function (e) {
         let btn = e.target.closest('.btn-archive');
         if (!btn) return;
 
-        const url  = btn.dataset.url;
-        const slug = btn.dataset.slug;
+        const url = btn.dataset.url;
+        const id  = btn.dataset.id;
 
         if (typeof deleteData === 'function') {
             deleteData(
                 url,
-                'Yakin ingin mengarsipkan subject ini?',
+                'Yakin ingin memindahkan data ke arsip?',
                 {
                     onSuccess: function () {
-                        let removedRow = document.getElementById('row-' + slug);
+                        // Hapus baris dari tabel
+                        let removedRow = document.getElementById('row-' + id);
                         if (removedRow) removedRow.remove();
 
+                        // Tampilkan empty state jika tidak ada data tersisa
                         let remaining = document.querySelectorAll('tbody tr[id^="row-"]');
                         if (remaining.length === 0) {
                             let input = document.getElementById('searchInput');
@@ -228,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!input) return;
 
         input.addEventListener('input', function () {
-            var q = this.value.trim().toLowerCase();
+            var q       = this.value.trim().toLowerCase();
             var visible = 0;
 
             allRows.forEach(function (row) {
@@ -253,5 +293,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-@endverbatim
 @endpush

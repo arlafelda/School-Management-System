@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_subjects', function (Blueprint $table) {
@@ -30,21 +27,14 @@ return new class extends Migration
             // Slug URL
             $table->string('slug')->unique();
 
-            // Status arsip
-            $table->boolean('archived')->default(false);
-
             $table->timestamps();
+            $table->softDeletes(); // ✅ ganti archived - ada fitur arsip & restore
 
             // Index pencarian
             $table->index('name');
-            $table->index('archived');
-
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_subjects');

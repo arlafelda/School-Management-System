@@ -13,9 +13,7 @@ class StudentController extends Controller
 {
     public function index()
     {
-        $students = Student::with('user', 'class')
-            ->where('archived', 0)
-            ->get();
+        $students = Student::with('user', 'class')->get();
 
         return view('student.student-index', compact('students'));
     }
@@ -29,42 +27,40 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:tbl_users,email',
+            'name'     => 'required',
+            'email'    => 'required|email|unique:tbl_users,email',
             'password' => 'required|min:6',
-            'nisn' => 'required|unique:tbl_students,nisn',
-            'nis' => 'required|unique:tbl_students,nis',
+            'nisn'     => 'required|unique:tbl_students,nisn',
+            'nis'      => 'required|unique:tbl_students,nis',
             'class_id' => 'required|exists:tbl_classes,id',
         ]);
 
         // USER
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'student',
-            'archived' => 0
+            'role'     => 'student',
         ]);
 
         // STUDENT
         Student::create([
-            'user_id' => $user->id,
-            'nisn' => $request->nisn,
-            'nis' => $request->nis,
-            'name' => $request->name,
-            'gender' => $request->gender,
-            'class_id' => $request->class_id,
-            'major' => $request->major,
-            'status' => $request->status ?? 'aktif',
-            'birth_place' => $request->birth_place,
-            'birth_date' => $request->birth_date,
-            'address' => $request->address,
-            'phone' => $request->phone,
-            'father_name' => $request->father_name,
-            'mother_name' => $request->mother_name,
-            'parent_phone' => $request->parent_phone,
+            'user_id'        => $user->id,
+            'nisn'           => $request->nisn,
+            'nis'            => $request->nis,
+            'name'           => $request->name,
+            'gender'         => $request->gender,
+            'class_id'       => $request->class_id,
+            'major'          => $request->major,
+            'status'         => $request->status ?? 'aktif',
+            'birth_place'    => $request->birth_place,
+            'birth_date'     => $request->birth_date,
+            'address'        => $request->address,
+            'phone'          => $request->phone,
+            'father_name'    => $request->father_name,
+            'mother_name'    => $request->mother_name,
+            'parent_phone'   => $request->parent_phone,
             'parent_address' => $request->parent_address,
-            'archived' => 0
         ]);
 
         if ($request->expectsJson()) {
@@ -102,15 +98,15 @@ class StudentController extends Controller
             ->firstOrFail();
 
         $validated = $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:tbl_users,email,' . $student->user_id,
-            'nisn' => 'required|unique:tbl_students,nisn,' . $student->id,
-            'nis' => 'required|unique:tbl_students,nis,' . $student->id,
+            'name'     => 'required',
+            'email'    => 'required|email|unique:tbl_users,email,' . $student->user_id,
+            'nisn'     => 'required|unique:tbl_students,nisn,' . $student->id,
+            'nis'      => 'required|unique:tbl_students,nis,' . $student->id,
             'class_id' => 'required|exists:tbl_classes,id',
         ]);
 
         $student->user->update([
-            'name' => $request->name,
+            'name'  => $request->name,
             'email' => $request->email,
         ]);
 
@@ -121,17 +117,17 @@ class StudentController extends Controller
         }
 
         $student->update([
-            'name' => $request->name,
-            'nisn' => $request->nisn,
-            'nis' => $request->nis,
-            'gender' => $request->gender,
-            'class_id' => $request->class_id,
-            'major' => $request->major,
-            'status' => $request->status,
+            'name'        => $request->name,
+            'nisn'        => $request->nisn,
+            'nis'         => $request->nis,
+            'gender'      => $request->gender,
+            'class_id'    => $request->class_id,
+            'major'       => $request->major,
+            'status'      => $request->status,
             'birth_place' => $request->birth_place,
-            'birth_date' => $request->birth_date,
-            'address' => $request->address,
-            'phone' => $request->phone,
+            'birth_date'  => $request->birth_date,
+            'address'     => $request->address,
+            'phone'       => $request->phone,
         ]);
 
         if ($request->expectsJson()) {
@@ -145,22 +141,20 @@ class StudentController extends Controller
             ->with('success', 'Data siswa berhasil diupdate');
     }
 
-    // ARCHIVE DELETE
+    // SOFT DELETE (arsip)
     public function destroy(string $slug, Request $request)
     {
         $student = Student::with('user')
             ->where('slug', $slug)
             ->firstOrFail();
 
+        // Soft delete user terkait
         if ($student->user) {
-            $student->user->update([
-                'archived' => 1
-            ]);
+            $student->user->delete();
         }
 
-        $student->update([
-            'archived' => 1
-        ]);
+        // Soft delete student
+        $student->delete();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -176,9 +170,7 @@ class StudentController extends Controller
     // HALAMAN ARSIP
     public function archived()
     {
-        $students = Student::with('user', 'class')
-            ->where('archived', 1)
-            ->get();
+        $students = Student::onlyTrashed()->with('user', 'class')->get();
 
         return view('student.student-archived', compact('students'));
     }
@@ -186,19 +178,16 @@ class StudentController extends Controller
     // RESTORE
     public function restore(string $slug)
     {
-        $student = Student::with('user')
+        $student = Student::onlyTrashed()
             ->where('slug', $slug)
             ->firstOrFail();
 
-        if ($student->user) {
-            $student->user->update([
-                'archived' => 0
-            ]);
+        // Restore user terkait
+        if ($student->user_id) {
+            User::onlyTrashed()->where('id', $student->user_id)->restore();
         }
 
-        $student->update([
-            'archived' => 0
-        ]);
+        $student->restore();
 
         return redirect()
             ->route('students.archived')
@@ -209,65 +198,51 @@ class StudentController extends Controller
     public function forceDelete(string $slug)
     {
         try {
-
-            $student = Student::with('user')
+            $student = Student::onlyTrashed()
                 ->where('slug', $slug)
-                ->where('archived', 1)
                 ->firstOrFail();
 
-            // hapus user terkait
-            if ($student->user) {
-                $student->user->delete();
+            // Hapus permanen user terkait
+            if ($student->user_id) {
+                User::onlyTrashed()->where('id', $student->user_id)->forceDelete();
             }
 
-            // hapus student
-            $student->delete();
+            // Hapus permanen student
+            $student->forceDelete();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data siswa berhasil dihapus permanen'
             ]);
         } catch (\Throwable $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus permanen',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
     public function homeroomStudents()
     {
-        // ambil user login
-        $user = auth::user();
+        $user = Auth::user();
 
-        // cek apakah user memiliki relasi teacher
         if (!$user || !$user->teacher) {
             abort(403, 'Akun teacher tidak ditemukan.');
         }
 
-        // ambil data teacher
         $teacher = $user->teacher;
 
-        // cek apakah teacher menjadi wali kelas
-        $class = ClassModel::where('teacher_id', $teacher->id)
-            ->first();
+        $class = ClassModel::where('teacher_id', $teacher->id)->first();
 
-        // jika bukan wali kelas
         if (!$class) {
             abort(403, 'Anda bukan wali kelas.');
         }
 
-        // ambil siswa berdasarkan kelas wali kelas
         $students = Student::with(['user', 'class'])
             ->where('class_id', $class->id)
-            ->where('archived', 0)
             ->get();
 
-        return view(
-            'student.student-index',
-            compact('students')
-        );
+        return view('student.student-index', compact('students'));
     }
 }

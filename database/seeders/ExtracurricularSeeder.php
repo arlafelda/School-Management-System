@@ -11,6 +11,7 @@ class ExtracurricularSeeder extends Seeder
 {
     public function run(): void
     {
+        // Ambil hanya guru & siswa aktif (tidak di-trash).
         $teacherIds = Teacher::pluck('id');
         $studentIds = Student::pluck('id');
 
@@ -26,16 +27,14 @@ class ExtracurricularSeeder extends Seeder
 
         Extracurricular::factory()
             ->count(8)
-            ->state(fn () => [
-                'teacher_id' => $teacherIds->random(),
-            ])
+            ->state(fn () => ['teacher_id' => $teacherIds->random()])
             ->create()
             ->each(function (Extracurricular $extracurricular) use ($studentIds) {
                 if ($studentIds->isEmpty()) {
                     return;
                 }
 
-                // Tiap ekstrakurikuler diisi 3-8 siswa acak, tanpa duplikat siswa di pivot yang sama.
+                // Tiap ekstrakurikuler diisi 3–8 siswa acak, tanpa duplikat.
                 $jumlahSiswa = min(rand(3, 8), $studentIds->count());
 
                 $extracurricular->students()->attach(

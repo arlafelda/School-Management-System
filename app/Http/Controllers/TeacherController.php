@@ -13,7 +13,6 @@ class TeacherController extends Controller
     public function index()
     {
         $teachers = Teacher::with(['user', 'subjects'])
-            ->where('archived', 0)
             ->latest()
             ->get();
 
@@ -22,8 +21,8 @@ class TeacherController extends Controller
 
     public function archived()
     {
-        $teachers = Teacher::with(['user', 'subjects'])
-            ->where('archived', 1)
+        $teachers = Teacher::onlyTrashed()
+            ->with(['user', 'subjects'])
             ->latest()
             ->get();
 
@@ -32,7 +31,7 @@ class TeacherController extends Controller
 
     public function create()
     {
-        $subjects = Subject::where('archived', 0)->get();
+        $subjects = Subject::all();
 
         return view('teacher.teacher-add', compact('subjects'));
     }
@@ -40,33 +39,31 @@ class TeacherController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:tbl_users,email',
-            'password' => 'required|min:6',
-            'nip' => 'required|unique:tbl_teachers,nip',
+            'name'        => 'required',
+            'email'       => 'required|email|unique:tbl_users,email',
+            'password'    => 'required|min:6',
+            'nip'         => 'required|unique:tbl_teachers,nip',
             'subject_ids' => 'nullable|array',
             'subject_ids.*' => 'exists:tbl_subjects,id',
-            'phone' => 'nullable',
-            'address' => 'nullable',
-            'position' => 'nullable',
+            'phone'       => 'nullable',
+            'address'     => 'nullable',
+            'position'    => 'nullable',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'teacher',
-            'archived' => 0,
+            'role'     => 'teacher',
         ]);
 
         $teacher = Teacher::create([
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'nip' => $request->nip,
-            'phone' => $request->phone,
-            'address' => $request->address,
+            'user_id'  => $user->id,
+            'name'     => $request->name,
+            'nip'      => $request->nip,
+            'phone'    => $request->phone,
+            'address'  => $request->address,
             'position' => $request->position,
-            'archived' => 0,
         ]);
 
         $teacher->subjects()->sync($request->subject_ids ?? []);
@@ -80,7 +77,6 @@ class TeacherController extends Controller
     {
         $teacher = Teacher::with(['user', 'subjects'])
             ->where('slug', $slug)
-            ->where('archived', 0)
             ->firstOrFail();
 
         return view('teacher.teacher-show', compact('teacher'));
@@ -90,10 +86,9 @@ class TeacherController extends Controller
     {
         $teacher = Teacher::with(['user', 'subjects'])
             ->where('slug', $slug)
-            ->where('archived', 0)
             ->firstOrFail();
 
-        $subjects = Subject::where('archived', 0)->get();
+        $subjects = Subject::all();
 
         return view('teacher.teacher-edit', compact('teacher', 'subjects'));
     }
@@ -102,40 +97,31 @@ class TeacherController extends Controller
     {
         $teacher = Teacher::with('user')
             ->where('slug', $slug)
-            ->where('archived', 0)
             ->firstOrFail();
 
         $request->validate([
-            'name' => 'required',
-            'nip' => 'required|unique:tbl_teachers,nip,' . $teacher->id,
+            'name'        => 'required',
+            'nip'         => 'required|unique:tbl_teachers,nip,' . $teacher->id,
             'subject_ids' => 'nullable|array',
             'subject_ids.*' => 'exists:tbl_subjects,id',
-            'phone' => 'nullable',
-            'address' => 'nullable',
-            'position' => 'nullable',
-            'password' => 'nullable|min:6', // ✅ TAMBAHAN
+            'phone'       => 'nullable',
+            'address'     => 'nullable',
+            'position'    => 'nullable',
+            'password'    => 'nullable|min:6',
         ]);
 
-        // UPDATE TEACHER
         $teacher->update([
-            'name' => $request->name,
-            'nip' => $request->nip,
-            'phone' => $request->phone,
-            'address' => $request->address,
+            'name'     => $request->name,
+            'nip'      => $request->nip,
+            'phone'    => $request->phone,
+            'address'  => $request->address,
             'position' => $request->position,
         ]);
 
-        // SYNC SUBJECT
         $teacher->subjects()->sync($request->subject_ids ?? []);
 
-        // UPDATE USER NAME
-        $teacher->user?->update([
-            'name' => $request->name
-        ]);
+        $teacher->user?->update(['name' => $request->name]);
 
-        // =========================
-        // UPDATE PASSWORD (OPSIONAL)
-        // =========================
         if ($request->filled('password')) {
             $teacher->user?->update([
                 'password' => Hash::make($request->password)
@@ -147,20 +133,15 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil diupdate');
     }
 
+    // SOFT DELETE (arsip)
     public function destroy(Request $request, string $slug)
     {
         $teacher = Teacher::with('user')
             ->where('slug', $slug)
-            ->where('archived', 0)
             ->firstOrFail();
 
-        $teacher->update([
-            'archived' => 1
-        ]);
-
-        $teacher->user?->update([
-            'archived' => 1
-        ]);
+        $teacher->user?->delete();
+        $teacher->delete();
 
         if ($request->ajax()) {
             return response()->json([
@@ -174,20 +155,18 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil dipindahkan ke arsip');
     }
 
+    // RESTORE
     public function restore(Request $request, string $slug)
     {
-        $teacher = Teacher::with('user')
+        $teacher = Teacher::onlyTrashed()
             ->where('slug', $slug)
-            ->where('archived', 1)
             ->firstOrFail();
 
-        $teacher->update([
-            'archived' => 0
-        ]);
+        if ($teacher->user_id) {
+            User::onlyTrashed()->where('id', $teacher->user_id)->restore();
+        }
 
-        $teacher->user?->update([
-            'archived' => 0
-        ]);
+        $teacher->restore();
 
         if ($request->ajax()) {
             return response()->json([
@@ -201,21 +180,18 @@ class TeacherController extends Controller
             ->with('success', 'Guru berhasil direstore');
     }
 
+    // FORCE DELETE (PERMANENT)
     public function forceDelete(string $slug)
     {
-        $teacher = Teacher::with('user')
+        $teacher = Teacher::onlyTrashed()
             ->where('slug', $slug)
-            ->where('archived', 1)
             ->firstOrFail();
 
-        // Hapus relasi many-to-many
         $teacher->subjects()->detach();
 
-        // Hapus user terkait
-        $teacher->user?->delete();
+        User::onlyTrashed()->where('id', $teacher->user_id)->forceDelete();
 
-        // Hapus guru
-        $teacher->delete();
+        $teacher->forceDelete();
 
         return response()->json([
             'success' => true,

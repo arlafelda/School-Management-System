@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_extracurriculars', function (Blueprint $table) {
@@ -21,9 +18,6 @@ return new class extends Migration
             // Slug URL
             $table->string('slug')->unique();
 
-            // Status arsip
-            $table->boolean('archived')->default(false);
-
             // Pembina ekstrakurikuler
             $table->foreignId('teacher_id')
                 ->nullable()
@@ -31,13 +25,10 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->timestamps();
-
+            $table->softDeletes(); // ✅ ganti archived - ada fitur arsip & restore
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_extracurriculars');

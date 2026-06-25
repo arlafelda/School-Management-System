@@ -16,19 +16,18 @@ class TeacherFactory extends Factory
         $name = fake()->name();
 
         return [
-            'user_id' => User::factory()->teacher(),
-            'nip' => fake()->unique()->numerify('19#########0##1'),
-            'name' => $name,
-            'slug' => Str::slug($name) . '-' . fake()->unique()->numberBetween(1000, 9999),
-            'position' => 'Guru', // default, di-override di seeder kalau perlu jadi Wali Kelas
-            'phone' => fake()->numerify('08##########'),
-            'address' => fake()->address(),
-            'archived' => 0,
+            'user_id'  => User::factory()->teacher(),
+            'nip'      => fake()->unique()->numerify('19#########0##1'),
+            'name'     => $name,
+            'slug'     => Str::slug($name) . '-' . fake()->unique()->numberBetween(1000, 9999),
+            'position' => 'Guru',
+            'phone'    => fake()->numerify('08##########'),
+            'address'  => fake()->address(),
         ];
     }
 
     /**
-     * Indicate the teacher is a homeroom teacher (Wali Kelas).
+     * Guru dengan posisi Wali Kelas.
      */
     public function waliKelas(): static
     {
@@ -38,12 +37,14 @@ class TeacherFactory extends Factory
     }
 
     /**
-     * Indicate the teacher is archived.
+     * Simulate a soft-deleted (trashed) teacher.
+     * Juga men-trash user terkait agar konsisten.
      */
-    public function archived(): static
+    public function trashed(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'archived' => 1,
-        ]);
+        return $this->afterCreating(function ($teacher) {
+            $teacher->user?->delete();
+            $teacher->delete();
+        });
     }
 }

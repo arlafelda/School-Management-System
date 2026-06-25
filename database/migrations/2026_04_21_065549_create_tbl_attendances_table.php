@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_attendances', function (Blueprint $table) {
@@ -50,13 +47,12 @@ return new class extends Migration
                 'schedule_id',
                 'date'
             ]);
-
+            // ❌ tidak pakai softDeletes
+            // data absensi adalah data historis permanen
+            // jika ada kesalahan cukup gunakan fitur edit status
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_attendances');

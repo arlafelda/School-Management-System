@@ -34,17 +34,6 @@
             </div>
 
             <div class="flex items-center gap-2">
-
-                @if(in_array($user->role, ['super_admin', 'admin']))
-                <a href="{{ route('grades.archived') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
-                    </svg>
-                    Archived
-                </a>
-                @endif
-
                 @if(in_array($user->role, ['super_admin', 'admin', 'teacher']))
                 <a href="{{ route('grades.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition">
@@ -54,7 +43,6 @@
                     Tambah Nilai
                 </a>
                 @endif
-
             </div>
 
         </div>
@@ -229,15 +217,18 @@
                                         Edit
                                     </a>
 
-                                    <button type="button"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition btn-archive"
-                                        data-id="{{ $g->id }}"
-                                        data-url="{{ route('grades.destroy', $g->id) }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
-                                        </svg>
-                                        Arsipkan
-                                    </button>
+                                    <form method="POST" action="{{ route('grades.destroy', $g->id) }}"
+                                          onsubmit="return confirm('Yakin ingin menghapus data nilai ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                            </svg>
+                                            Hapus
+                                        </button>
+                                    </form>
 
                                 </div>
                             </td>
@@ -279,23 +270,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const row = cell.closest('tr');
             const url = row ? row.dataset.url : null;
             if (url) window.location.href = url;
-        }
-    });
-
-    // Tombol Arsipkan
-    document.addEventListener('click', function (e) {
-        let btn = e.target.closest('.btn-archive');
-        if (!btn) return;
-
-        const url = btn.dataset.url;
-        const id  = btn.dataset.id;
-
-        if (typeof deleteData === 'function') {
-            deleteData(url, 'Yakin ingin memindahkan data nilai ke arsip?', {
-                onSuccess: function () {
-                    document.getElementById('row-' + id)?.remove();
-                }
-            });
         }
     });
 

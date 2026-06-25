@@ -14,7 +14,6 @@ class ExtracurricularController extends Controller
     public function index()
     {
         $data = Extracurricular::with(['teacher', 'students'])
-            ->where('archived', 0)
             ->latest()
             ->get();
 
@@ -23,8 +22,8 @@ class ExtracurricularController extends Controller
 
     public function archived()
     {
-        $data = Extracurricular::with(['teacher', 'students'])
-            ->where('archived', 1)
+        $data = Extracurricular::onlyTrashed()
+            ->with(['teacher', 'students'])
             ->latest()
             ->get();
 
@@ -33,8 +32,8 @@ class ExtracurricularController extends Controller
 
     public function create()
     {
-        $teachers = Teacher::where('archived', 0)->get();
-        $students = Student::where('archived', 0)->get();
+        $teachers = Teacher::all();
+        $students = Student::all();
 
         return view('extracurricular.extracurricular-add', compact('teachers', 'students'));
     }
@@ -42,7 +41,7 @@ class ExtracurricularController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string',
+            'name'       => 'required|string',
             'teacher_id' => 'nullable|exists:tbl_teachers,id',
         ]);
 
@@ -55,7 +54,6 @@ class ExtracurricularController extends Controller
         }
 
         $validated['slug'] = $slug;
-        $validated['archived'] = 0;
 
         $ekskul = Extracurricular::create($validated);
 
@@ -65,9 +63,9 @@ class ExtracurricularController extends Controller
 
         return $request->ajax()
             ? response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Data berhasil ditambahkan',
-                'data' => $ekskul
+                'data'    => $ekskul
             ])
             : redirect()->route('extracurricular.index')
                 ->with('success', 'Data berhasil ditambahkan');
@@ -75,10 +73,6 @@ class ExtracurricularController extends Controller
 
     public function show(Extracurricular $extracurricular)
     {
-        if ($extracurricular->archived == 1) {
-            abort(404);
-        }
-
         $extracurricular->load(['teacher', 'students']);
 
         return view('extracurricular.extracurricular-show', [
@@ -88,15 +82,11 @@ class ExtracurricularController extends Controller
 
     public function edit(Extracurricular $extracurricular)
     {
-        if ($extracurricular->archived == 1) {
-            abort(404);
-        }
-
-        $teachers = Teacher::where('archived', 0)->get();
-        $students = Student::where('archived', 0)->get();
+        $teachers = Teacher::all();
+        $students = Student::all();
 
         return view('extracurricular.extracurricular-edit', [
-            'data' => $extracurricular,
+            'data'     => $extracurricular,
             'teachers' => $teachers,
             'students' => $students
         ]);
@@ -104,12 +94,8 @@ class ExtracurricularController extends Controller
 
     public function update(Request $request, Extracurricular $extracurricular)
     {
-        if ($extracurricular->archived == 1) {
-            abort(404);
-        }
-
         $validated = $request->validate([
-            'name' => 'required|string',
+            'name'       => 'required|string',
             'teacher_id' => 'nullable|exists:tbl_teachers,id',
         ]);
 
@@ -135,85 +121,80 @@ class ExtracurricularController extends Controller
 
         return $request->ajax()
             ? response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Data berhasil diupdate'
             ])
             : redirect()->route('extracurricular.index')
                 ->with('success', 'Data berhasil diupdate');
     }
 
+    // SOFT DELETE (arsip)
     public function destroy(Request $request, Extracurricular $extracurricular)
-{
-    $extracurricular->update(['archived' => 1]);
-
-    return $request->expectsJson()
-        ? response()->json([
-            'success' => true, // <-- ganti 'status' ke 'success'
-            'message' => 'Data berhasil dipindahkan ke arsip'
-        ])
-        : redirect()->route('extracurricular.index')
-            ->with('success', 'Data berhasil dipindahkan ke arsip');
-}
-
-public function restore(string $slug)
-{
-    try {
-        $extracurricular = Extracurricular::where('slug', $slug)
-            ->where('archived', 1)
-            ->firstOrFail();
-
-        $extracurricular->update(['archived' => 0]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data berhasil direstore'
-        ]);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
-    }
-}
-
-public function delete(string $slug)
-{
-    try {
-        $extracurricular = Extracurricular::where('slug', $slug)
-            ->where('archived', 1)
-            ->firstOrFail();
-
+    {
         $extracurricular->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Data berhasil dihapus permanen'
-        ]);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        return $request->expectsJson()
+            ? response()->json([
+                'success' => true,
+                'message' => 'Data berhasil dipindahkan ke arsip'
+            ])
+            : redirect()->route('extracurricular.index')
+                ->with('success', 'Data berhasil dipindahkan ke arsip');
     }
-}
+
+    // RESTORE
+    public function restore(string $slug)
+    {
+        try {
+            $extracurricular = Extracurricular::onlyTrashed()
+                ->where('slug', $slug)
+                ->firstOrFail();
+
+            $extracurricular->restore();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil direstore'
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // FORCE DELETE (PERMANENT)
+    public function delete(string $slug)
+    {
+        try {
+            $extracurricular = Extracurricular::onlyTrashed()
+                ->where('slug', $slug)
+                ->firstOrFail();
+
+            $extracurricular->forceDelete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil dihapus permanen'
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function studentExtracurricular()
     {
-        $extracurriculars = Extracurricular::with('teacher')
-            ->where('archived', 0)
-            ->get();
+        $extracurriculars = Extracurricular::with('teacher')->get();
 
         return view('extracurricular.extracurricular-student', compact('extracurriculars'));
     }
 
     public function join(Request $request, Extracurricular $extracurricular)
     {
-        if ($extracurricular->archived == 1) {
-            abort(404);
-        }
-
         $student = Auth::user()->student;
 
         if (!$extracurricular->students()->where('student_id', $student->id)->exists()) {
@@ -222,7 +203,7 @@ public function delete(string $slug)
 
         return $request->ajax()
             ? response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Berhasil daftar ekskul'
             ])
             : back()->with('success', 'Berhasil daftar ekskul');

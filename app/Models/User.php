@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'tbl_users';
 
@@ -21,7 +22,6 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'archived',
         'creation_time',
         'create_id',
         'update_time',
@@ -33,6 +33,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $dates = ['deleted_at'];
+
     protected function casts(): array
     {
         return [
@@ -40,7 +42,7 @@ class User extends Authenticatable
         ];
     }
 
-    // 🔥 AUTO SLUG ANTI NULL (FIX UTAMA)
+    // AUTO SLUG
     protected static function boot()
     {
         parent::boot();

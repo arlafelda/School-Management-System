@@ -15,24 +15,22 @@ class UserSeeder extends Seeder
      *
      * Catatan: User untuk Teacher/Student dibuat otomatis lewat
      * TeacherFactory/StudentFactory (relasi user_id), jadi di sini
-     * hanya akun super_admin & admin + beberapa user tambahan.
+     * hanya akun super_admin & admin.
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Super Admin',
-            'slug' => Str::slug('Super Admin'),
-            'email' => 'superadmin@gamelab.id',
+        User::factory()->superAdmin()->create([
+            'name'     => 'Super Admin',
+            'slug'     => Str::slug('Super Admin'),
+            'email'    => 'superadmin@gamelab.id',
             'password' => Hash::make('123456'),
-            'role' => 'super_admin',
         ]);
 
-        User::factory()->create([
-            'name' => 'Admin Sekolah',
-            'slug' => Str::slug('Admin Sekolah'),
-            'email' => 'admin@gamelab.id',
+        User::factory()->admin()->create([
+            'name'     => 'Admin Sekolah',
+            'slug'     => Str::slug('Admin Sekolah'),
+            'email'    => 'admin@gamelab.id',
             'password' => Hash::make('123456'),
-            'role' => 'admin',
         ]);
     }
 }

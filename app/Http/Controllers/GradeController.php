@@ -20,7 +20,7 @@ class GradeController extends Controller
     {
         $user = Auth::user();
 
-        $classes = ClassModel::where('archived', 0)->get();
+        $classes = ClassModel::all();
 
         $query = Grade::with([
             'student.class',
@@ -28,7 +28,7 @@ class GradeController extends Controller
             'schedule.subject',
             'schedule.classModel',
             'subject'
-        ])->where('archived', 0);
+        ]);
 
         if ($user->role === 'student') {
 
@@ -39,25 +39,14 @@ class GradeController extends Controller
             }
 
             $query->where('student_id', $student->id);
+
         } elseif ($user->role === 'teacher') {
 
-            $teacher = Teacher::where(
-                'user_id',
-                $user->id
-            )->first();
+            $teacher = Teacher::where('user_id', $user->id)->first();
 
             if ($teacher) {
-                $scheduleIds = Schedule::where(
-                    'teacher_id',
-                    $teacher->id
-                )
-                    ->where('archived', 0)
-                    ->pluck('id');
-
-                $query->whereIn(
-                    'schedule_id',
-                    $scheduleIds
-                );
+                $scheduleIds = Schedule::where('teacher_id', $teacher->id)->pluck('id');
+                $query->whereIn('schedule_id', $scheduleIds);
             }
         }
 
@@ -87,10 +76,7 @@ class GradeController extends Controller
 
         $data = $query->latest()->get();
 
-        return view('grade.grade-index', compact(
-            'data',
-            'classes'
-        ));
+        return view('grade.grade-index', compact('data', 'classes'));
     }
 
 
@@ -101,18 +87,15 @@ class GradeController extends Controller
     {
         $user = Auth::user();
 
-        $classes = ClassModel::where('archived', 0)->get();
-        $teachers = Teacher::where('archived', 0)->get();
+        $classes  = ClassModel::all();
+        $teachers = Teacher::all();
 
         $schedules = collect();
-        $students = collect();
+        $students  = collect();
 
         if ($user->role === 'teacher') {
 
-            $teacher = Teacher::where(
-                'user_id',
-                $user->id
-            )->first();
+            $teacher = Teacher::where('user_id', $user->id)->first();
 
             if (!$teacher) {
                 return redirect()
@@ -120,22 +103,13 @@ class GradeController extends Controller
                     ->with('error', 'Teacher tidak ditemukan');
             }
 
-            $schedules = Schedule::with([
-                'subject',
-                'classModel',
-                'teacher'
-            ])
+            $schedules = Schedule::with(['subject', 'classModel', 'teacher'])
                 ->where('teacher_id', $teacher->id)
-                ->where('archived', 0)
                 ->get();
+
         } else {
-            $schedules = Schedule::with([
-                'subject',
-                'classModel',
-                'teacher'
-            ])
-                ->where('archived', 0)
-                ->get();
+
+            $schedules = Schedule::with(['subject', 'classModel', 'teacher'])->get();
         }
 
         if ($request->schedule_id) {
@@ -144,17 +118,11 @@ class GradeController extends Controller
             if ($schedule) {
                 $students = Student::with('class')
                     ->where('class_id', $schedule->class_id)
-                    ->where('archived', 0)
                     ->get();
             }
         }
 
-        return view('grade.grade-add', compact(
-            'classes',
-            'teachers',
-            'schedules',
-            'students'
-        ));
+        return view('grade.grade-add', compact('classes', 'teachers', 'schedules', 'students'));
     }
 
 
@@ -164,15 +132,15 @@ class GradeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'schedule_id'       => 'required|exists:tbl_schedules,id',
-            'subject_id'        => 'required|exists:tbl_subjects,id',
-            'student_id'        => 'required|array',
-            'assignment_score'  => 'required|array',
-            'mid_exam_score'    => 'required|array',
-            'final_exam_score'  => 'required|array',
+            'schedule_id'      => 'required|exists:tbl_schedules,id',
+            'subject_id'       => 'required|exists:tbl_subjects,id',
+            'student_id'       => 'required|array',
+            'assignment_score' => 'required|array',
+            'mid_exam_score'   => 'required|array',
+            'final_exam_score' => 'required|array',
         ]);
 
-        $saved = 0;
+        $saved   = 0;
         $skipped = 0;
 
         foreach ($request->student_id as $i => $studentId) {
@@ -193,30 +161,28 @@ class GradeController extends Controller
                 'assignment_score' => $request->assignment_score[$i] ?? 0,
                 'mid_exam_score'   => $request->mid_exam_score[$i] ?? 0,
                 'final_exam_score' => $request->final_exam_score[$i] ?? 0,
-                'archived'         => 0
             ]);
 
             $saved++;
         }
 
-        /*
-    =====================
-    RESPONSE
-    =====================
-    */
         if ($saved == 0) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Nilai untuk jadwal ini sudah pernah diinput, tidak bisa input ulang'
             ], 422);
         }
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => "Berhasil menyimpan {$saved} data nilai"
         ]);
     }
 
+
+    // =====================
+    // EDIT
+    // =====================
     public function edit(int $id)
     {
         $user = Auth::user();
@@ -229,70 +195,34 @@ class GradeController extends Controller
             'subject'
         ])->findOrFail($id);
 
-        if ($grade->archived == 1) {
-            abort(404);
-        }
-
-        $subjects = collect();
+        $subjects  = collect();
         $schedules = collect();
 
-        /*
-    =====================
-    TEACHER
-    =====================
-    */
         if ($user->role === 'teacher') {
 
-            $teacher = Teacher::where(
-                'user_id',
-                $user->id
-            )->first();
+            $teacher = Teacher::where('user_id', $user->id)->first();
 
             if ($teacher) {
-
-                $schedules = Schedule::with([
-                    'subject',
-                    'classModel',
-                    'teacher'
-                ])
+                $schedules = Schedule::with(['subject', 'classModel', 'teacher'])
                     ->where('teacher_id', $teacher->id)
-                    ->where('archived', 0)
                     ->get();
 
-                $subjects = Subject::whereIn(
-                    'id',
-                    $schedules->pluck('subject_id')
-                )->get();
+                $subjects = Subject::whereIn('id', $schedules->pluck('subject_id'))->get();
             }
+
+        } else {
+
+            $subjects  = Subject::all();
+            $schedules = Schedule::with(['subject', 'classModel', 'teacher'])->get();
         }
 
-        /*
-    =====================
-    ADMIN / SUPER ADMIN
-    =====================
-    */ else {
-
-            $subjects = Subject::where('archived', 0)->get();
-
-            $schedules = Schedule::with([
-                'subject',
-                'classModel',
-                'teacher'
-            ])
-                ->where('archived', 0)
-                ->get();
-        }
-
-        return view('grade.grade-edit', compact(
-            'grade',
-            'subjects',
-            'schedules'
-        ));
+        return view('grade.grade-edit', compact('grade', 'subjects', 'schedules'));
     }
 
-    // =========================
+
+    // =====================
     // UPDATE
-    // =========================
+    // =====================
     public function update(Request $request, int $id)
     {
         $request->validate([
@@ -301,10 +231,7 @@ class GradeController extends Controller
             'final_exam_score' => 'required|numeric|min:0|max:100',
         ]);
 
-        $grade = Grade::where(
-            'archived',
-            0
-        )->findOrFail($id);
+        $grade = Grade::findOrFail($id);
 
         $grade->update([
             'assignment_score' => $request->assignment_score,
@@ -321,11 +248,9 @@ class GradeController extends Controller
 
         return redirect()
             ->route('grades.index')
-            ->with(
-                'success',
-                'Nilai berhasil diupdate'
-            );
+            ->with('success', 'Nilai berhasil diupdate');
     }
+
 
     // =====================
     // SHOW
@@ -340,100 +265,27 @@ class GradeController extends Controller
             'subject'
         ])->findOrFail($id);
 
-        if ($grade->archived == 1) {
-            abort(404);
-        }
-
         return view('grade.grade-show', compact('grade'));
     }
 
 
     // =====================
-    // ARCHIVED
-    // =====================
-    public function archived()
-    {
-        $grades = Grade::with([
-            'student.class',
-            'schedule.teacher',
-            'schedule.subject',
-            'schedule.classModel',
-            'subject'
-        ])
-            ->where('archived', 1)
-            ->latest()
-            ->get();
-
-        return view(
-            'grade.grade-archived',
-            compact('grades')
-        );
-    }
-
-
-    // =====================
-    // RESTORE
-    // =====================
-    public function restore(int $id)
-    {
-        $grade = Grade::where(
-            'archived',
-            1
-        )->findOrFail($id);
-
-        $grade->update([
-            'archived' => 0
-        ]);
-
-        return redirect()
-            ->route('grades.archived')
-            ->with(
-                'success',
-                'Data nilai berhasil direstore'
-            );
-    }
-
-
-    // =====================
-    // ARCHIVE
+    // DELETE (PERMANENT — data nilai tidak di-arsip)
     // =====================
     public function destroy(int $id)
     {
-        $grade = Grade::where(
-            'archived',
-            0
-        )->findOrFail($id);
+        $grade = Grade::findOrFail($id);
+        $grade->delete();
 
-        $grade->update([
-            'archived' => 1
-        ]);
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data nilai berhasil dihapus'
+            ]);
+        }
 
         return redirect()
             ->route('grades.index')
-            ->with(
-                'success',
-                'Data berhasil dipindahkan ke arsip'
-            );
-    }
-
-
-    // =====================
-    // DELETE
-    // =====================
-    public function delete(int $id)
-    {
-        $grade = Grade::where(
-            'archived',
-            1
-        )->findOrFail($id);
-
-        $grade->delete();
-
-        return redirect()
-            ->route('grades.archived')
-            ->with(
-                'success',
-                'Data nilai berhasil dihapus permanen'
-            );
+            ->with('success', 'Data nilai berhasil dihapus');
     }
 }

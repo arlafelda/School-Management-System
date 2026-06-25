@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_schedules', function (Blueprint $table) {
@@ -35,22 +32,17 @@ return new class extends Migration
             // Jam selesai
             $table->time('end_time');
 
-            // Status arsip
-            $table->boolean('archived')->default(false);
-
             // Guru pengajar
             $table->foreignId('teacher_id')
                 ->constrained('tbl_teachers')
                 ->cascadeOnDelete();
 
             $table->timestamps();
-
+            $table->softDeletes(); // ✅ ada fitur arsip & restore
+                                   // ✅ melindungi relasi ke tbl_attendances & tbl_grades
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_schedules');

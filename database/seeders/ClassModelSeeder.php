@@ -10,30 +10,22 @@ class ClassModelSeeder extends Seeder
 {
     public function run(): void
     {
-        // Hanya ambil guru yang posisinya "Wali Kelas", jangan bikin guru baru.
-        $teacherIds = Teacher::where('position', 'Wali Kelas')
-            ->where('archived', 0)
-            ->pluck('id');
+        // Hanya ambil guru posisi "Wali Kelas" yang aktif (tidak di-trash).
+        $teacherIds = Teacher::where('position', 'Wali Kelas')->pluck('id');
 
         if ($teacherIds->isEmpty()) {
             $this->call(TeacherSeeder::class);
-
-            $teacherIds = Teacher::where('position', 'Wali Kelas')
-                ->where('archived', 0)
-                ->pluck('id');
+            $teacherIds = Teacher::where('position', 'Wali Kelas')->pluck('id');
         }
 
-        // Pastikan tetap ada guru wali kelas, kalau masih kosong beri peringatan.
         if ($teacherIds->isEmpty()) {
             $this->command->warn('Tidak ada guru dengan posisi "Wali Kelas". ClassModelSeeder dilewati.');
             return;
         }
 
-        // Acak urutan guru, supaya assignment ke kelas tidak berulang.
         $shuffledTeacherIds = $teacherIds->shuffle()->values();
 
-        // Jumlah kelas dibatasi sebanyak guru wali kelas yang tersedia,
-        // supaya satu wali kelas hanya pegang satu kelas (tidak ada duplikat).
+        // Jumlah kelas dibatasi sebanyak guru wali kelas yang tersedia.
         $totalClasses = min(8, $shuffledTeacherIds->count());
 
         if ($shuffledTeacherIds->count() < 8) {

@@ -36,9 +36,9 @@ class DashboardController extends Controller
         // ================= SUPER ADMIN =================
         if ($role === 'super_admin') {
 
-            $totalStudents = User::where('role', 'student')->where('archived', 0)->count();
-            $totalTeachers = User::where('role', 'teacher')->where('archived', 0)->count();
-            $totalAdmins   = User::where('role', 'admin')->where('archived', 0)->count();
+            $totalStudents = User::where('role', 'student')->count();
+            $totalTeachers = User::where('role', 'teacher')->count();
+            $totalAdmins   = User::where('role', 'admin')->count();
 
             $chartData = [
                 $totalStudents,
@@ -50,14 +50,12 @@ class DashboardController extends Controller
                 'totalStudents' => $totalStudents,
                 'totalTeachers' => $totalTeachers,
                 'totalAdmins'   => $totalAdmins,
-                'totalClasses'  => ClassModel::where('archived', 0)->count(),
-                'totalMajors'   => ClassModel::where('archived', 0)->distinct('major')->count('major'),
-                'totalSubjects' => Subject::where('archived', 0)->count(),
+                'totalClasses'  => ClassModel::count(),
+                'totalMajors'   => ClassModel::distinct('major')->count('major'),
+                'totalSubjects' => Subject::count(),
                 'today'         => $today,
 
-                // Aktivitas hari ini, diurutkan dari jam paling pagi
                 'activities' => Schedule::with(['class', 'teacher'])
-                    ->where('archived', 0)
                     ->where('day', $today)
                     ->orderBy('start_time', 'asc')
                     ->get(),
@@ -69,27 +67,25 @@ class DashboardController extends Controller
         // ================= ADMIN =================
         if ($role === 'admin') {
 
-            $totalStudents = User::where('role', 'student')->where('archived', 0)->count();
-            $totalTeachers = User::where('role', 'teacher')->where('archived', 0)->count();
+            $totalStudents = User::where('role', 'student')->count();
+            $totalTeachers = User::where('role', 'teacher')->count();
 
             $chartData = [
                 $totalStudents,
                 $totalTeachers,
-                User::where('role', 'admin')->where('archived', 0)->count(),
+                User::where('role', 'admin')->count(),
             ];
 
             return view('dashboard.admin-dashboard', [
                 'totalStudents'  => $totalStudents,
                 'totalTeachers'  => $totalTeachers,
-                'totalClasses'   => ClassModel::where('archived', 0)->count(),
-                'totalMajors'    => ClassModel::where('archived', 0)->distinct('major')->count('major'),
-                'totalSubjects'  => Subject::where('archived', 0)->count(),
-                'totalSchedules' => Schedule::where('archived', 0)->count(),
+                'totalClasses'   => ClassModel::count(),
+                'totalMajors'    => ClassModel::distinct('major')->count('major'),
+                'totalSubjects'  => Subject::count(),
+                'totalSchedules' => Schedule::count(),
                 'today'          => $today,
 
-                // Aktivitas hari ini, diurutkan dari jam paling pagi
                 'activities' => Schedule::with(['class', 'teacher'])
-                    ->where('archived', 0)
                     ->where('day', $today)
                     ->orderBy('start_time', 'asc')
                     ->get(),
@@ -100,52 +96,40 @@ class DashboardController extends Controller
 
         // ================= TEACHER =================
         if ($role === 'teacher') {
-            // Load sekaligus relasi subjects (pivot teacher_subject)
             $teacher = Teacher::with('subjects')
                 ->where('user_id', $user->id)
                 ->first();
- 
+
             if (!$teacher) {
                 abort(404, 'Data teacher tidak ditemukan');
             }
- 
-            // Jadwal hari ini — tidak perlu eager load teacher (sudah tahu gurunya)
+
             $todaySchedules = Schedule::with(['class', 'subject'])
                 ->where('teacher_id', $teacher->id)
                 ->where('day', $today)
-                ->where('archived', 0)
                 ->orderBy('start_time', 'asc')
                 ->get();
- 
-            // Kelas wali — tbl_classes.teacher_id = id wali kelas
-            $homeroomClass = ClassModel::where('teacher_id', $teacher->id)
-                ->where('archived', 0)
-                ->first();
- 
-            // Jumlah siswa HANYA dari kelas wali
+
+            $homeroomClass = ClassModel::where('teacher_id', $teacher->id)->first();
+
             $totalStudents = $homeroomClass
-                ? Student::where('class_id', $homeroomClass->id)
-                    ->where('archived', 0)
-                    ->count()
+                ? Student::where('class_id', $homeroomClass->id)->count()
                 : 0;
- 
-            // Mapel dari pivot teacher_subject (bukan dari schedules)
-            $subjects      = $teacher->subjects()->where('archived', 0)->get();
+
+            $subjects      = $teacher->subjects;
             $totalSubjects = $subjects->count();
- 
-            // Jumlah kelas yang diajar (distinct dari schedules)
+
             $totalClasses  = Schedule::where('teacher_id', $teacher->id)
-                ->where('archived', 0)
                 ->distinct('class_id')
                 ->count('class_id');
- 
+
             return view('dashboard.teacher-dashboard', [
                 'todaySchedules' => $todaySchedules,
-                'totalStudents'  => $totalStudents,   // siswa wali kelas
-                'homeroomClass'  => $homeroomClass,   // data kelas wali (bisa null)
-                'totalClasses'   => $totalClasses,    // kelas yang diajar
-                'subjects'       => $subjects,        // koleksi Subject
-                'totalSubjects'  => $totalSubjects,   // jumlah mapel
+                'totalStudents'  => $totalStudents,
+                'homeroomClass'  => $homeroomClass,
+                'totalClasses'   => $totalClasses,
+                'subjects'       => $subjects,
+                'totalSubjects'  => $totalSubjects,
                 'todayCount'     => $todaySchedules->count(),
                 'today'          => $today,
             ]);
@@ -154,26 +138,24 @@ class DashboardController extends Controller
         // ================= STUDENT =================
         if ($role === 'student') {
             $student = $user->student;
- 
+
             if (!$student) {
                 abort(404, 'Data student tidak ditemukan');
             }
- 
+
             $attendances       = Attendance::where('student_id', $student->id)->get();
             $totalAttendance   = $attendances->count();
             $presentCount      = $attendances->where('status', 'hadir')->count();
             $attendancePercent = $totalAttendance > 0
                 ? round(($presentCount / $totalAttendance) * 100, 1)
                 : 0;
- 
-            // ⬇ Tambah 'subject' di eager load agar nama mapel tampil di view
+
             $todaySchedules = Schedule::with(['teacher', 'class', 'subject'])
                 ->where('class_id', $student->class_id)
                 ->where('day', $today)
-                ->where('archived', 0)
                 ->orderBy('start_time', 'asc')
                 ->get();
- 
+
             return view('dashboard.student-dashboard', [
                 'attendancePercent' => $attendancePercent,
                 'totalAttendance'   => $totalAttendance,
@@ -181,7 +163,7 @@ class DashboardController extends Controller
                 'today'             => $today,
             ]);
         }
- 
+
         abort(403, 'Role tidak dikenali');
     }
 }

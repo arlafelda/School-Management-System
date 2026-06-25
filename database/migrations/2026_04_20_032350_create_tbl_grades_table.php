@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_grades', function (Blueprint $table) {
@@ -35,22 +32,18 @@ return new class extends Migration
             // Nilai UAS
             $table->unsignedInteger('final_exam_score')->default(0);
 
-            // Status arsip
-            $table->boolean('archived')->default(false);
-
             // Mata pelajaran
             $table->foreignId('subject_id')
                 ->constrained('tbl_subjects')
                 ->cascadeOnDelete();
 
             $table->timestamps();
-
+            // ❌ tidak pakai softDeletes
+            // data nilai adalah data akademik permanen
+            // jika ada kesalahan cukup gunakan fitur edit
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_grades');

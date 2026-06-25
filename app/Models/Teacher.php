@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use App\Models\Subject;
 use App\Models\User;
@@ -12,7 +13,8 @@ use App\Models\Extracurricular;
 
 class Teacher extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
     protected $table = 'tbl_teachers';
 
     protected $fillable = [
@@ -21,14 +23,11 @@ class Teacher extends Model
         'nip',
         'phone',
         'address',
-        'archived',
         'position',
         'slug',
     ];
 
-    protected $casts = [
-        'archived' => 'boolean',
-    ];
+    protected $dates = ['deleted_at'];
 
     protected static function boot()
     {
@@ -79,9 +78,6 @@ class Teacher extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * MANY TO MANY: teachers <-> subjects
-     */
     public function subjects()
     {
         return $this->belongsToMany(

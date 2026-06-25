@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_teachers', function (Blueprint $table) {
@@ -38,16 +35,11 @@ return new class extends Migration
             // Alamat
             $table->text('address')->nullable();
 
-            // Status arsip
-            $table->boolean('archived')->default(false);
-
             $table->timestamps();
+            $table->softDeletes(); // ✅ ganti archived - ada fitur arsip & restore
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_teachers');

@@ -15,28 +15,25 @@ class ScheduleFactory extends Factory
     public function definition(): array
     {
         $start = fake()->randomElement(['07:00', '08:30', '10:00', '12:30', '14:00']);
-        $end = date('H:i', strtotime($start . ' +90 minutes'));
+        $end   = date('H:i', strtotime($start . ' +90 minutes'));
 
         return [
-            'class_id' => ClassModel::factory(),
+            'class_id'   => ClassModel::factory(),
             'subject_id' => Subject::factory(),
-            'day' => fake()->randomElement([
-                'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat',
-            ]),
+            'day'        => fake()->randomElement(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']),
             'start_time' => $start,
-            'end_time' => $end,
-            'archived' => 0,
+            'end_time'   => $end,
             'teacher_id' => Teacher::factory(),
         ];
     }
 
     /**
-     * Indicate the schedule is archived.
+     * Simulate a soft-deleted (trashed) schedule.
      */
-    public function archived(): static
+    public function trashed(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'archived' => 1,
-        ]);
+        return $this->afterCreating(function ($schedule) {
+            $schedule->delete();
+        });
     }
 }

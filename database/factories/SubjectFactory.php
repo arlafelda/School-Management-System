@@ -31,22 +31,22 @@ class SubjectFactory extends Factory
         ]);
 
         return [
-            'name' => $name,
-            'code' => strtoupper(Str::substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 3)) . fake()->unique()->numberBetween(100, 999),
-            'kkm' => 75,
+            'name'        => $name,
+            'code'        => strtoupper(Str::substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 3))
+                             . fake()->unique()->numberBetween(100, 999),
+            'kkm'         => 75,
             'description' => fake()->sentence(12),
-            'slug' => Str::slug($name),
-            'archived' => 0,
+            'slug'        => Str::slug($name),
         ];
     }
 
     /**
-     * Indicate the subject is archived.
+     * Simulate a soft-deleted (trashed) subject.
      */
-    public function archived(): static
+    public function trashed(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'archived' => 1,
-        ]);
+        return $this->afterCreating(function ($subject) {
+            $subject->delete();
+        });
     }
 }

@@ -11,14 +11,12 @@ return new class extends Migration
         Schema::create('tbl_users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique()->nullable(); // 🔥 FIX PENTING
+            $table->string('slug')->unique()->nullable();
             $table->string('email')->unique();
             $table->string('password');
 
             $table->enum('role', ['super_admin', 'admin', 'teacher', 'student'])
                 ->default('student');
-
-            $table->integer('archived')->default(0);
 
             $table->timestamp('creation_time')->nullable();
             $table->integer('create_id')->nullable();
@@ -27,6 +25,7 @@ return new class extends Migration
             $table->integer('update_id')->nullable();
 
             $table->rememberToken();
+            $table->softDeletes(); // ✅ ganti archived
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -47,7 +46,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('tbl_users'); // 🔥 FIX PENTING
+        Schema::dropIfExists('tbl_users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

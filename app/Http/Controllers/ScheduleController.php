@@ -15,10 +15,9 @@ class ScheduleController extends Controller
     {
         $user = Auth::user();
 
-        $classes = ClassModel::where('archived', 0)->get();
+        $classes = ClassModel::all();
 
         $schedules = Schedule::with(['teacher', 'classModel', 'subject'])
-            ->where('archived', 0)
 
             ->when($user->role === 'student', function ($query) use ($user) {
                 $student = Student::where('user_id', $user->id)->first();
@@ -73,8 +72,8 @@ class ScheduleController extends Controller
 
     public function archived()
     {
-        $schedules = Schedule::with(['teacher', 'classModel', 'subject'])
-            ->where('archived', 1)
+        $schedules = Schedule::onlyTrashed()
+            ->with(['teacher', 'classModel', 'subject'])
             ->latest()
             ->get();
 
@@ -83,8 +82,8 @@ class ScheduleController extends Controller
 
     public function create()
     {
-        $teachers = Teacher::with('subjects')->where('archived', 0)->get();
-        $classes = ClassModel::where('archived', 0)->get();
+        $teachers = Teacher::with('subjects')->get();
+        $classes  = ClassModel::all();
 
         return view('schedule.schedule-add', compact('teachers', 'classes'));
     }
@@ -92,22 +91,21 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'class_id' => 'required',
+            'class_id'   => 'required',
             'teacher_id' => 'required',
             'subject_id' => 'required',
-            'day' => 'required',
+            'day'        => 'required',
             'start_time' => 'required',
-            'end_time' => 'required',
+            'end_time'   => 'required',
         ]);
 
         Schedule::create([
-            'class_id' => $request->class_id,
+            'class_id'   => $request->class_id,
             'teacher_id' => $request->teacher_id,
             'subject_id' => $request->subject_id,
-            'day' => $request->day,
+            'day'        => $request->day,
             'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-            'archived' => 0,
+            'end_time'   => $request->end_time,
         ]);
 
         return response()->json([
@@ -118,10 +116,9 @@ class ScheduleController extends Controller
 
     public function edit(int $id)
     {
-        $schedule = Schedule::where('archived', 0)->findOrFail($id);
-
-        $classes = ClassModel::where('archived', 0)->get();
-        $teachers = Teacher::with('subjects')->where('archived', 0)->get();
+        $schedule = Schedule::findOrFail($id);
+        $classes  = ClassModel::all();
+        $teachers = Teacher::with('subjects')->get();
 
         return view('schedule.schedule-edit', compact('schedule', 'classes', 'teachers'));
     }
@@ -129,23 +126,23 @@ class ScheduleController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'class_id' => 'required',
+            'class_id'   => 'required',
             'teacher_id' => 'required',
             'subject_id' => 'required',
-            'day' => 'required',
+            'day'        => 'required',
             'start_time' => 'required',
-            'end_time' => 'required',
+            'end_time'   => 'required',
         ]);
 
-        $schedule = Schedule::where('archived', 0)->findOrFail($id);
+        $schedule = Schedule::findOrFail($id);
 
         $schedule->update([
-            'class_id' => $request->class_id,
+            'class_id'   => $request->class_id,
             'teacher_id' => $request->teacher_id,
             'subject_id' => $request->subject_id,
-            'day' => $request->day,
+            'day'        => $request->day,
             'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'end_time'   => $request->end_time,
         ]);
 
         return response()->json([
@@ -156,20 +153,16 @@ class ScheduleController extends Controller
 
     public function show(int $id)
     {
-        $schedule = Schedule::with(['classModel', 'teacher', 'subject'])
-            ->where('archived', 0)
-            ->findOrFail($id);
+        $schedule = Schedule::with(['classModel', 'teacher', 'subject'])->findOrFail($id);
 
         return view('schedule.schedule-show', compact('schedule'));
     }
 
+    // SOFT DELETE (arsip)
     public function destroy(int $id)
     {
-        $schedule = Schedule::where('archived', 0)->findOrFail($id);
-
-        $schedule->update([
-            'archived' => 1
-        ]);
+        $schedule = Schedule::findOrFail($id);
+        $schedule->delete();
 
         return response()->json([
             'success' => true,
@@ -177,13 +170,11 @@ class ScheduleController extends Controller
         ]);
     }
 
+    // RESTORE
     public function restore(int $id)
     {
-        $schedule = Schedule::where('archived', 1)->findOrFail($id);
-
-        $schedule->update([
-            'archived' => 0
-        ]);
+        $schedule = Schedule::onlyTrashed()->findOrFail($id);
+        $schedule->restore();
 
         return response()->json([
             'success' => true,
@@ -191,10 +182,11 @@ class ScheduleController extends Controller
         ]);
     }
 
+    // FORCE DELETE (PERMANENT)
     public function delete(int $id)
     {
-        $schedule = Schedule::where('archived', 1)->findOrFail($id);
-        $schedule->delete();
+        $schedule = Schedule::onlyTrashed()->findOrFail($id);
+        $schedule->forceDelete();
 
         return response()->json([
             'success' => true,

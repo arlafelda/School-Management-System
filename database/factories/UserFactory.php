@@ -11,9 +11,6 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     public function definition(): array
@@ -21,23 +18,19 @@ class UserFactory extends Factory
         $name = fake()->name();
 
         return [
-            'name' => $name,
-            'slug' => Str::slug($name) . '-' . fake()->unique()->numberBetween(1000, 9999),
-            'email' => fake()->unique()->safeEmail(),
-            'password' => static::$password ??= Hash::make('password'),
-            'role' => 'student',
-            'archived' => 0,
-            'creation_time' => now(),
-            'create_id' => null,
-            'update_time' => now(),
-            'update_id' => null,
+            'name'           => $name,
+            'slug'           => Str::slug($name) . '-' . fake()->unique()->numberBetween(1000, 9999),
+            'email'          => fake()->unique()->safeEmail(),
+            'password'       => static::$password ??= Hash::make('password'),
+            'role'           => 'student',
+            'creation_time'  => now(),
+            'create_id'      => null,
+            'update_time'    => now(),
+            'update_id'      => null,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate the user is a super admin.
-     */
     public function superAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -45,9 +38,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate the user is an admin.
-     */
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -55,9 +45,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate the user is a teacher.
-     */
     public function teacher(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -65,9 +52,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate the user is a student.
-     */
     public function student(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -76,12 +60,13 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate the user is archived (soft disabled).
+     * Simulate a soft-deleted (trashed) user.
+     * Menggunakan afterCreating agar deleted_at diisi setelah record dibuat.
      */
-    public function archived(): static
+    public function trashed(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'archived' => 1,
-        ]);
+        return $this->afterCreating(function ($user) {
+            $user->delete();
+        });
     }
 }

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tbl_extracurricular_students', function (Blueprint $table) {
@@ -32,13 +29,11 @@ return new class extends Migration
                 ['extracurricular_id', 'student_id'],
                 'extra_student_unique'
             );
-
+            // ❌ tidak pakai softDeletes - tabel pivot
+            // cukup hapus relasi jika siswa keluar dari ekskul
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tbl_extracurricular_students');

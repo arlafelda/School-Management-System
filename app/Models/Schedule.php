@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Teacher;
 use App\Models\ClassModel;
 use App\Models\Subject;
 
 class Schedule extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
     protected $table = 'tbl_schedules';
 
     protected $fillable = [
@@ -20,8 +22,9 @@ class Schedule extends Model
         'day',
         'start_time',
         'end_time',
-        'archived',
     ];
+
+    protected $dates = ['deleted_at'];
 
     public function teacher()
     {
