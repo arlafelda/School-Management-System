@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,63 +31,68 @@ class AuthenticatedSessionController extends Controller
 
             $user = $request->user();
 
-            // 🔥 akun non aktif
+            // 🔥 Blokir akun non-aktif
             if ($user->archived == 1) {
                 Auth::logout();
 
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Akun tidak aktif'
+                        'message' => 'Akun tidak aktif',
                     ], 403);
                 }
 
                 return back()->withErrors(['email' => 'Akun tidak aktif']);
             }
 
-            // 🔥 redirect role
-            if ($user->role == 'super_admin') {
-                $redirect = '/dashboard/superadmin';
-            } elseif ($user->role == 'admin') {
-                $redirect = '/dashboard/admin';
-            } elseif ($user->role == 'teacher') {
-                $redirect = '/dashboard/teacher';
-            } else {
-                $redirect = '/dashboard/student';
-            }
+            // 📝 Catat aktivitas login
+            ActivityLogService::login("Login ke sistem sebagai {$user->role}: {$user->name}");
 
-            // ✅ AJAX RESPONSE
+            // 🔥 Redirect berdasarkan role
+            $redirect = match ($user->role) {
+                'super_admin' => '/dashboard/superadmin',
+                'admin'       => '/dashboard/admin',
+                'teacher'     => '/dashboard/teacher',
+                default       => '/dashboard/student',
+            };
+
+            // ✅ Response AJAX
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Login berhasil',
-                    'redirect' => $redirect
+                    'success'  => true,
+                    'message'  => 'Login berhasil',
+                    'redirect' => $redirect,
                 ]);
             }
 
-            // ✅ NON AJAX
+            // ✅ Response non-AJAX
             return redirect($redirect);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Email atau password salah'
+                    'message' => 'Email atau password salah',
                 ], 422);
             }
 
-            return back()->withErrors([
-                'email' => 'Email atau password salah',
-            ]);
+            return back()->withErrors(['email' => 'Email atau password salah']);
         }
     }
+
     /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        // 📝 Catat aktivitas logout sebelum sesi dihapus
+        $user = Auth::user();
+        if ($user) {
+            ActivityLogService::logout("Logout dari sistem: {$user->name} ({$user->role})");
+        }
 
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -32,7 +33,7 @@ class SubjectController extends Controller
         $request->validate([
             'name'        => 'required',
             'code'        => 'required|unique:tbl_subjects,code',
-            'description' => 'nullable'
+            'description' => 'nullable',
         ]);
 
         $slug = Str::slug($request->name);
@@ -49,11 +50,19 @@ class SubjectController extends Controller
             'description' => $request->description,
         ]);
 
+        // 📝 Catat aktivitas
+        ActivityLogService::create(
+            'Subject',
+            "Menambahkan mata pelajaran baru: {$subject->name} (Kode: {$subject->code})",
+            $subject->name,
+            $subject->only(['name', 'code', 'kkm', 'description'])
+        );
+
         return $request->ajax()
             ? response()->json([
                 'success' => true,
                 'message' => 'Subject berhasil ditambahkan',
-                'data'    => $subject
+                'data'    => $subject,
             ])
             : redirect()->route('subjects.index')
                 ->with('success', 'Subject berhasil ditambahkan');
@@ -73,8 +82,11 @@ class SubjectController extends Controller
         $request->validate([
             'name'        => 'required',
             'code'        => 'required|unique:tbl_subjects,code,' . $subject->id,
-            'description' => 'nullable'
+            'description' => 'nullable',
         ]);
+
+        // Simpan data lama sebelum diupdate
+        $oldData = $subject->only(['name', 'code', 'description', 'slug']);
 
         $newSlug = Str::slug($request->name);
 
@@ -90,14 +102,23 @@ class SubjectController extends Controller
             'name'        => $request->name,
             'code'        => $request->code,
             'slug'        => $newSlug,
-            'description' => $request->description
+            'description' => $request->description,
         ]);
+
+        // 📝 Catat aktivitas
+        ActivityLogService::update(
+            'Subject',
+            "Mengupdate mata pelajaran: {$subject->name} (Kode: {$subject->code})",
+            $subject->name,
+            $oldData,
+            $subject->only(['name', 'code', 'description', 'slug'])
+        );
 
         return $request->ajax()
             ? response()->json([
                 'success' => true,
                 'message' => 'Subject berhasil diupdate',
-                'data'    => $subject
+                'data'    => $subject,
             ])
             : redirect()->route('subjects.index')
                 ->with('success', 'Subject berhasil diupdate');
@@ -112,17 +133,25 @@ class SubjectController extends Controller
             return $request->ajax()
                 ? response()->json([
                     'success' => false,
-                    'message' => 'Subject tidak bisa diarsipkan karena masih digunakan guru'
+                    'message' => 'Subject tidak bisa diarsipkan karena masih digunakan guru',
                 ], 422)
                 : back()->with('error', 'Subject masih digunakan guru');
         }
+
+        // 📝 Catat aktivitas sebelum dihapus
+        ActivityLogService::delete(
+            'Subject',
+            "Mengarsipkan mata pelajaran: {$subject->name} (Kode: {$subject->code})",
+            $subject->name,
+            $subject->only(['name', 'code', 'description', 'slug'])
+        );
 
         $subject->delete();
 
         return $request->ajax()
             ? response()->json([
                 'success' => true,
-                'message' => 'Subject berhasil diarsipkan'
+                'message' => 'Subject berhasil diarsipkan',
             ])
             : redirect()->route('subjects.index')
                 ->with('success', 'Subject berhasil diarsipkan');
@@ -137,10 +166,17 @@ class SubjectController extends Controller
 
         $subject->restore();
 
+        // 📝 Catat aktivitas
+        ActivityLogService::restore(
+            'Subject',
+            "Merestore mata pelajaran: {$subject->name} (Kode: {$subject->code})",
+            $subject->name
+        );
+
         return $request->ajax()
             ? response()->json([
                 'success' => true,
-                'message' => 'Subject berhasil direstore'
+                'message' => 'Subject berhasil direstore',
             ])
             : redirect()->route('subjects.archived')
                 ->with('success', 'Subject berhasil direstore');
@@ -157,17 +193,25 @@ class SubjectController extends Controller
             return $request->ajax()
                 ? response()->json([
                     'success' => false,
-                    'message' => 'Tidak bisa dihapus, masih digunakan oleh guru'
+                    'message' => 'Tidak bisa dihapus, masih digunakan oleh guru',
                 ], 422)
                 : back()->with('error', 'Tidak bisa dihapus, masih digunakan oleh guru');
         }
+
+        // 📝 Catat aktivitas sebelum dihapus permanen
+        ActivityLogService::forceDelete(
+            'Subject',
+            "Menghapus permanen mata pelajaran: {$subject->name} (Kode: {$subject->code})",
+            $subject->name,
+            $subject->only(['name', 'code', 'description', 'slug'])
+        );
 
         $subject->forceDelete();
 
         return $request->ajax()
             ? response()->json([
                 'success' => true,
-                'message' => 'Subject berhasil dihapus permanen'
+                'message' => 'Subject berhasil dihapus permanen',
             ])
             : redirect()->route('subjects.archived')
                 ->with('success', 'Subject berhasil dihapus permanen');

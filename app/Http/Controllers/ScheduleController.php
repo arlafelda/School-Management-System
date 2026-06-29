@@ -6,6 +6,7 @@ use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Models\ClassModel;
 use App\Models\Student;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,8 +14,7 @@ class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        $user = Auth::user();
-
+        $user    = Auth::user();
         $classes = ClassModel::all();
 
         $schedules = Schedule::with(['teacher', 'classModel', 'subject'])
@@ -99,7 +99,7 @@ class ScheduleController extends Controller
             'end_time'   => 'required',
         ]);
 
-        Schedule::create([
+        $schedule = Schedule::create([
             'class_id'   => $request->class_id,
             'teacher_id' => $request->teacher_id,
             'subject_id' => $request->subject_id,
@@ -108,9 +108,24 @@ class ScheduleController extends Controller
             'end_time'   => $request->end_time,
         ]);
 
+        // Eager load relasi untuk deskripsi log
+        $schedule->load(['teacher', 'classModel', 'subject']);
+
+        // 📝 Catat aktivitas
+        $teacherName = $schedule->teacher?->name    ?? '-';
+        $className   = $schedule->classModel?->name ?? '-';
+        $subjectName = $schedule->subject?->name    ?? '-';
+
+        ActivityLogService::create(
+            'Schedule',
+            "Menambahkan jadwal baru: {$subjectName} — Kelas: {$className}, Guru: {$teacherName}, Hari: {$schedule->day} ({$schedule->start_time}–{$schedule->end_time})",
+            "{$subjectName} / {$className}",
+            $schedule->toArray()
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Jadwal berhasil ditambahkan'
+            'message' => 'Jadwal berhasil ditambahkan',
         ]);
     }
 
@@ -134,7 +149,13 @@ class ScheduleController extends Controller
             'end_time'   => 'required',
         ]);
 
-        $schedule = Schedule::findOrFail($id);
+        $schedule = Schedule::with(['teacher', 'classModel', 'subject'])->findOrFail($id);
+
+        // Simpan data lama sebelum diupdate
+        $oldData = $schedule->only([
+            'class_id', 'teacher_id', 'subject_id',
+            'day', 'start_time', 'end_time',
+        ]);
 
         $schedule->update([
             'class_id'   => $request->class_id,
@@ -145,9 +166,28 @@ class ScheduleController extends Controller
             'end_time'   => $request->end_time,
         ]);
 
+        // Refresh relasi setelah update
+        $schedule->load(['teacher', 'classModel', 'subject']);
+
+        // 📝 Catat aktivitas
+        $teacherName = $schedule->teacher?->name    ?? '-';
+        $className   = $schedule->classModel?->name ?? '-';
+        $subjectName = $schedule->subject?->name    ?? '-';
+
+        ActivityLogService::update(
+            'Schedule',
+            "Mengupdate jadwal: {$subjectName} — Kelas: {$className}, Guru: {$teacherName}, Hari: {$schedule->day} ({$schedule->start_time}–{$schedule->end_time})",
+            "{$subjectName} / {$className}",
+            $oldData,
+            $schedule->only([
+                'class_id', 'teacher_id', 'subject_id',
+                'day', 'start_time', 'end_time',
+            ])
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Jadwal berhasil diperbarui'
+            'message' => 'Jadwal berhasil diperbarui',
         ]);
     }
 
@@ -161,36 +201,84 @@ class ScheduleController extends Controller
     // SOFT DELETE (arsip)
     public function destroy(int $id)
     {
-        $schedule = Schedule::findOrFail($id);
+        $schedule = Schedule::with(['teacher', 'classModel', 'subject'])->findOrFail($id);
+
+        // 📝 Catat aktivitas sebelum dihapus
+        $teacherName = $schedule->teacher?->name    ?? '-';
+        $className   = $schedule->classModel?->name ?? '-';
+        $subjectName = $schedule->subject?->name    ?? '-';
+
+        ActivityLogService::delete(
+            'Schedule',
+            "Mengarsipkan jadwal: {$subjectName} — Kelas: {$className}, Guru: {$teacherName}, Hari: {$schedule->day} ({$schedule->start_time}–{$schedule->end_time})",
+            "{$subjectName} / {$className}",
+            $schedule->only([
+                'class_id', 'teacher_id', 'subject_id',
+                'day', 'start_time', 'end_time',
+            ])
+        );
+
         $schedule->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Jadwal berhasil dipindahkan ke arsip'
+            'message' => 'Jadwal berhasil dipindahkan ke arsip',
         ]);
     }
 
     // RESTORE
     public function restore(int $id)
     {
-        $schedule = Schedule::onlyTrashed()->findOrFail($id);
+        $schedule = Schedule::onlyTrashed()
+            ->with(['teacher', 'classModel', 'subject'])
+            ->findOrFail($id);
+
         $schedule->restore();
+
+        // 📝 Catat aktivitas
+        $teacherName = $schedule->teacher?->name    ?? '-';
+        $className   = $schedule->classModel?->name ?? '-';
+        $subjectName = $schedule->subject?->name    ?? '-';
+
+        ActivityLogService::restore(
+            'Schedule',
+            "Merestore jadwal: {$subjectName} — Kelas: {$className}, Guru: {$teacherName}, Hari: {$schedule->day} ({$schedule->start_time}–{$schedule->end_time})",
+            "{$subjectName} / {$className}"
+        );
 
         return response()->json([
             'success' => true,
-            'message' => 'Jadwal berhasil direstore'
+            'message' => 'Jadwal berhasil direstore',
         ]);
     }
 
     // FORCE DELETE (PERMANENT)
     public function delete(int $id)
     {
-        $schedule = Schedule::onlyTrashed()->findOrFail($id);
+        $schedule = Schedule::onlyTrashed()
+            ->with(['teacher', 'classModel', 'subject'])
+            ->findOrFail($id);
+
+        // 📝 Catat aktivitas sebelum dihapus permanen
+        $teacherName = $schedule->teacher?->name    ?? '-';
+        $className   = $schedule->classModel?->name ?? '-';
+        $subjectName = $schedule->subject?->name    ?? '-';
+
+        ActivityLogService::forceDelete(
+            'Schedule',
+            "Menghapus permanen jadwal: {$subjectName} — Kelas: {$className}, Guru: {$teacherName}, Hari: {$schedule->day} ({$schedule->start_time}–{$schedule->end_time})",
+            "{$subjectName} / {$className}",
+            $schedule->only([
+                'class_id', 'teacher_id', 'subject_id',
+                'day', 'start_time', 'end_time',
+            ])
+        );
+
         $schedule->forceDelete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Jadwal berhasil dihapus permanen'
+            'message' => 'Jadwal berhasil dihapus permanen',
         ]);
     }
 }

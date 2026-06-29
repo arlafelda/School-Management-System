@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Extracurricular;
 use App\Models\Teacher;
 use App\Models\Student;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -46,8 +47,8 @@ class ExtracurricularController extends Controller
         ]);
 
         $baseSlug = Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
+        $slug     = $baseSlug;
+        $counter  = 1;
 
         while (Extracurricular::where('slug', $slug)->exists()) {
             $slug = $baseSlug . '-' . $counter++;
@@ -61,11 +62,22 @@ class ExtracurricularController extends Controller
             $ekskul->students()->sync($request->student_ids);
         }
 
+        // 📝 Catat aktivitas
+        $teacherName   = $ekskul->teacher?->name ?? '-';
+        $studentCount  = count($request->student_ids ?? []);
+
+        ActivityLogService::create(
+            'Extracurricular',
+            "Menambahkan ekskul baru: {$ekskul->name} — Pembina: {$teacherName}, Anggota: {$studentCount} siswa",
+            $ekskul->name,
+            $ekskul->toArray()
+        );
+
         return $request->ajax()
             ? response()->json([
                 'status'  => true,
                 'message' => 'Data berhasil ditambahkan',
-                'data'    => $ekskul
+                'data'    => $ekskul,
             ])
             : redirect()->route('extracurricular.index')
                 ->with('success', 'Data berhasil ditambahkan');
@@ -76,7 +88,7 @@ class ExtracurricularController extends Controller
         $extracurricular->load(['teacher', 'students']);
 
         return view('extracurricular.extracurricular-show', [
-            'data' => $extracurricular
+            'data' => $extracurricular,
         ]);
     }
 
@@ -88,7 +100,7 @@ class ExtracurricularController extends Controller
         return view('extracurricular.extracurricular-edit', [
             'data'     => $extracurricular,
             'teachers' => $teachers,
-            'students' => $students
+            'students' => $students,
         ]);
     }
 
@@ -99,9 +111,13 @@ class ExtracurricularController extends Controller
             'teacher_id' => 'nullable|exists:tbl_teachers,id',
         ]);
 
+        // Simpan data lama sebelum diupdate
+        $oldData = $extracurricular->only(['name', 'teacher_id', 'slug']);
+        $oldStudentIds = $extracurricular->students()->pluck('student_id')->toArray();
+
         $baseSlug = Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
+        $slug     = $baseSlug;
+        $counter  = 1;
 
         while (
             Extracurricular::where('slug', $slug)
@@ -119,10 +135,24 @@ class ExtracurricularController extends Controller
             $extracurricular->students()->sync($request->student_ids);
         }
 
+        // 📝 Catat aktivitas
+        $teacherName = $extracurricular->teacher?->name ?? '-';
+
+        ActivityLogService::update(
+            'Extracurricular',
+            "Mengupdate ekskul: {$extracurricular->name} — Pembina: {$teacherName}",
+            $extracurricular->name,
+            array_merge($oldData, ['student_ids' => $oldStudentIds]),
+            array_merge(
+                $extracurricular->only(['name', 'teacher_id', 'slug']),
+                ['student_ids' => $request->student_ids ?? []]
+            )
+        );
+
         return $request->ajax()
             ? response()->json([
                 'status'  => true,
-                'message' => 'Data berhasil diupdate'
+                'message' => 'Data berhasil diupdate',
             ])
             : redirect()->route('extracurricular.index')
                 ->with('success', 'Data berhasil diupdate');
@@ -131,12 +161,22 @@ class ExtracurricularController extends Controller
     // SOFT DELETE (arsip)
     public function destroy(Request $request, Extracurricular $extracurricular)
     {
+        // 📝 Catat aktivitas sebelum dihapus
+        $teacherName = $extracurricular->teacher?->name ?? '-';
+
+        ActivityLogService::delete(
+            'Extracurricular',
+            "Mengarsipkan ekskul: {$extracurricular->name} — Pembina: {$teacherName}",
+            $extracurricular->name,
+            $extracurricular->only(['name', 'teacher_id', 'slug'])
+        );
+
         $extracurricular->delete();
 
         return $request->expectsJson()
             ? response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dipindahkan ke arsip'
+                'message' => 'Data berhasil dipindahkan ke arsip',
             ])
             : redirect()->route('extracurricular.index')
                 ->with('success', 'Data berhasil dipindahkan ke arsip');
@@ -152,14 +192,21 @@ class ExtracurricularController extends Controller
 
             $extracurricular->restore();
 
+            // 📝 Catat aktivitas
+            ActivityLogService::restore(
+                'Extracurricular',
+                "Merestore ekskul: {$extracurricular->name}",
+                $extracurricular->name
+            );
+
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil direstore'
+                'message' => 'Data berhasil direstore',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -172,16 +219,24 @@ class ExtracurricularController extends Controller
                 ->where('slug', $slug)
                 ->firstOrFail();
 
+            // 📝 Catat aktivitas sebelum dihapus permanen
+            ActivityLogService::forceDelete(
+                'Extracurricular',
+                "Menghapus permanen ekskul: {$extracurricular->name}",
+                $extracurricular->name,
+                $extracurricular->only(['name', 'teacher_id', 'slug'])
+            );
+
             $extracurricular->forceDelete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dihapus permanen'
+                'message' => 'Data berhasil dihapus permanen',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -199,12 +254,19 @@ class ExtracurricularController extends Controller
 
         if (!$extracurricular->students()->where('student_id', $student->id)->exists()) {
             $extracurricular->students()->attach($student->id);
+
+            // 📝 Catat aktivitas
+            ActivityLogService::create(
+                'Extracurricular',
+                "Siswa mendaftar ekskul: {$extracurricular->name} — Siswa: {$student->name}",
+                $student->name
+            );
         }
 
         return $request->ajax()
             ? response()->json([
                 'status'  => true,
-                'message' => 'Berhasil daftar ekskul'
+                'message' => 'Berhasil daftar ekskul',
             ])
             : back()->with('success', 'Berhasil daftar ekskul');
     }

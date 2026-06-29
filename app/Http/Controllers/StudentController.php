@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\ClassModel;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,12 +22,13 @@ class StudentController extends Controller
     public function create()
     {
         $classes = ClassModel::all();
+
         return view('student.student-add', compact('classes'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name'     => 'required',
             'email'    => 'required|email|unique:tbl_users,email',
             'password' => 'required|min:6',
@@ -44,7 +46,7 @@ class StudentController extends Controller
         ]);
 
         // STUDENT
-        Student::create([
+        $student = Student::create([
             'user_id'        => $user->id,
             'nisn'           => $request->nisn,
             'nis'            => $request->nis,
@@ -63,10 +65,23 @@ class StudentController extends Controller
             'parent_address' => $request->parent_address,
         ]);
 
+        // 📝 Catat aktivitas
+        $className = $student->class?->name ?? '-';
+
+        ActivityLogService::create(
+            'Student',
+            "Menambahkan siswa baru: {$student->name} (NISN: {$student->nisn}, Kelas: {$className})",
+            $student->name,
+            $student->only([
+                'name', 'nisn', 'nis', 'gender',
+                'class_id', 'major', 'status', 'email',
+            ])
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data siswa berhasil ditambahkan'
+                'message' => 'Data siswa berhasil ditambahkan',
             ]);
         }
 
@@ -93,17 +108,27 @@ class StudentController extends Controller
 
     public function update(Request $request, string $slug)
     {
-        $student = Student::with('user')
+        $student = Student::with('user', 'class')
             ->where('slug', $slug)
             ->firstOrFail();
 
-        $validated = $request->validate([
+        $request->validate([
             'name'     => 'required',
             'email'    => 'required|email|unique:tbl_users,email,' . $student->user_id,
             'nisn'     => 'required|unique:tbl_students,nisn,' . $student->id,
             'nis'      => 'required|unique:tbl_students,nis,' . $student->id,
             'class_id' => 'required|exists:tbl_classes,id',
         ]);
+
+        // Simpan data lama sebelum diupdate
+        $oldData = array_merge(
+            $student->only([
+                'name', 'nisn', 'nis', 'gender',
+                'class_id', 'major', 'status',
+                'birth_place', 'birth_date', 'address', 'phone',
+            ]),
+            ['email' => $student->user?->email]
+        );
 
         $student->user->update([
             'name'  => $request->name,
@@ -112,7 +137,7 @@ class StudentController extends Controller
 
         if ($request->password) {
             $student->user->update([
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
             ]);
         }
 
@@ -130,10 +155,28 @@ class StudentController extends Controller
             'phone'       => $request->phone,
         ]);
 
+        // 📝 Catat aktivitas
+        $className = $student->class?->name ?? '-';
+
+        ActivityLogService::update(
+            'Student',
+            "Mengupdate data siswa: {$student->name} (NISN: {$student->nisn}, Kelas: {$className})",
+            $student->name,
+            $oldData,
+            array_merge(
+                $student->only([
+                    'name', 'nisn', 'nis', 'gender',
+                    'class_id', 'major', 'status',
+                    'birth_place', 'birth_date', 'address', 'phone',
+                ]),
+                ['email' => $request->email]
+            )
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data siswa berhasil diupdate'
+                'message' => 'Data siswa berhasil diupdate',
             ]);
         }
 
@@ -144,22 +187,31 @@ class StudentController extends Controller
     // SOFT DELETE (arsip)
     public function destroy(string $slug, Request $request)
     {
-        $student = Student::with('user')
+        $student = Student::with('user', 'class')
             ->where('slug', $slug)
             ->firstOrFail();
+
+        // 📝 Catat aktivitas sebelum dihapus
+        $className = $student->class?->name ?? '-';
+
+        ActivityLogService::delete(
+            'Student',
+            "Mengarsipkan siswa: {$student->name} (NISN: {$student->nisn}, Kelas: {$className})",
+            $student->name,
+            $student->only(['name', 'nisn', 'nis', 'class_id', 'status'])
+        );
 
         // Soft delete user terkait
         if ($student->user) {
             $student->user->delete();
         }
 
-        // Soft delete student
         $student->delete();
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dipindahkan ke arsip'
+                'message' => 'Data berhasil dipindahkan ke arsip',
             ]);
         }
 
@@ -189,6 +241,13 @@ class StudentController extends Controller
 
         $student->restore();
 
+        // 📝 Catat aktivitas
+        ActivityLogService::restore(
+            'Student',
+            "Merestore siswa: {$student->name} (NISN: {$student->nisn})",
+            $student->name
+        );
+
         return redirect()
             ->route('students.archived')
             ->with('success', 'Data berhasil direstore');
@@ -202,23 +261,30 @@ class StudentController extends Controller
                 ->where('slug', $slug)
                 ->firstOrFail();
 
+            // 📝 Catat aktivitas sebelum dihapus permanen
+            ActivityLogService::forceDelete(
+                'Student',
+                "Menghapus permanen siswa: {$student->name} (NISN: {$student->nisn})",
+                $student->name,
+                $student->only(['name', 'nisn', 'nis', 'class_id', 'status'])
+            );
+
             // Hapus permanen user terkait
             if ($student->user_id) {
                 User::onlyTrashed()->where('id', $student->user_id)->forceDelete();
             }
 
-            // Hapus permanen student
             $student->forceDelete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data siswa berhasil dihapus permanen'
+                'message' => 'Data siswa berhasil dihapus permanen',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus permanen',
-                'error'   => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
@@ -232,8 +298,7 @@ class StudentController extends Controller
         }
 
         $teacher = $user->teacher;
-
-        $class = ClassModel::where('teacher_id', $teacher->id)->first();
+        $class   = ClassModel::where('teacher_id', $teacher->id)->first();
 
         if (!$class) {
             abort(403, 'Anda bukan wali kelas.');

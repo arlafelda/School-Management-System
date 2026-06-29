@@ -8,6 +8,7 @@ use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Subject;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +38,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        $classes = ClassModel::all();
+        $classes  = ClassModel::all();
         $subjects = Subject::all();
 
         $query = Attendance::with([
@@ -59,17 +60,10 @@ class AttendanceController extends Controller
                 ->first();
 
             if ($student) {
-
                 $query->where('student_id', $student->id);
-
-                $request->merge([
-                    'class_id' => $student->class_id
-                ]);
-
+                $request->merge(['class_id' => $student->class_id]);
             } else {
-
                 $query->whereRaw('1=0');
-
             }
         }
 
@@ -83,21 +77,10 @@ class AttendanceController extends Controller
             $teacher = $this->getTeacher();
 
             if ($teacher) {
-
-                $scheduleIds = Schedule::where(
-                    'teacher_id',
-                    $teacher->id
-                )->pluck('id');
-
-                $query->whereIn(
-                    'schedule_id',
-                    $scheduleIds
-                );
-
+                $scheduleIds = Schedule::where('teacher_id', $teacher->id)->pluck('id');
+                $query->whereIn('schedule_id', $scheduleIds);
             } else {
-
                 $query->whereRaw('1=0');
-
             }
         }
 
@@ -107,14 +90,9 @@ class AttendanceController extends Controller
         =====================
         */
         if ($request->class_id) {
-
             $query->whereHas('student', function ($q) use ($request) {
-                $q->where(
-                    'class_id',
-                    $request->class_id
-                );
+                $q->where('class_id', $request->class_id);
             });
-
         }
 
         /*
@@ -123,14 +101,9 @@ class AttendanceController extends Controller
         =====================
         */
         if ($request->subject_id) {
-
             $query->whereHas('schedule', function ($q) use ($request) {
-                $q->where(
-                    'subject_id',
-                    $request->subject_id
-                );
+                $q->where('subject_id', $request->subject_id);
             });
-
         }
 
         /*
@@ -139,10 +112,7 @@ class AttendanceController extends Controller
         =====================
         */
         if ($request->status) {
-            $query->where(
-                'status',
-                $request->status
-            );
+            $query->where('status', $request->status);
         }
 
         /*
@@ -151,23 +121,14 @@ class AttendanceController extends Controller
         =====================
         */
         if ($request->date) {
-            $query->whereDate(
-                'date',
-                $request->date
-            );
+            $query->whereDate('date', $request->date);
         }
 
         $attendances = $query->latest()->get();
 
-        $total = $attendances->count();
-
-        $hadir = $attendances
-            ->where('status', 'hadir')
-            ->count();
-
-        $persen = $total
-            ? round(($hadir / $total) * 100, 1)
-            : 0;
+        $total  = $attendances->count();
+        $hadir  = $attendances->where('status', 'hadir')->count();
+        $persen = $total ? round(($hadir / $total) * 100, 1) : 0;
 
         return view('attendance.attendance-index', compact(
             'attendances',
@@ -189,10 +150,9 @@ class AttendanceController extends Controller
             abort(403, 'Student tidak memiliki akses');
         }
 
-        $classes = ClassModel::all();
+        $classes  = ClassModel::all();
         $subjects = Subject::all();
-
-        $date = $request->date ?? date('Y-m-d');
+        $date     = $request->date ?? date('Y-m-d');
 
         $hariMap = [
             'Monday'    => 'Senin',
@@ -205,10 +165,10 @@ class AttendanceController extends Controller
         ];
 
         $englishDay = Carbon::parse($date)->format('l');
-        $today = $hariMap[$englishDay];
+        $today      = $hariMap[$englishDay];
 
         $schedules = collect();
-        $students = collect();
+        $students  = collect();
 
         /*
         =====================
@@ -226,6 +186,7 @@ class AttendanceController extends Controller
             ->where('teacher_id', $teacher->id)
             ->where('day', $today)
             ->get();
+
         }
 
         /*
@@ -257,12 +218,8 @@ class AttendanceController extends Controller
                 ->first();
 
             if ($selectedSchedule) {
-
                 $students = Student::with('class')
-                    ->where(
-                        'class_id',
-                        $selectedSchedule->class_id
-                    )
+                    ->where('class_id', $selectedSchedule->class_id)
                     ->get();
             }
         }
@@ -275,13 +232,9 @@ class AttendanceController extends Controller
         $attendanceExists = false;
 
         if ($request->schedule_id) {
-
-            $attendanceExists = Attendance::where(
-                'schedule_id',
-                $request->schedule_id
-            )
-            ->whereDate('date', $date)
-            ->exists();
+            $attendanceExists = Attendance::where('schedule_id', $request->schedule_id)
+                ->whereDate('date', $date)
+                ->exists();
         }
 
         $showForm = $request->schedule_id
@@ -309,7 +262,7 @@ class AttendanceController extends Controller
 
         if ($user->role === 'student') {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Student tidak memiliki akses'
             ], 403);
         }
@@ -322,11 +275,15 @@ class AttendanceController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
+
+        $schedule     = Schedule::with(['subject', 'classModel'])->find($request->schedule_id);
+        $savedCount   = 0;
+        $savedStudents = [];
 
         foreach ($request->student_id as $studentId) {
 
@@ -340,16 +297,29 @@ class AttendanceController extends Controller
                 [
                     'student_id'  => $studentId,
                     'schedule_id' => $request->schedule_id,
-                    'date'        => $request->date
+                    'date'        => $request->date,
                 ],
                 [
-                    'status' => $status
+                    'status' => $status,
                 ]
             );
+
+            $savedCount++;
+            $savedStudents[] = $studentId;
         }
 
+        // 📝 Catat aktivitas
+        $subjectName = $schedule?->subject?->name ?? '-';
+        $className   = $schedule?->classModel?->name ?? '-';
+
+        ActivityLogService::create(
+            'Attendance',
+            "Menyimpan absensi {$savedCount} siswa — Mapel: {$subjectName}, Kelas: {$className}, Tanggal: {$request->date}",
+            "{$subjectName} / {$className}",
+        );
+
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Absensi berhasil disimpan'
         ]);
     }
@@ -367,14 +337,9 @@ class AttendanceController extends Controller
             'schedule.classModel'
         ])->findOrFail($id);
 
-        $classes = ClassModel::all();
-        $subjects = Subject::all();
-
-        $schedules = Schedule::with([
-            'teacher',
-            'classModel',
-            'subject'
-        ])->get();
+        $classes   = ClassModel::all();
+        $subjects  = Subject::all();
+        $schedules = Schedule::with(['teacher', 'classModel', 'subject'])->get();
 
         return view('attendance.attendance-edit', compact(
             'attendance',
@@ -390,7 +355,18 @@ class AttendanceController extends Controller
     // =====================
     public function update(Request $request, int $id)
     {
-        $attendance = Attendance::findOrFail($id);
+        $attendance = Attendance::with([
+            'student',
+            'schedule.subject',
+            'schedule.classModel'
+        ])->findOrFail($id);
+
+        // Simpan data lama sebelum diupdate
+        $oldData = [
+            'schedule_id' => $attendance->schedule_id,
+            'date'        => $attendance->date,
+            'status'      => $attendance->status,
+        ];
 
         $attendance->update([
             'schedule_id' => $request->schedule_id,
@@ -398,8 +374,24 @@ class AttendanceController extends Controller
             'status'      => $request->status,
         ]);
 
+        // 📝 Catat aktivitas
+        $studentName = $attendance->student?->name ?? '-';
+        $subjectName = $attendance->schedule?->subject?->name ?? '-';
+
+        ActivityLogService::update(
+            'Attendance',
+            "Mengupdate absensi siswa: {$studentName} — Mapel: {$subjectName}, Status: {$oldData['status']} → {$request->status}",
+            $studentName,
+            $oldData,
+            [
+                'schedule_id' => $request->schedule_id,
+                'date'        => $request->date,
+                'status'      => $request->status,
+            ]
+        );
+
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Absensi berhasil diperbarui'
         ]);
     }
@@ -409,112 +401,108 @@ class AttendanceController extends Controller
     // RECAP
     // =====================
     public function recap(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $classes = ClassModel::all();
-    $subjects = Subject::all();
+        $classes  = ClassModel::all();
+        $subjects = Subject::all();
 
-    $query = Attendance::with([
-        'student.class',
-        'schedule.subject'
-    ]);
+        $query = Attendance::with([
+            'student.class',
+            'schedule.subject'
+        ]);
 
-    /*
-    =====================
-    STUDENT
-    =====================
-    */
-    if ($user->role === 'student') {
+        /*
+        =====================
+        STUDENT
+        =====================
+        */
+        if ($user->role === 'student') {
 
-        $student = Student::where('user_id', $user->id)->first();
+            $student = Student::where('user_id', $user->id)->first();
 
-        if ($student) {
-            $query->where('student_id', $student->id);
-        } else {
-            $query->whereRaw('1=0');
+            if ($student) {
+                $query->where('student_id', $student->id);
+            } else {
+                $query->whereRaw('1=0');
+            }
         }
-    }
 
-    /*
-    =====================
-    TEACHER
-    =====================
-    */
-    elseif ($user->role === 'teacher') {
+        /*
+        =====================
+        TEACHER
+        =====================
+        */
+        elseif ($user->role === 'teacher') {
 
-        $teacher = $this->getTeacher();
+            $teacher = $this->getTeacher();
 
-        if ($teacher) {
-
-            $scheduleIds = Schedule::where('teacher_id', $teacher->id)
-                ->pluck('id');
-
-            $query->whereIn('schedule_id', $scheduleIds);
-
-        } else {
-            $query->whereRaw('1=0');
+            if ($teacher) {
+                $scheduleIds = Schedule::where('teacher_id', $teacher->id)->pluck('id');
+                $query->whereIn('schedule_id', $scheduleIds);
+            } else {
+                $query->whereRaw('1=0');
+            }
         }
+
+        /*
+        =====================
+        FILTER MAJOR
+        =====================
+        */
+        if ($request->major) {
+            $query->whereHas('student.class', function ($q) use ($request) {
+                $q->where('major', $request->major);
+            });
+        }
+
+        /*
+        =====================
+        FILTER CLASS
+        =====================
+        */
+        if ($request->class_id) {
+            $query->whereHas('student', function ($q) use ($request) {
+                $q->where('class_id', $request->class_id);
+            });
+        }
+
+        /*
+        =====================
+        FILTER SUBJECT
+        =====================
+        */
+        if ($request->subject_id) {
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->where('subject_id', $request->subject_id);
+            });
+        }
+
+        /*
+        =====================
+        REKAP DATA
+        =====================
+        */
+        $rekap = $query->get()
+            ->groupBy('student_id')
+            ->map(function ($items) {
+
+                $first = $items->first();
+
+                return (object)[
+                    'student' => $first->student,
+                    'hadir'   => $items->where('status', 'hadir')->count(),
+                    'izin'    => $items->where('status', 'izin')->count(),
+                    'alpa'    => $items->where('status', 'alpa')->count(),
+                ];
+            });
+
+        return view('attendance.attendance-recap', compact(
+            'rekap',
+            'classes',
+            'subjects'
+        ));
     }
-
-    /*
-    =====================
-    FILTER MAJOR
-    =====================
-    */
-    if ($request->major) {
-        $query->whereHas('student.class', function ($q) use ($request) {
-            $q->where('major', $request->major);
-        });
-    }
-
-    /*
-    =====================
-    FILTER CLASS
-    =====================
-    */
-    if ($request->class_id) {
-        $query->whereHas('student', function ($q) use ($request) {
-            $q->where('class_id', $request->class_id);
-        });
-    }
-
-    /*
-    =====================
-    FILTER SUBJECT (BARU)
-    =====================
-    */
-    if ($request->subject_id) {
-        $query->whereHas('schedule', function ($q) use ($request) {
-            $q->where('subject_id', $request->subject_id);
-        });
-    }
-
-    /*
-    =====================
-    REKAP DATA
-    =====================
-    */
-    $rekap = $query->get()
-        ->groupBy('student_id')
-        ->map(function ($items) {
-
-            $first = $items->first();
-
-            return (object)[
-                'student' => $first->student,
-                'hadir'   => $items->where('status', 'hadir')->count(),
-                'izin'    => $items->where('status', 'izin')->count(),
-                'alpa'    => $items->where('status', 'alpa')->count(),
-            ];
-        });
-
-    return view('attendance.attendance-recap', compact(
-        'rekap',
-        'classes',
-        'subjects'
-    ));
-}
 
 
     // =====================
@@ -522,10 +510,34 @@ class AttendanceController extends Controller
     // =====================
     public function destroy(int $id)
     {
-        Attendance::findOrFail($id)->delete();
+        $attendance = Attendance::with([
+            'student',
+            'schedule.subject',
+            'schedule.classModel'
+        ])->findOrFail($id);
+
+        // 📝 Catat aktivitas sebelum dihapus
+        $studentName = $attendance->student?->name ?? '-';
+        $subjectName = $attendance->schedule?->subject?->name ?? '-';
+        $className   = $attendance->schedule?->classModel?->name ?? '-';
+
+        ActivityLogService::delete(
+            'Attendance',
+            "Menghapus absensi siswa: {$studentName} — Mapel: {$subjectName}, Kelas: {$className}, Tanggal: {$attendance->date}",
+            $studentName,
+            [
+                'student'  => $studentName,
+                'subject'  => $subjectName,
+                'class'    => $className,
+                'date'     => $attendance->date,
+                'status'   => $attendance->status,
+            ]
+        );
+
+        $attendance->delete();
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Absensi berhasil dihapus'
         ]);
     }

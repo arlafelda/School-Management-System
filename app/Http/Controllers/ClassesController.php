@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassModel;
 use App\Models\Teacher;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -81,8 +82,8 @@ class ClassesController extends Controller
         ]);
 
         $baseSlug = Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
+        $slug     = $baseSlug;
+        $counter  = 1;
 
         while (ClassModel::where('slug', $slug)->exists()) {
             $slug = $baseSlug . '-' . $counter++;
@@ -92,11 +93,19 @@ class ClassesController extends Controller
 
         $class = ClassModel::create($validated);
 
+        // 📝 Catat aktivitas
+        ActivityLogService::create(
+            'Class',
+            "Menambahkan kelas baru: {$class->name} (Level: {$class->level}, T.A: {$class->academic_year})",
+            $class->name,
+            $class->toArray()
+        );
+
         return $request->ajax()
             ? response()->json([
                 'status'  => true,
                 'message' => 'Kelas berhasil ditambahkan',
-                'data'    => $class
+                'data'    => $class,
             ])
             : redirect()
                 ->route('class.index')
@@ -128,9 +137,12 @@ class ClassesController extends Controller
             'teacher_id'    => 'nullable|exists:tbl_teachers,id'
         ]);
 
+        // Simpan data lama sebelum diupdate
+        $oldData = $class->only(['name', 'level', 'major', 'academic_year', 'semester', 'teacher_id', 'slug']);
+
         $baseSlug = Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
+        $slug     = $baseSlug;
+        $counter  = 1;
 
         while (
             ClassModel::where('slug', $slug)
@@ -144,6 +156,15 @@ class ClassesController extends Controller
 
         $class->update($validated);
 
+        // 📝 Catat aktivitas
+        ActivityLogService::update(
+            'Class',
+            "Mengupdate kelas: {$class->name} (Level: {$class->level}, T.A: {$class->academic_year})",
+            $class->name,
+            $oldData,
+            $class->only(['name', 'level', 'major', 'academic_year', 'semester', 'teacher_id', 'slug'])
+        );
+
         return redirect()
             ->route('class.index')
             ->with('success', 'Kelas berhasil diupdate');
@@ -152,11 +173,19 @@ class ClassesController extends Controller
     // SOFT DELETE (arsip)
     public function destroy(ClassModel $class): JsonResponse
     {
+        // 📝 Catat aktivitas sebelum dihapus
+        ActivityLogService::delete(
+            'Class',
+            "Mengarsipkan kelas: {$class->name} (Level: {$class->level}, T.A: {$class->academic_year})",
+            $class->name,
+            $class->only(['name', 'level', 'major', 'academic_year', 'semester', 'slug'])
+        );
+
         $class->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Kelas dipindahkan ke arsip'
+            'message' => 'Kelas dipindahkan ke arsip',
         ]);
     }
 
@@ -169,9 +198,16 @@ class ClassesController extends Controller
 
         $class->restore();
 
+        // 📝 Catat aktivitas
+        ActivityLogService::restore(
+            'Class',
+            "Merestore kelas: {$class->name} (Level: {$class->level}, T.A: {$class->academic_year})",
+            $class->name
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Kelas berhasil direstore'
+            'message' => 'Kelas berhasil direstore',
         ]);
     }
 
@@ -183,16 +219,24 @@ class ClassesController extends Controller
                 ->where('slug', $slug)
                 ->firstOrFail();
 
+            // 📝 Catat aktivitas sebelum dihapus permanen
+            ActivityLogService::forceDelete(
+                'Class',
+                "Menghapus permanen kelas: {$class->name} (Level: {$class->level}, T.A: {$class->academic_year})",
+                $class->name,
+                $class->only(['name', 'level', 'major', 'academic_year', 'semester', 'slug'])
+            );
+
             $class->forceDelete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kelas berhasil dihapus permanen'
+                'message' => 'Kelas berhasil dihapus permanen',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

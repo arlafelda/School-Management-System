@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Models\Subject;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -39,15 +40,15 @@ class TeacherController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required',
-            'email'       => 'required|email|unique:tbl_users,email',
-            'password'    => 'required|min:6',
-            'nip'         => 'required|unique:tbl_teachers,nip',
-            'subject_ids' => 'nullable|array',
+            'name'          => 'required',
+            'email'         => 'required|email|unique:tbl_users,email',
+            'password'      => 'required|min:6',
+            'nip'           => 'required|unique:tbl_teachers,nip',
+            'subject_ids'   => 'nullable|array',
             'subject_ids.*' => 'exists:tbl_subjects,id',
-            'phone'       => 'nullable',
-            'address'     => 'nullable',
-            'position'    => 'nullable',
+            'phone'         => 'nullable',
+            'address'       => 'nullable',
+            'position'      => 'nullable',
         ]);
 
         $user = User::create([
@@ -67,6 +68,18 @@ class TeacherController extends Controller
         ]);
 
         $teacher->subjects()->sync($request->subject_ids ?? []);
+
+        // 📝 Catat aktivitas
+        $subjectNames = Subject::whereIn('id', $request->subject_ids ?? [])
+            ->pluck('name')
+            ->join(', ');
+
+        ActivityLogService::create(
+            'Teacher',
+            "Menambahkan guru baru: {$teacher->name} (NIP: {$teacher->nip}, Jabatan: {$teacher->position}) — Mapel: " . ($subjectNames ?: '-'),
+            $teacher->name,
+            $teacher->only(['name', 'nip', 'phone', 'address', 'position'])
+        );
 
         return redirect()
             ->route('teacher.index')
@@ -95,20 +108,29 @@ class TeacherController extends Controller
 
     public function update(Request $request, string $slug)
     {
-        $teacher = Teacher::with('user')
+        $teacher = Teacher::with(['user', 'subjects'])
             ->where('slug', $slug)
             ->firstOrFail();
 
         $request->validate([
-            'name'        => 'required',
-            'nip'         => 'required|unique:tbl_teachers,nip,' . $teacher->id,
-            'subject_ids' => 'nullable|array',
+            'name'          => 'required',
+            'nip'           => 'required|unique:tbl_teachers,nip,' . $teacher->id,
+            'subject_ids'   => 'nullable|array',
             'subject_ids.*' => 'exists:tbl_subjects,id',
-            'phone'       => 'nullable',
-            'address'     => 'nullable',
-            'position'    => 'nullable',
-            'password'    => 'nullable|min:6',
+            'phone'         => 'nullable',
+            'address'       => 'nullable',
+            'position'      => 'nullable',
+            'password'      => 'nullable|min:6',
         ]);
+
+        // Simpan data lama sebelum diupdate
+        $oldData = array_merge(
+            $teacher->only(['name', 'nip', 'phone', 'address', 'position']),
+            [
+                'email'       => $teacher->user?->email,
+                'subject_ids' => $teacher->subjects->pluck('id')->toArray(),
+            ]
+        );
 
         $teacher->update([
             'name'     => $request->name,
@@ -124,9 +146,25 @@ class TeacherController extends Controller
 
         if ($request->filled('password')) {
             $teacher->user?->update([
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
             ]);
         }
+
+        // 📝 Catat aktivitas
+        $subjectNames = Subject::whereIn('id', $request->subject_ids ?? [])
+            ->pluck('name')
+            ->join(', ');
+
+        ActivityLogService::update(
+            'Teacher',
+            "Mengupdate data guru: {$teacher->name} (NIP: {$teacher->nip}, Jabatan: {$teacher->position}) — Mapel: " . ($subjectNames ?: '-'),
+            $teacher->name,
+            $oldData,
+            array_merge(
+                $teacher->only(['name', 'nip', 'phone', 'address', 'position']),
+                ['subject_ids' => $request->subject_ids ?? []]
+            )
+        );
 
         return redirect()
             ->route('teacher.index')
@@ -136,9 +174,17 @@ class TeacherController extends Controller
     // SOFT DELETE (arsip)
     public function destroy(Request $request, string $slug)
     {
-        $teacher = Teacher::with('user')
+        $teacher = Teacher::with(['user', 'subjects'])
             ->where('slug', $slug)
             ->firstOrFail();
+
+        // 📝 Catat aktivitas sebelum dihapus
+        ActivityLogService::delete(
+            'Teacher',
+            "Mengarsipkan guru: {$teacher->name} (NIP: {$teacher->nip}, Jabatan: {$teacher->position})",
+            $teacher->name,
+            $teacher->only(['name', 'nip', 'phone', 'address', 'position'])
+        );
 
         $teacher->user?->delete();
         $teacher->delete();
@@ -146,7 +192,7 @@ class TeacherController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Guru berhasil dipindahkan ke arsip'
+                'message' => 'Guru berhasil dipindahkan ke arsip',
             ]);
         }
 
@@ -168,10 +214,17 @@ class TeacherController extends Controller
 
         $teacher->restore();
 
+        // 📝 Catat aktivitas
+        ActivityLogService::restore(
+            'Teacher',
+            "Merestore guru: {$teacher->name} (NIP: {$teacher->nip})",
+            $teacher->name
+        );
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Guru berhasil direstore'
+                'message' => 'Guru berhasil direstore',
             ]);
         }
 
@@ -187,6 +240,14 @@ class TeacherController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
+        // 📝 Catat aktivitas sebelum dihapus permanen
+        ActivityLogService::forceDelete(
+            'Teacher',
+            "Menghapus permanen guru: {$teacher->name} (NIP: {$teacher->nip}, Jabatan: {$teacher->position})",
+            $teacher->name,
+            $teacher->only(['name', 'nip', 'phone', 'address', 'position'])
+        );
+
         $teacher->subjects()->detach();
 
         User::onlyTrashed()->where('id', $teacher->user_id)->forceDelete();
@@ -195,7 +256,7 @@ class TeacherController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Guru berhasil dihapus permanen'
+            'message' => 'Guru berhasil dihapus permanen',
         ]);
     }
 }

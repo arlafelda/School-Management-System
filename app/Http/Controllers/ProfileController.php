@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,14 +54,33 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $user->name = $request->name;
+        // Simpan data lama sebelum diupdate
+        $oldData = [
+            'name'  => $user->name,
+            'email' => $user->email,
+        ];
+
+        $user->name  = $request->name;
         $user->email = $request->email;
 
         $user->save();
 
+        // 📝 Catat aktivitas
+        ActivityLogService::update(
+            'Profile',
+            "Mengupdate profil akun: {$user->name} ({$user->email})",
+            $user->name,
+            $oldData,
+            [
+                'name'  => $user->name,
+                'email' => $user->email,
+            ]
+        );
+
         return Redirect::route('profile.edit')
             ->with('status', 'profile-updated');
     }
+
     /**
      * Delete the user's account.
      */
@@ -71,6 +91,18 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // 📝 Catat aktivitas sebelum akun dihapus & logout
+        ActivityLogService::delete(
+            'Profile',
+            "Menghapus akun sendiri: {$user->name} ({$user->email}) — Role: {$user->role}",
+            $user->name,
+            [
+                'name'  => $user->name,
+                'email' => $user->email,
+                'role'  => $user->role,
+            ]
+        );
 
         Auth::logout();
 

@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ActivityLogController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -436,3 +437,8 @@ Route::get(
     '/student/raport',
     [ReportController::class, 'studentRaport']
 )->name('student.raport');
+
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    Route::get('/activity-log/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-log.show');
+});

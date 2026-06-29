@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -10,7 +11,9 @@ use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-    // INDEX
+    /**
+     * Display a listing of admins.
+     */
     public function index()
     {
         $admins = User::where('role', 'admin')->get();
@@ -18,13 +21,17 @@ class AdminController extends Controller
         return view('admin.admin-index', compact('admins'));
     }
 
-    // CREATE
+    /**
+     * Show the form for creating a new admin.
+     */
     public function create()
     {
         return view('admin.admin-add');
     }
 
-    // STORE
+    /**
+     * Store a newly created admin.
+     */
     public function store(Request $request)
     {
         try {
@@ -35,36 +42,45 @@ class AdminController extends Controller
             ]);
 
             $admin = User::create([
-                'name'            => $request->name,
-                'email'           => $request->email,
-                'password'        => Hash::make($request->password),
-                'role'            => 'admin',
-                'creation_time'   => now(),
-                'create_id'       => Auth::id() ?? 0,
-                'update_time'     => now(),
-                'update_id'       => Auth::id() ?? 0,
+                'name'          => $request->name,
+                'email'         => $request->email,
+                'password'      => Hash::make($request->password),
+                'role'          => 'admin',
+                'creation_time' => now(),
+                'create_id'     => Auth::id() ?? 0,
+                'update_time'   => now(),
+                'update_id'     => Auth::id() ?? 0,
             ]);
 
-            // AUTO SLUG UNIK
+            // Auto slug unik
             $admin->slug = Str::slug($request->name) . '-' . $admin->id;
             $admin->save();
+
+            // 📝 Catat aktivitas
+            ActivityLogService::create(
+                'Admin',
+                "Menambahkan admin baru: {$admin->name} ({$admin->email})",
+                $admin->name,
+                $admin->toArray()
+            );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Admin berhasil dibuat',
-                'data'    => $admin
+                'data'    => $admin,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan',
-                'error'   => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
 
-    // SHOW / EDIT
-    // SHOW (detail/view only)
+    /**
+     * Display the specified admin (view only).
+     */
     public function show(string $slug)
     {
         $admin = User::where('slug', $slug)->where('role', 'admin')->firstOrFail();
@@ -72,14 +88,19 @@ class AdminController extends Controller
         return view('admin.admin-show', compact('admin'));
     }
 
-    // EDIT (form edit)
+    /**
+     * Show the form for editing the specified admin.
+     */
     public function edit(string $slug)
     {
         $admin = User::where('slug', $slug)->where('role', 'admin')->firstOrFail();
 
         return view('admin.admin-edit', compact('admin'));
     }
-    // UPDATE
+
+    /**
+     * Update the specified admin.
+     */
     public function update(Request $request, string $slug)
     {
         try {
@@ -89,6 +110,9 @@ class AdminController extends Controller
                 'name'  => 'required|string|max:255',
                 'email' => 'required|email|unique:tbl_users,email,' . $admin->id,
             ]);
+
+            // Simpan data lama sebelum diupdate
+            $oldData = $admin->only(['name', 'email', 'slug']);
 
             $newSlug = Str::slug($request->name) . '-' . $admin->id;
 
@@ -101,52 +125,71 @@ class AdminController extends Controller
             ]);
 
             if ($request->filled('password')) {
-                $admin->update([
-                    'password' => Hash::make($request->password)
-                ]);
+                $admin->update(['password' => Hash::make($request->password)]);
             }
+
+            // 📝 Catat aktivitas
+            ActivityLogService::update(
+                'Admin',
+                "Mengupdate data admin: {$admin->name} ({$admin->email})",
+                $admin->name,
+                $oldData,
+                $admin->only(['name', 'email', 'slug'])
+            );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Admin berhasil diupdate',
-                'slug'    => $newSlug
+                'slug'    => $newSlug,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal update admin',
-                'error'   => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
 
-    // SOFT DELETE (arsip)
+    /**
+     * Soft delete (arsip) the specified admin.
+     */
     public function destroy(string $slug)
     {
         try {
             $admin = User::where('slug', $slug)->where('role', 'admin')->firstOrFail();
 
+            // 📝 Catat aktivitas sebelum dihapus
+            ActivityLogService::delete(
+                'Admin',
+                "Mengarsipkan admin: {$admin->name} ({$admin->email})",
+                $admin->name,
+                $admin->only(['name', 'email', 'slug'])
+            );
+
             $admin->update([
                 'update_time' => now(),
-                'update_id'   => Auth::id() ?? 0
+                'update_id'   => Auth::id() ?? 0,
             ]);
 
             $admin->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Admin berhasil diarsipkan'
+                'message' => 'Admin berhasil diarsipkan',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus admin',
-                'error'   => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
 
-    // ARCHIVE LIST
+    /**
+     * Display a listing of archived admins.
+     */
     public function archived()
     {
         $admins = User::onlyTrashed()->where('role', 'admin')->get();
@@ -154,7 +197,9 @@ class AdminController extends Controller
         return view('admin.admin-archived', compact('admins'));
     }
 
-    // RESTORE
+    /**
+     * Restore the specified archived admin.
+     */
     public function restore(string $slug)
     {
         try {
@@ -164,6 +209,13 @@ class AdminController extends Controller
                 ->firstOrFail();
 
             $admin->restore();
+
+            // 📝 Catat aktivitas
+            ActivityLogService::restore(
+                'Admin',
+                "Merestore admin: {$admin->name} ({$admin->email})",
+                $admin->name
+            );
 
             return redirect()
                 ->route('admin.archived')
@@ -175,7 +227,9 @@ class AdminController extends Controller
         }
     }
 
-    // FORCE DELETE (PERMANENT)
+    /**
+     * Permanently delete the specified admin.
+     */
     public function forceDelete(string $slug)
     {
         try {
@@ -184,17 +238,25 @@ class AdminController extends Controller
                 ->where('role', 'admin')
                 ->firstOrFail();
 
+            // 📝 Catat aktivitas sebelum dihapus permanen
+            ActivityLogService::forceDelete(
+                'Admin',
+                "Menghapus permanen admin: {$admin->name} ({$admin->email})",
+                $admin->name,
+                $admin->only(['name', 'email', 'slug'])
+            );
+
             $admin->forceDelete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Admin berhasil dihapus permanen'
+                'message' => 'Admin berhasil dihapus permanen',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus permanen',
-                'error'   => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }

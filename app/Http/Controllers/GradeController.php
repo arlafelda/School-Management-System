@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Schedule;
 use App\Models\Subject;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -143,6 +144,8 @@ class GradeController extends Controller
         $saved   = 0;
         $skipped = 0;
 
+        $schedule = Schedule::with(['subject', 'classModel'])->find($request->schedule_id);
+
         foreach ($request->student_id as $i => $studentId) {
 
             $exists = Grade::where('student_id', $studentId)
@@ -173,9 +176,20 @@ class GradeController extends Controller
             ], 422);
         }
 
+        // 📝 Catat aktivitas
+        $subjectName = $schedule?->subject?->name ?? '-';
+        $className   = $schedule?->classModel?->name ?? '-';
+
+        ActivityLogService::create(
+            'Grade',
+            "Menyimpan nilai {$saved} siswa — Mapel: {$subjectName}, Kelas: {$className}" .
+            ($skipped > 0 ? ", Dilewati: {$skipped} (sudah ada)" : ''),
+            "{$subjectName} / {$className}",
+        );
+
         return response()->json([
             'status'  => true,
-            'message' => "Berhasil menyimpan {$saved} data nilai"
+            'message' => "Berhasil menyimpan {$saved} data nilai",
         ]);
     }
 
@@ -231,7 +245,14 @@ class GradeController extends Controller
             'final_exam_score' => 'required|numeric|min:0|max:100',
         ]);
 
-        $grade = Grade::findOrFail($id);
+        $grade = Grade::with([
+            'student',
+            'schedule.subject',
+            'schedule.classModel',
+        ])->findOrFail($id);
+
+        // Simpan data lama sebelum diupdate
+        $oldData = $grade->only(['assignment_score', 'mid_exam_score', 'final_exam_score']);
 
         $grade->update([
             'assignment_score' => $request->assignment_score,
@@ -239,10 +260,23 @@ class GradeController extends Controller
             'final_exam_score' => $request->final_exam_score,
         ]);
 
+        // 📝 Catat aktivitas
+        $studentName = $grade->student?->name ?? '-';
+        $subjectName = $grade->schedule?->subject?->name ?? '-';
+        $className   = $grade->schedule?->classModel?->name ?? '-';
+
+        ActivityLogService::update(
+            'Grade',
+            "Mengupdate nilai siswa: {$studentName} — Mapel: {$subjectName}, Kelas: {$className}",
+            $studentName,
+            $oldData,
+            $grade->only(['assignment_score', 'mid_exam_score', 'final_exam_score'])
+        );
+
         if ($request->ajax()) {
             return response()->json([
                 'status'  => true,
-                'message' => 'Nilai berhasil diupdate'
+                'message' => 'Nilai berhasil diupdate',
             ]);
         }
 
@@ -274,13 +308,30 @@ class GradeController extends Controller
     // =====================
     public function destroy(int $id)
     {
-        $grade = Grade::findOrFail($id);
+        $grade = Grade::with([
+            'student',
+            'schedule.subject',
+            'schedule.classModel',
+        ])->findOrFail($id);
+
+        // 📝 Catat aktivitas sebelum dihapus permanen
+        $studentName = $grade->student?->name ?? '-';
+        $subjectName = $grade->schedule?->subject?->name ?? '-';
+        $className   = $grade->schedule?->classModel?->name ?? '-';
+
+        ActivityLogService::delete(
+            'Grade',
+            "Menghapus nilai siswa: {$studentName} — Mapel: {$subjectName}, Kelas: {$className}",
+            $studentName,
+            $grade->only(['assignment_score', 'mid_exam_score', 'final_exam_score', 'schedule_id', 'subject_id'])
+        );
+
         $grade->delete();
 
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data nilai berhasil dihapus'
+                'message' => 'Data nilai berhasil dihapus',
             ]);
         }
 
