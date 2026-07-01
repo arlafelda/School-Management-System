@@ -22,6 +22,12 @@ return new class extends Migration
                 ->constrained('tbl_students')
                 ->cascadeOnDelete();
 
+            // Predikat keikutsertaan ekskul (Kurikulum Merdeka: Sangat Baik / Baik / Cukup / Kurang)
+            $table->string('predikat')->default('Baik');
+
+            // Catatan/keterangan tambahan dari pembina ekskul
+            $table->text('catatan')->nullable();
+
             $table->timestamps();
 
             // Mencegah siswa terdaftar dua kali

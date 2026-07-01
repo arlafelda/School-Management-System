@@ -20,11 +20,12 @@
         /* ─── HALAMAN ─────────────────────────────────────── */
         @page {
             size: A4 portrait;
-            margin: 15mm 20mm 20mm 25mm;
+            margin: 18mm 24mm 18mm 24mm;
         }
 
         .page {
             width: 100%;
+            padding: 0 3mm;
         }
 
         /* ─── ATURAN PAGE BREAK ───────────────────────────── */
@@ -35,17 +36,9 @@
         thead          { display: table-header-group; } /* ulangi thead di halaman baru */
         tfoot          { display: table-footer-group; }
 
-        /* Setiap section utama tidak boleh dipotong di awal */
-        .section       { page-break-inside: avoid; }
-
-        /* Section yang cukup besar boleh break, tapi judul tetap ikut isinya */
         .section-title { page-break-after: avoid; }
 
-        /* Tanda tangan selalu satu halaman dengan catatan wali kelas */
         .ttd-block     { page-break-inside: avoid; }
-
-        /* Paksa 2-kolom kehadiran+ekskul tidak terputah */
-        .two-col-wrap  { page-break-inside: avoid; }
 
         /* ─── KOP SURAT ───────────────────────────────────── */
         .kop {
@@ -104,6 +97,7 @@
 
         .identitas-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             font-size: 10pt;
         }
@@ -111,10 +105,19 @@
         .identitas-table td {
             padding: 2.5pt 4pt;
             vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
-        .identitas-table td:first-child { width: 38%; }
+        /* Lebar kolom eksplisit, total = 100% (label1 18% + :3% + value1 29%
+           + label2 15% + :3% + value2 32%) supaya tidak ada kolom yang
+           membesar sendiri lalu mendorong tabel melebihi lebar halaman. */
+        .identitas-table td:nth-child(1) { width: 18%; }
         .identitas-table td:nth-child(2) { width: 3%; text-align: center; }
+        .identitas-table td:nth-child(3) { width: 29%; }
+        .identitas-table td:nth-child(4) { width: 15%; }
+        .identitas-table td:nth-child(5) { width: 3%; text-align: center; }
+        .identitas-table td:nth-child(6) { width: 32%; }
 
         /* ─── TABEL NILAI ─────────────────────────────────── */
         .nilai-wrap {
@@ -123,6 +126,7 @@
 
         .nilai-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             font-size: 9.5pt;
         }
@@ -133,6 +137,8 @@
             padding: 3.5pt 4pt;
             text-align: center;
             vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .nilai-table th {
@@ -140,6 +146,24 @@
             font-weight: bold;
             page-break-after: avoid;
         }
+
+        /* Lebar kolom eksplisit, total = 100% */
+        .nilai-table th:nth-child(1),
+        .nilai-table td:nth-child(1) { width: 5%; }
+        .nilai-table th:nth-child(2),
+        .nilai-table td:nth-child(2) { width: 30%; }
+        .nilai-table th:nth-child(3),
+        .nilai-table td:nth-child(3) { width: 9%; }
+        .nilai-table th:nth-child(4),
+        .nilai-table td:nth-child(4) { width: 9%; }
+        .nilai-table th:nth-child(5),
+        .nilai-table td:nth-child(5) { width: 9%; }
+        .nilai-table th:nth-child(6),
+        .nilai-table td:nth-child(6) { width: 14%; }
+        .nilai-table th:nth-child(7),
+        .nilai-table td:nth-child(7) { width: 16%; }
+        .nilai-table th:nth-child(8),
+        .nilai-table td:nth-child(8) { width: 8%; }
 
         .nilai-table td.mapel { text-align: left; padding-left: 5pt; }
 
@@ -163,6 +187,7 @@
 
         .two-col-outer {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
         }
 
@@ -184,6 +209,7 @@
         .kehadiran-table,
         .ekskul-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             font-size: 9pt;
         }
@@ -196,6 +222,8 @@
             padding: 3pt 4pt;
             text-align: center;
             vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .kehadiran-table th,
@@ -206,6 +234,28 @@
 
         .kehadiran-table td.label,
         .ekskul-table td.label { text-align: left; }
+
+        /* Lebar kolom kehadiran-table: 7% + 45%(label) + 12%*4 = 100% */
+        .kehadiran-table th:nth-child(1),
+        .kehadiran-table td:nth-child(1) { width: 7%; }
+        .kehadiran-table th:nth-child(2),
+        .kehadiran-table td:nth-child(2) { width: 45%; }
+        .kehadiran-table th:nth-child(3),
+        .kehadiran-table td:nth-child(3),
+        .kehadiran-table th:nth-child(4),
+        .kehadiran-table td:nth-child(4),
+        .kehadiran-table th:nth-child(5),
+        .kehadiran-table td:nth-child(5),
+        .kehadiran-table th:nth-child(6),
+        .kehadiran-table td:nth-child(6) { width: 12%; }
+
+        /* Lebar kolom ekskul-table: 10% + 68%(label) + 22% = 100% */
+        .ekskul-table th:nth-child(1),
+        .ekskul-table td:nth-child(1) { width: 10%; }
+        .ekskul-table th:nth-child(2),
+        .ekskul-table td:nth-child(2) { width: 68%; }
+        .ekskul-table th:nth-child(3),
+        .ekskul-table td:nth-child(3) { width: 22%; }
 
         /* ─── CATATAN WALI KELAS ──────────────────────────── */
         .catatan-wrap {
@@ -218,17 +268,26 @@
             padding: 5pt 7pt;
             min-height: 36pt;
             font-size: 10pt;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         /* ─── TANDA TANGAN ────────────────────────────────── */
+        /* .ttd-block sekarang berupa <table> (bukan div+p+table campuran)
+           supaya DomPDF menghitung tinggi blok ini dengan akurat saat
+           page-break-inside:avoid — mencegah lompat halaman prematur
+           yang meninggalkan spasi kosong besar sebelum tanda tangan. */
         .ttd-block {
-            page-break-inside: avoid;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
             margin-top: 6pt;
+            font-size: 10pt;
         }
 
-        .ttd-table {
-            width: 100%;
-            border-collapse: collapse;
+        .ttd-tanggal-cell {
+            text-align: right;
+            padding-bottom: 6pt;
             font-size: 10pt;
         }
 
@@ -237,6 +296,8 @@
             vertical-align: bottom;
             padding: 0 10pt;
             width: 50%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .ttd-space { height: 48pt; }
@@ -245,8 +306,11 @@
             border-top: 1px solid #000;
             display: inline-block;
             min-width: 110pt;
+            max-width: 100%;
             padding-top: 2pt;
             font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         /* ─── KETERANGAN PREDIKAT ─────────────────────────── */
@@ -271,6 +335,7 @@
     {{-- JUDUL --}}
     <div class="judul-rapor">
         <h2>Laporan Hasil Belajar Peserta Didik</h2>
+        <p style="font-style:italic;margin-bottom:2pt">Kurikulum Merdeka</p>
         <p>
             Semester
             @if($semester)
@@ -300,8 +365,8 @@
                     <td>Nama Peserta Didik</td>
                     <td>:</td>
                     <td><b>{{ $student->name }}</b></td>
-                    <td style="width:38%">Kelas</td>
-                    <td style="width:3%;text-align:center">:</td>
+                    <td>Kelas</td>
+                    <td style="text-align:center">:</td>
                     <td>{{ $student->class->name ?? '-' }}</td>
                 </tr>
                 <tr>
@@ -344,14 +409,14 @@
         <table class="nilai-table">
             <thead>
                 <tr>
-                    <th style="width:5%">No</th>
-                    <th style="width:30%;text-align:left;padding-left:5pt">Mata Pelajaran</th>
-                    <th style="width:11%">Tugas</th>
-                    <th style="width:11%">UTS</th>
-                    <th style="width:11%">UAS</th>
-                    <th style="width:13%">Nilai Akhir</th>
-                    <th style="width:10%">Predikat</th>
-                    <th style="width:9%;font-size:8.5pt">KKTP</th>
+                    <th>No</th>
+                    <th style="text-align:left;padding-left:5pt">Mata Pelajaran</th>
+                    <th>Formatif</th>
+                    <th>STS</th>
+                    <th>SAS</th>
+                    <th>Nilai Akhir</th>
+                    <th>Predikat</th>
+                    <th style="font-size:8.5pt">KKTP</th>
                 </tr>
             </thead>
             <tbody>
@@ -359,7 +424,7 @@
                 @php
                     $finalScore = $grade->final_score;
                     $totalNilai += $finalScore;
-                    $predikat = $grade->grade_letter;
+                    $predikat = $grade->predikat;
                     $lulus    = $finalScore >= $kkm;
                 @endphp
                 <tr>
@@ -388,10 +453,10 @@
                     <td colspan="5" style="text-align:right;padding-right:5pt">Rata-rata Keseluruhan</td>
                     <td class="nilai-akhir">{{ number_format($rataRata, 1) }}</td>
                     <td>
-                        @if($rataRata >= 90) A
-                        @elseif($rataRata >= 80) B
-                        @elseif($rataRata >= 70) C
-                        @else D
+                        @if($rataRata >= 90) Sangat Baik
+                        @elseif($rataRata >= 80) Baik
+                        @elseif($rataRata >= 70) Cukup
+                        @else Perlu Bimbingan
                         @endif
                     </td>
                     <td></td>
@@ -400,10 +465,10 @@
             </tbody>
         </table>
         <p class="keterangan">
-            Keterangan: A = 90&ndash;100 (Sangat Baik) &nbsp;|&nbsp;
-            B = 80&ndash;89 (Baik) &nbsp;|&nbsp;
-            C = 70&ndash;79 (Cukup) &nbsp;|&nbsp;
-            D = &lt;70 (Perlu Bimbingan) &nbsp;|&nbsp;
+            Keterangan: Sangat Baik (90&ndash;100) &nbsp;|&nbsp;
+            Baik (80&ndash;89) &nbsp;|&nbsp;
+            Cukup (70&ndash;79) &nbsp;|&nbsp;
+            Perlu Bimbingan (&lt;70) &nbsp;|&nbsp;
             <span style="color:#c00000">Merah = di bawah KKTP ({{ $kkm }})</span>
         </p>
     </div>
@@ -429,12 +494,12 @@
                         <table class="kehadiran-table">
                             <thead>
                                 <tr>
-                                    <th style="width:7%">No</th>
+                                    <th>No</th>
                                     <th class="label" style="text-align:left">Mata Pelajaran</th>
-                                    <th style="width:12%">H</th>
-                                    <th style="width:12%">I</th>
-                                    <th style="width:12%">S</th>
-                                    <th style="width:12%">A</th>
+                                    <th>H</th>
+                                    <th>I</th>
+                                    <th>S</th>
+                                    <th>A</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -474,9 +539,9 @@
                         <table class="ekskul-table">
                             <thead>
                                 <tr>
-                                    <th style="width:10%">No</th>
+                                    <th>No</th>
                                     <th class="label" style="text-align:left">Nama Kegiatan</th>
-                                    <th style="width:22%">Ket.</th>
+                                    <th>Predikat</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -484,7 +549,7 @@
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
                                     <td class="label">{{ $item->name }}</td>
-                                    <td>Aktif</td>
+                                    <td>{{ $item->pivot->predikat ?? 'Baik' }}</td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -508,32 +573,32 @@
     </div>
 
     {{-- TANDA TANGAN --}}
-    <div class="ttd-block">
-        @php
-            $tanggal = \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y');
-        @endphp
-        <p style="text-align:right;font-size:10pt;margin-bottom:4pt">
-            Banyuwangi, {{ $tanggal }}
-        </p>
-        <table class="ttd-table">
-            <tbody>
-                <tr>
-                    <td>
-                        <p>Wali Kelas,</p>
-                        <div class="ttd-space"></div>
-                        <div class="ttd-nama">
-                            {{ $student->class->teacher->name ?? '( ................................ )' }}
-                        </div>
-                    </td>
-                    <td>
-                        <p>Mengetahui,<br>Kepala Sekolah</p>
-                        <div class="ttd-space"></div>
-                        <div class="ttd-nama">( ................................ )</div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    @php
+        $tanggal = \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y');
+    @endphp
+    <table class="ttd-block">
+        <tbody>
+            <tr>
+                <td colspan="2" class="ttd-tanggal-cell">
+                    Banyuwangi, {{ $tanggal }}
+                </td>
+            </tr>
+            <tr class="ttd-table">
+                <td>
+                    <p>Wali Kelas,</p>
+                    <div class="ttd-space"></div>
+                    <div class="ttd-nama">
+                        {{ $student->class->teacher->name ?? '( ................................ )' }}
+                    </div>
+                </td>
+                <td>
+                    <p>Mengetahui,<br>Kepala Sekolah</p>
+                    <div class="ttd-space"></div>
+                    <div class="ttd-nama">( ................................ )</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
 </div>
 </body>

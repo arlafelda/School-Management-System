@@ -170,10 +170,14 @@
                         @forelse($logs as $log)
                         <tr class="hover:bg-gray-50 transition">
 
-                            {{-- Waktu --}}
+                            {{-- Waktu (sudah disesuaikan ke WIB / Asia Jakarta) --}}
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-xs text-gray-800 font-medium">{{ $log->created_at->format('d M Y') }}</div>
-                                <div class="text-xs text-gray-400">{{ $log->created_at->format('H:i:s') }}</div>
+                                <div class="text-xs text-gray-800 font-medium">
+                                    {{ $log->created_at->timezone('Asia/Jakarta')->format('d M Y') }}
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    {{ $log->created_at->timezone('Asia/Jakarta')->format('H:i:s') }} WIB
+                                </div>
                             </td>
 
                             {{-- User --}}

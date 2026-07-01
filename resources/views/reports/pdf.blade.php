@@ -96,7 +96,7 @@
 
         {{-- KOP SURAT --}}
         <div class="border-b-4 border-blue-800 bg-gradient-to-r from-blue-800 to-indigo-700 text-white px-6 py-5 text-center">
-            <p class="text-xs uppercase tracking-widest opacity-80 mb-1">Laporan Hasil Belajar Peserta Didik</p>
+            <p class="text-xs uppercase tracking-widest opacity-80 mb-1">Laporan Hasil Belajar Peserta Didik &mdash; Kurikulum Merdeka</p>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide">Gamelab Indonesia</h1>
             <p class="text-xs sm:text-sm mt-2 opacity-90">Jl. Raya Jember No. KM13, Banyuwangi, Jawa Timur &nbsp;|&nbsp; Telp: 08123456789</p>
             <div class="mt-3 inline-block bg-white/20 rounded-full px-4 py-1 text-xs font-semibold">
@@ -148,7 +148,7 @@
                     $grades = $student->grades;
                     $totalNilai = 0;
                     $jumlahMapel = $grades->count();
-                    $kkm = 75;
+                    $kktp = 75; // Kriteria Ketercapaian Tujuan Pembelajaran
                 @endphp
                 <div class="overflow-x-auto border border-gray-200 rounded-xl">
                     <table class="w-full text-sm min-w-[560px]">
@@ -156,12 +156,12 @@
                             <tr>
                                 <th class="px-4 py-3 text-center w-10">No</th>
                                 <th class="px-4 py-3 text-left">Mata Pelajaran</th>
-                                <th class="px-4 py-3 text-center w-20">Tugas</th>
-                                <th class="px-4 py-3 text-center w-20">UTS</th>
-                                <th class="px-4 py-3 text-center w-20">UAS</th>
+                                <th class="px-4 py-3 text-center w-20">Formatif</th>
+                                <th class="px-4 py-3 text-center w-20">STS</th>
+                                <th class="px-4 py-3 text-center w-20">SAS</th>
                                 <th class="px-4 py-3 text-center w-24">Nilai Akhir</th>
-                                <th class="px-4 py-3 text-center w-20">Predikat</th>
-                                <th class="px-4 py-3 text-center w-16">KKM</th>
+                                <th class="px-4 py-3 text-center w-24">Predikat</th>
+                                <th class="px-4 py-3 text-center w-16">KKTP</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -169,9 +169,9 @@
                             @php
                                 $fs = $grade->final_score;
                                 $totalNilai += $fs;
-                                $lulus = $fs >= $kkm;
-                                $predikat = $grade->grade_letter;
-                                $predClass = 'grade-' . strtolower($predikat);
+                                $lulus = $fs >= $kktp;
+                                $predikat = $grade->predikat;
+                                $predClass = 'grade-' . strtolower($grade->grade_letter);
                             @endphp
                             <tr class="{{ $i % 2 == 1 ? 'bg-gray-50/50' : '' }}">
                                 <td class="px-4 py-3 text-center text-gray-500">{{ $i + 1 }}</td>
@@ -183,7 +183,7 @@
                                     {{ number_format($fs, 1) }}
                                 </td>
                                 <td class="px-4 py-3 text-center {{ $predClass }}">{{ $predikat }}</td>
-                                <td class="px-4 py-3 text-center text-gray-400 text-xs">{{ $kkm }}</td>
+                                <td class="px-4 py-3 text-center text-gray-400 text-xs">{{ $kktp }}</td>
                             </tr>
                             @empty
                             <tr>
@@ -197,7 +197,7 @@
                                 <td colspan="5" class="px-4 py-3 text-right text-emerald-800">Rata-rata Keseluruhan</td>
                                 <td class="px-4 py-3 text-center text-emerald-800">{{ number_format($rataRata, 1) }}</td>
                                 <td class="px-4 py-3 text-center {{ 'grade-' . (($rataRata>=90)?'a':(($rataRata>=80)?'b':(($rataRata>=70)?'c':'d'))) }}">
-                                    @if($rataRata >= 90) A @elseif($rataRata >= 80) B @elseif($rataRata >= 70) C @else D @endif
+                                    @if($rataRata >= 90) Sangat Baik @elseif($rataRata >= 80) Baik @elseif($rataRata >= 70) Cukup @else Perlu Bimbingan @endif
                                 </td>
                                 <td></td>
                             </tr>
@@ -208,9 +208,9 @@
 
                 {{-- Keterangan Predikat --}}
                 <p class="text-xs text-gray-400 mt-2">
-                    Keterangan: A = 90–100 (Sangat Baik) &nbsp;|&nbsp; B = 80–89 (Baik) &nbsp;|&nbsp;
-                    C = 70–79 (Cukup) &nbsp;|&nbsp; D = &lt; 70 (Perlu Perbaikan) &nbsp;|&nbsp;
-                    <span class="text-red-500">Merah = di bawah KKM ({{ $kkm }})</span>
+                    Keterangan: Sangat Baik (90&ndash;100) &nbsp;|&nbsp; Baik (80&ndash;89) &nbsp;|&nbsp;
+                    Cukup (70&ndash;79) &nbsp;|&nbsp; Perlu Bimbingan (&lt; 70) &nbsp;|&nbsp;
+                    <span class="text-red-500">Merah = di bawah KKTP ({{ $kktp }})</span>
                 </p>
             </div>
 
@@ -284,7 +284,7 @@
                                 <tr>
                                     <th class="px-3 py-2 text-center w-10">No</th>
                                     <th class="px-3 py-2 text-left">Nama Kegiatan</th>
-                                    <th class="px-3 py-2 text-center">Ket.</th>
+                                    <th class="px-3 py-2 text-center">Predikat</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -292,7 +292,7 @@
                                 <tr class="{{ $i % 2 == 1 ? 'bg-gray-50/50' : '' }}">
                                     <td class="px-3 py-2 text-center text-gray-400">{{ $i + 1 }}</td>
                                     <td class="px-3 py-2">{{ $item->name }}</td>
-                                    <td class="px-3 py-2 text-center text-green-600 font-medium">Aktif</td>
+                                    <td class="px-3 py-2 text-center text-green-600 font-medium">{{ $item->pivot->predikat ?? 'Baik' }}</td>
                                 </tr>
                                 @empty
                                 <tr><td colspan="3" class="px-3 py-4 text-center text-gray-400 italic">Belum ada data</td></tr>

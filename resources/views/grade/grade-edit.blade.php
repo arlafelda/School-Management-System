@@ -131,7 +131,7 @@
 
                 <div>
                     <label class="text-sm font-medium text-gray-600">
-                        Tugas
+                        Formatif
                     </label>
 
                     <input
@@ -147,7 +147,7 @@
 
                 <div>
                     <label class="text-sm font-medium text-gray-600">
-                        UTS
+                        STS
                     </label>
 
                     <input
@@ -162,7 +162,7 @@
 
                 <div>
                     <label class="text-sm font-medium text-gray-600">
-                        UAS
+                        SAS
                     </label>
 
                     <input

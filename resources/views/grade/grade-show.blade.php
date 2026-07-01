@@ -172,9 +172,9 @@
 
                     <thead class="bg-gray-100 text-gray-600">
                         <tr>
-                            <th class="p-3 text-right">Tugas</th>
-                            <th class="p-3 text-right">UTS</th>
-                            <th class="p-3 text-right">UAS</th>
+                            <th class="p-3 text-right">Formatif</th>
+                            <th class="p-3 text-right">STS</th>
+                            <th class="p-3 text-right">SAS</th>
                             <th class="p-3 text-right">Nilai Akhir</th>
                         </tr>
                     </thead>

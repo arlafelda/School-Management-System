@@ -12,6 +12,7 @@ use App\Models\ClassModel;
 use App\Models\Schedule;
 use App\Models\Attendance;
 use App\Models\Student;
+use App\Models\Announcement; // ← tambahkan ini
 
 class DashboardController extends Controller
 {
@@ -20,7 +21,6 @@ class DashboardController extends Controller
         $user = Auth::user();
         $role = $user->role;
 
-        // Map hari Inggris -> Indonesia (dipakai semua role)
         $days = [
             'Monday'    => 'Senin',
             'Tuesday'   => 'Selasa',
@@ -35,16 +35,9 @@ class DashboardController extends Controller
 
         // ================= SUPER ADMIN =================
         if ($role === 'super_admin') {
-
             $totalStudents = User::where('role', 'student')->count();
             $totalTeachers = User::where('role', 'teacher')->count();
             $totalAdmins   = User::where('role', 'admin')->count();
-
-            $chartData = [
-                $totalStudents,
-                $totalTeachers,
-                $totalAdmins,
-            ];
 
             return view('dashboard.super-admin-dashboard', [
                 'totalStudents' => $totalStudents,
@@ -54,27 +47,18 @@ class DashboardController extends Controller
                 'totalMajors'   => ClassModel::distinct('major')->count('major'),
                 'totalSubjects' => Subject::count(),
                 'today'         => $today,
-
-                'activities' => Schedule::with(['class', 'teacher'])
+                'activities'    => Schedule::with(['class', 'teacher'])
                     ->where('day', $today)
                     ->orderBy('start_time', 'asc')
                     ->get(),
-
-                'chartData' => $chartData,
+                'chartData' => [$totalStudents, $totalTeachers, $totalAdmins],
             ]);
         }
 
         // ================= ADMIN =================
         if ($role === 'admin') {
-
             $totalStudents = User::where('role', 'student')->count();
             $totalTeachers = User::where('role', 'teacher')->count();
-
-            $chartData = [
-                $totalStudents,
-                $totalTeachers,
-                User::where('role', 'admin')->count(),
-            ];
 
             return view('dashboard.admin-dashboard', [
                 'totalStudents'  => $totalStudents,
@@ -84,13 +68,15 @@ class DashboardController extends Controller
                 'totalSubjects'  => Subject::count(),
                 'totalSchedules' => Schedule::count(),
                 'today'          => $today,
-
-                'activities' => Schedule::with(['class', 'teacher'])
+                'activities'     => Schedule::with(['class', 'teacher'])
                     ->where('day', $today)
                     ->orderBy('start_time', 'asc')
                     ->get(),
-
-                'chartData' => $chartData,
+                'chartData' => [
+                    $totalStudents,
+                    $totalTeachers,
+                    User::where('role', 'admin')->count(),
+                ],
             ]);
         }
 
@@ -118,10 +104,18 @@ class DashboardController extends Controller
 
             $subjects      = $teacher->subjects;
             $totalSubjects = $subjects->count();
-
             $totalClasses  = Schedule::where('teacher_id', $teacher->id)
                 ->distinct('class_id')
                 ->count('class_id');
+
+            // ← Tambahan: ambil pengumuman untuk teacher
+            $announcements = Announcement::active()
+                ->forRole('teacher')
+                ->with('author')
+                ->orderByRaw("FIELD(priority, 'mendesak', 'penting', 'normal')")
+                ->latest()
+                ->limit(5)
+                ->get();
 
             return view('dashboard.teacher-dashboard', [
                 'todaySchedules' => $todaySchedules,
@@ -132,6 +126,7 @@ class DashboardController extends Controller
                 'totalSubjects'  => $totalSubjects,
                 'todayCount'     => $todaySchedules->count(),
                 'today'          => $today,
+                'announcements'  => $announcements, // ← tambahkan ini
             ]);
         }
 
@@ -156,11 +151,21 @@ class DashboardController extends Controller
                 ->orderBy('start_time', 'asc')
                 ->get();
 
+            // ← Tambahan: ambil pengumuman untuk student
+            $announcements = Announcement::active()
+                ->forRole('student')
+                ->with('author')
+                ->orderByRaw("FIELD(priority, 'mendesak', 'penting', 'normal')")
+                ->latest()
+                ->limit(5)
+                ->get();
+
             return view('dashboard.student-dashboard', [
                 'attendancePercent' => $attendancePercent,
                 'totalAttendance'   => $totalAttendance,
                 'todaySchedules'    => $todaySchedules,
                 'today'             => $today,
+                'announcements'     => $announcements, // ← tambahkan ini
             ]);
         }
 

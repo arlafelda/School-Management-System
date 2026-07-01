@@ -136,9 +136,9 @@
                     <th class="p-3">No</th>
                     <th class="p-3">NISN</th>
                     <th class="p-3">Nama</th>
-                    <th class="p-3">Tugas</th>
-                    <th class="p-3">UTS</th>
-                    <th class="p-3">UAS</th>
+                    <th class="p-3">Formatif</th>
+                    <th class="p-3">STS</th>
+                    <th class="p-3">SAS</th>
                 </tr>
             </thead>
 

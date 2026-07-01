@@ -15,6 +15,7 @@ use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AnnouncementController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -442,3 +443,26 @@ Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
     Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
     Route::get('/activity-log/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-log.show');
 });
+
+Route::get('/announcements/board', [AnnouncementController::class, 'board'])
+    ->name('announcement.board')
+    ->middleware(['auth', 'role:super_admin,admin,teacher,student']);
+ 
+// Restore & Force Delete — hanya admin
+Route::patch('/announcements/{id}/restore', [AnnouncementController::class, 'restore'])
+    ->name('announcement.restore')
+    ->middleware(['auth', 'role:super_admin,admin']);
+ 
+Route::delete('/announcements/{id}/force-delete', [AnnouncementController::class, 'forceDelete'])
+    ->name('announcement.forceDelete')
+    ->middleware(['auth', 'role:super_admin,admin']);
+ 
+// Resource routes — hanya admin/super_admin yang bisa kelola
+Route::middleware(['auth', 'role:super_admin,admin'])
+    ->group(function () {
+        Route::resource('announcements', AnnouncementController::class)
+            ->parameters(['announcements' => 'announcement'])
+            ->names('announcement')
+            ->except(['show']); // board sudah handle view untuk semua
+    });
+ 

@@ -70,6 +70,10 @@ class Grade extends Model
         );
     }
 
+    /**
+     * Kode singkat nilai akhir (dipakai untuk kelas CSS: grade-a, grade-b, dst).
+     * Ambang batas tetap sama, hanya digunakan sebagai kunci internal.
+     */
     public function getGradeLetterAttribute()
     {
         $score = $this->final_score;
@@ -87,5 +91,36 @@ class Grade extends Model
         }
 
         return 'D';
+    }
+
+    /**
+     * Predikat deskriptif sesuai Kurikulum Merdeka.
+     * Kurikulum Merdeka menampilkan capaian kompetensi dengan predikat
+     * kata, bukan huruf tunggal seperti pada K-13.
+     */
+    public function getPredikatAttribute(): string
+    {
+        return match ($this->grade_letter) {
+            'A'     => 'Sangat Baik',
+            'B'     => 'Baik',
+            'C'     => 'Cukup',
+            default => 'Perlu Bimbingan',
+        };
+    }
+
+    /**
+     * Deskripsi capaian kompetensi otomatis untuk rapor,
+     * dibangun dari nama mapel & predikat (format naratif Kurikulum Merdeka).
+     */
+    public function getCapaianKompetensiAttribute(): string
+    {
+        $mapel = $this->subject->name ?? 'mata pelajaran ini';
+
+        return match ($this->grade_letter) {
+            'A'     => "Menunjukkan penguasaan yang sangat baik pada capaian pembelajaran {$mapel}.",
+            'B'     => "Menunjukkan penguasaan yang baik pada capaian pembelajaran {$mapel}.",
+            'C'     => "Menunjukkan penguasaan yang cukup pada capaian pembelajaran {$mapel}, perlu latihan lebih lanjut.",
+            default => "Masih memerlukan bimbingan untuk mencapai tujuan pembelajaran {$mapel}.",
+        };
     }
 }

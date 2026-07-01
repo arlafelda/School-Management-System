@@ -89,6 +89,6 @@ class Student extends Model
             'tbl_extracurricular_students',
             'student_id',
             'extracurricular_id'
-        );
+        )->withPivot(['predikat', 'catatan']);
     }
 }

@@ -83,6 +83,36 @@
 
     </div>
 
+    {{-- ===== PENGUMUMAN ===== --}}
+    @if(isset($announcements) && $announcements->isNotEmpty())
+    <div class="card announcement-card">
+        <div class="card__header">
+            <h2 class="card__title">📢 Pengumuman</h2>
+            <span class="card__badge">{{ $announcements->count() }} pengumuman</span>
+        </div>
+
+        <ul class="announcement-list">
+            @foreach($announcements as $announcement)
+                <li class="announcement-item announcement-item--{{ $announcement->priority }}">
+                    <div class="announcement-item__top">
+                        <span class="announcement-priority announcement-priority--{{ $announcement->priority }}">
+                            {{ ucfirst($announcement->priority) }}
+                        </span>
+                        <span class="announcement-date">
+                            {{ \Carbon\Carbon::parse($announcement->created_at)->translatedFormat('d M Y') }}
+                        </span>
+                    </div>
+                    <p class="announcement-title">{{ $announcement->title }}</p>
+                    <p class="announcement-body">{{ \Illuminate\Support\Str::limit($announcement->content, 160) }}</p>
+                    @if($announcement->author)
+                        <p class="announcement-author">— {{ $announcement->author->name }}</p>
+                    @endif
+                </li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     {{-- ===== MAIN GRID ===== --}}
     <div class="main-grid">
 
@@ -299,6 +329,7 @@
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
     border: 1px solid #F1F5F9;
+    margin-bottom: 1.25rem;
 }
 .card__header {
     display: flex;
@@ -451,6 +482,69 @@
 .empty-state__hint {
     font-size: 0.75rem;
     color: #CBD5E1;
+    margin: 0;
+}
+
+/* ===== ANNOUNCEMENTS ===== */
+.announcement-card { position: relative; }
+.announcement-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.announcement-item {
+    background: #F8FAFC;
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-left: 3px solid #CBD5E1;
+}
+.announcement-item--mendesak { border-left-color: #EF4444; background: #FEF2F2; }
+.announcement-item--penting { border-left-color: #F59E0B; background: #FFFBEB; }
+.announcement-item--normal { border-left-color: #3B82F6; background: #F8FAFC; }
+
+.announcement-item__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+}
+.announcement-priority {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: #E2E8F0;
+    color: #475569;
+}
+.announcement-priority--mendesak { background: #FEE2E2; color: #DC2626; }
+.announcement-priority--penting { background: #FEF3C7; color: #B45309; }
+.announcement-priority--normal { background: #DBEAFE; color: #1D4ED8; }
+
+.announcement-date {
+    font-size: 0.7rem;
+    color: #94A3B8;
+}
+.announcement-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0 0 0.25rem;
+}
+.announcement-body {
+    font-size: 0.8125rem;
+    color: #475569;
+    margin: 0 0 0.375rem;
+    line-height: 1.4;
+}
+.announcement-author {
+    font-size: 0.7rem;
+    color: #94A3B8;
+    font-style: italic;
     margin: 0;
 }
 </style>
