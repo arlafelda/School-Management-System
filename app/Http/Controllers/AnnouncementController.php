@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
@@ -50,12 +51,19 @@ class AnnouncementController extends Controller
             'is_active'   => 'nullable|boolean',
         ]);
 
-        Announcement::create([
+        $announcement = Announcement::create([
             ...$validated,
             'created_by'   => Auth::id(),
             'published_at' => now(),
             'is_active'    => $request->boolean('is_active', true),
         ]);
+
+        ActivityLogService::create(
+            'Announcement',
+            "Menambahkan pengumuman baru \"{$announcement->title}\".",
+            $announcement->title,
+            $announcement->toArray()
+        );
 
         return redirect()->route('announcement.index')
             ->with('success', 'Pengumuman berhasil ditambahkan.');
@@ -85,10 +93,20 @@ class AnnouncementController extends Controller
             'is_active'   => 'nullable|boolean',
         ]);
 
+        $oldData = $announcement->toArray();
+
         $announcement->update([
             ...$validated,
             'is_active' => $request->boolean('is_active', true),
         ]);
+
+        ActivityLogService::update(
+            'Announcement',
+            "Memperbarui pengumuman \"{$announcement->title}\".",
+            $announcement->title,
+            $oldData,
+            $announcement->toArray()
+        );
 
         return redirect()->route('announcement.index')
             ->with('success', 'Pengumuman berhasil diperbarui.');
@@ -99,7 +117,17 @@ class AnnouncementController extends Controller
     // =============================================
     public function destroy(Announcement $announcement): RedirectResponse
     {
+        $oldData = $announcement->toArray();
+        $title   = $announcement->title;
+
         $announcement->delete();
+
+        ActivityLogService::delete(
+            'Announcement',
+            "Menghapus pengumuman \"{$title}\".",
+            $title,
+            $oldData
+        );
 
         return redirect()->route('announcement.index')
             ->with('success', 'Pengumuman berhasil dihapus.');
@@ -113,6 +141,12 @@ class AnnouncementController extends Controller
         $announcement = Announcement::onlyTrashed()->findOrFail($id);
         $announcement->restore();
 
+        ActivityLogService::restore(
+            'Announcement',
+            "Memulihkan pengumuman \"{$announcement->title}\".",
+            $announcement->title
+        );
+
         return redirect()->route('announcement.index')
             ->with('success', 'Pengumuman berhasil dipulihkan.');
     }
@@ -123,7 +157,17 @@ class AnnouncementController extends Controller
     public function forceDelete(int $id): RedirectResponse
     {
         $announcement = Announcement::onlyTrashed()->findOrFail($id);
+        $oldData      = $announcement->toArray();
+        $title        = $announcement->title;
+
         $announcement->forceDelete();
+
+        ActivityLogService::forceDelete(
+            'Announcement',
+            "Menghapus permanen pengumuman \"{$title}\".",
+            $title,
+            $oldData
+        );
 
         return redirect()->route('announcement.index')
             ->with('success', 'Pengumuman berhasil dihapus permanen.');
